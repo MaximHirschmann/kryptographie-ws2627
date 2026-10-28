@@ -1,0 +1,31 @@
+1.
+
+mono-alphabetic:
+
+gen: k in {0, 1, l-1} | l is the length of the alphabet
+
+enc: c = pi_k (m)
+
+dec: m = pi_k ^-1 (c)
+
+
+vigenère:
+
+gen: 
+
+    for i = 0 to n − 1 do
+    ki ← Gen_mono
+    output k0, . . . , kn−1
+
+enc: 
+
+    input k0, . . . , kn−1 ∈ K, m ∈ M∗
+    for i = 0 to |m| − 1 do
+        ci ∶= pi_k_(i mod n) (m_i)
+    output c0, . . . , c|m|−1
+
+dec: 
+    input k0, . . . , kn−1 ∈ K, c ∈ C
+
+    for i = 0 to |c| - 1 do 
+        m_i := pi_k_(i mod n)^-1 (c_i)
