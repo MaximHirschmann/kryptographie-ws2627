@@ -146,7 +146,7 @@ $$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
   <li><b>Kasiski's method</b> (19th century): a frequent word that appears twice at the same position modulo $t$ produces the same ciphertext both times. Repeated ciphertext fragments of length 3 or more are therefore found at distances that are multiples of $t$; the greatest common divisor of these distances is $t$ or a multiple of it.</li>
   <li><b>Index of coincidence:</b> for $\tau = 1, 2, \dots$ take the stream $c_0, c_\tau, c_{2\tau}, \dots$ with letter frequencies $q_0, \dots, q_{25}$ and compute
   $$S_\tau = \sum_{i=0}^{25} q_i^2.$$
-  If $\tau$ is a multiple of $t$, the stream is a single shift of English text and $S_\tau \approx \sum_i p_i^2 \approx 0.065$ (a shift only permutes the frequencies). Otherwise the letters come from different shifts and $S_\tau \approx 0.038$. The smallest $\tau$ with $S_\tau \approx 0.065$ is the period.</li>
+  If $\tau$ is a multiple of $t$, the stream uses one key position, so with enough representative English text $S_\tau \approx \sum_i p_i^2 \approx 0.065$ (a shift only permutes the frequencies). Otherwise it visits $t/\gcd(t,\tau)$ key positions and mixes their shifted letter distributions. This often lowers $S_\tau$ toward $0.038$, but need not do so: repeated key letters and sampling fluctuations can produce other peaks. The smallest convincing peak is a candidate for the fundamental period; check it by analysing all streams and decrypting. Multiples of the period also produce peaks.</li>
 </ul>
 <p>Longer keys require more ciphertext for these statistics to work, but every fixed period can be broken.</p>
 </section>
@@ -241,7 +241,7 @@ $$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
 <div class="env def" id="def-conditional" data-title="Conditional probability">
 <p>If $\Pr[E_2] \gt 0$: $\displaystyle \Pr[E_1 \mid E_2] = \frac{\Pr[E_1 \land E_2]}{\Pr[E_2]}$. If $\Pr[E_2] = 0$, it is undefined.</p>
 </div>
-<p>Consequently $\Pr[E_1 \land E_2] = \Pr[E_1 \mid E_2] \cdot \Pr[E_2]$, and combining with the law of total probability: $\Pr[F] = \sum_i \Pr[F \mid E_i] \Pr[E_i]$ (sum over the $E_i$ with positive probability). The <b>chain rule</b> for three events: $\Pr[X \land Y \mid Z] = \Pr[X \mid Y \land Z] \cdot \Pr[Y \mid Z]$.</p>
+<p>Consequently, if $\Pr[E_2] \gt 0$, then $\Pr[E_1 \land E_2] = \Pr[E_1 \mid E_2] \cdot \Pr[E_2]$. If $\Pr[E_2] = 0$, the intersection has probability $0$, but the conditional expression is undefined. Combining with the law of total probability: $\Pr[F] = \sum_i \Pr[F \mid E_i] \Pr[E_i]$ (sum over the $E_i$ with positive probability). The <b>chain rule</b> for three events is $\Pr[X \land Y \mid Z] = \Pr[X \mid Y \land Z] \cdot \Pr[Y \mid Z]$, provided $\Pr[Y \land Z] \gt 0$. If $\Pr[Z] \gt 0$ but $\Pr[Y \land Z] = 0$, the left side is $0$ and the conditional probability on the right is undefined.</p>
 <div class="env thm" id="thm-bayes" data-title="Bayes">
 <p>If $\Pr[E_1] \gt 0$ and $\Pr[E_2] \gt 0$, then $\displaystyle \Pr[E_1 \mid E_2] = \frac{\Pr[E_2 \mid E_1] \cdot \Pr[E_1]}{\Pr[E_2]}.$</p>
 </div>
@@ -455,7 +455,7 @@ $$\big|\Pr[\mathcal{A} \text{ outputs } 1 \text{ in } \mathsf{PrivK}^{\mathsf{ea
 </div>
 <p><b>Only efficiency protects a PRG.</b> Let $\ell(n) = 2n$. The unbounded distinguisher $D(w)$: output $1$ iff $w = G(s)$ for some $s \in \{0,1\}^n$ (try all $2^n$ seeds). Then $\Pr[D(G(s)) = 1] = 1$, while at most $2^n$ of the $2^{2n}$ strings are outputs of $G$, so $\Pr[D(r) = 1] \le 2^{-n}$. The difference $1 - 2^{-n}$ is far from negligible. The seed must be long enough that such a search is infeasible.</p>
 <div class="env def" id="def-variable-prg" data-title="Variable output-length PRG">
-<p>A deterministic polynomial-time algorithm $G(s, 1^\ell)$ is a variable output-length PRG if (1) it outputs $\ell$ bits; (2) for $\ell \lt \ell'$, $G(s, 1^\ell)$ is a prefix of $G(s, 1^{\ell'})$; and (3) for every polynomial $\ell(\cdot)$, $G_\ell(s) := G(s, 1^{\ell(|s|)})$ is a PRG with expansion factor $\ell$.</p>
+<p>A deterministic polynomial-time algorithm $G(s, 1^\ell)$ is a variable output-length PRG if (1) for every positive integer $\ell$ it outputs $\ell$ bits; (2) for $\ell \lt \ell'$, $G(s, 1^\ell)$ is a prefix of $G(s, 1^{\ell'})$; and (3) for every polynomial $\ell(\cdot)$ satisfying $\ell(n) \gt n$ for all $n$, $G_\ell(s) := G(s, 1^{\ell(|s|)})$ is a PRG with expansion factor $\ell$. Shorter outputs are pseudorandom as well, by truncating a longer output using the prefix property; they simply do not satisfy the expansion requirement in <a class="xref" href="#def-prg"></a>.</p>
 </div>
 <p>This is the abstract model of a <b>stream cipher</b>: from a short key it produces as many pseudorandom bits as needed.</p>
 </section>
@@ -718,13 +718,13 @@ $$\mathsf{negl}(n) \ge \big|\Pr[D^{F_k} = 1] - \Pr[D^{f} = 1]\big| \ge \varepsil
 </ul>
 <p>All three problems are solved by including the index, the total length and a per-message random identifier in every block.</p>
 <div class="alg" id="constr-var-mac"><table>
-<tr><td colspan="2">Blocks have length $n/4$; messages have length $\ell \lt 2^{n/4}$; $\langle x \rangle$ is the $n/4$-bit encoding of $x$.</td></tr>
+<tr><td colspan="2">Assume $n$ is a positive multiple of $4$. Blocks have length $n/4$; messages have length $0 \le \ell \lt 2^{n/4}$; $\langle x \rangle$ is the $n/4$-bit encoding of $x$.</td></tr>
 <tr><td>$\mathsf{Gen}$</td><td>same as $\mathsf{Gen}'$</td></tr>
-<tr><td>$\mathsf{Mac}$</td><td>input $k$, $m$ of length $\ell$: split $m$ into $d$ blocks $m_1, \dots, m_d$ (pad the last with zeros); choose $r \leftarrow \{0,1\}^{n/4}$; for $i = 1, \dots, d$: $t_i := \mathsf{Mac}'_k(r \,\|\, \langle \ell \rangle \,\|\, \langle i \rangle \,\|\, m_i)$; output $t := \langle r, t_1, \dots, t_d \rangle$</td></tr>
-<tr><td>$\mathsf{Vrfy}$</td><td>recompute the blocks with the given $r$; output $1$ iff $\mathsf{Vrfy}'_k(r \| \langle \ell \rangle \| \langle i \rangle \| m_i, t_i) = 1$ for all $i$ and the number of tags is $d$</td></tr>
+<tr><td>$\mathsf{Mac}$</td><td>input $k$, $m$ of length $\ell$: set $d := \max(1, \lceil \ell/(n/4) \rceil)$ and pad $m$ with zeros to $d$ blocks $m_1, \dots, m_d$ (the empty message becomes one all-zero block); choose $r \leftarrow \{0,1\}^{n/4}$; for $i = 1, \dots, d$: $t_i \leftarrow \mathsf{Mac}'_k(r \,\|\, \langle \ell \rangle \,\|\, \langle i \rangle \,\|\, m_i)$; output $t := \langle r, t_1, \dots, t_d \rangle$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>reject if $\ell \ge 2^{n/4}$, $r$ is not $n/4$ bits, or the number of tags differs from $d := \max(1, \lceil \ell/(n/4) \rceil)$. Recompute the same padded blocks; output $1$ iff $\mathsf{Vrfy}'_k(r \| \langle \ell \rangle \| \langle i \rangle \| m_i, t_i) = 1$ for every $i = 1, \dots, d$</td></tr>
 </table></div>
 <div class="env thm" id="thm-var-mac">
-<p>If $\Pi'$ is a secure fixed-length MAC for messages of length $n$, then the construction above is a secure MAC for arbitrary-length messages.</p>
+<p>If $\Pi'$ is a secure fixed-length MAC for messages of length $n$, then the construction above is a secure MAC for messages within the stated length bound, including the empty message. Every polynomial message length satisfies this bound for sufficiently large $n$.</p>
 </div>
 <div class="proof"><p>Let $\mathcal{A}$ be PPT with at most $q(n)$ queries. Define two events in $\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}$:</p>
 <ul>
@@ -925,7 +925,7 @@ $$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
 <section class="sub" id="sec-divisibility">
 <h3>Divisibility, GCD and the Euclidean Algorithm</h3>
 <div class="env def" id="def-divides" data-title="Divides">
-<p>$a$ divides $b$, written $a \mid b$, if $b = ac$ for some integer $c$. Basic rules: $a \mid b$ and $b \mid c$ imply $a \mid c$; $a \mid b$ and $a \mid c$ imply $a \mid (xb + yc)$ for all $x, y$.</p>
+<p>$a$ divides $b$, written $a \mid b$, if $b = ac$ for some integer $c$. Basic rules: $a \mid b$ and $b \mid c$ imply $a \mid c$; $a \mid b$ and $a \mid c$ imply $a \mid (xb + yc)$ for all $x, y$. If $a \mid b$ and $b \ne 0$, then $|a| \le |b|$. The condition $b \ne 0$ is essential: every integer divides $0$.</p>
 </div>
 <div class="env def" id="def-gcd" data-title="GCD, coprime">
 <p>$\gcd(a, b)$ is the largest integer dividing both $a$ and $b$ (not both $0$). $a, b$ are coprime (relatively prime) if $\gcd(a, b) = 1$.</p>
@@ -934,7 +934,7 @@ $$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
 <p>For $a \in \mathbb{Z}$ and $b \gt 0$ there are unique $q, r$ with $a = qb + r$ and $0 \le r \lt b$. We write $r = [a \bmod b]$.</p>
 </div>
 <div class="env thm" id="thm-euclid" data-title="Euclidean algorithm">
-<p>$\gcd(a, b) = \gcd(b, [a \bmod b])$ and $\gcd(a, 0) = a$. Repeating this computes $\gcd(a, b)$ in $O(\log a + \log b)$ steps. The <b>extended</b> algorithm additionally returns $x, y$ with $ax + by = \gcd(a, b)$ (Bézout).</p>
+<p>For $a \in \mathbb{Z}$ and $b \gt 0$, $\gcd(a, b) = \gcd(b, [a \bmod b])$; for $a \ne 0$, $\gcd(a, 0) = |a|$. For arbitrary integer inputs, not both zero, first take their absolute values and then repeat division by a positive divisor until the remainder is zero. This computes $\gcd(a, b)$ in $O(\log(|a|+1) + \log(|b|+1))$ division steps. The <b>extended</b> algorithm additionally returns $x, y$ with $ax + by = \gcd(a, b)$ (Bézout).</p>
 </div>
 <p class="small">Example: $\gcd(1140, 11)$: $1140 = 103 \cdot 11 + 7$, $11 = 1 \cdot 7 + 4$, $7 = 1 \cdot 4 + 3$, $4 = 1 \cdot 3 + 1$, $3 = 3 \cdot 1$. Backwards: $1 = 4 - 3 = 4 - (7 - 4) = 2 \cdot 4 - 7 = 2(11 - 7) - 7 = 2 \cdot 11 - 3 \cdot 7 = 2 \cdot 11 - 3(1140 - 103 \cdot 11) = 311 \cdot 11 - 3 \cdot 1140$.</p>
 <div class="env cor" id="cor-coprime-divides">
@@ -947,14 +947,15 @@ $$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
 
 <section class="sub" id="sec-modular">
 <h3>Modular Arithmetic</h3>
-<p>$a \equiv b \pmod N$ means $N \mid a - b$, i.e. $[a \bmod N] = [b \bmod N]$. Reduction is compatible with addition and multiplication: $[ab \bmod N] = [[a \bmod N] \cdot [b \bmod N] \bmod N]$, and similarly for $+$ and $-$. Division is not always possible:</p>
+<p>Let $N \ge 2$. Then $a \equiv b \pmod N$ means $N \mid a - b$, i.e. $[a \bmod N] = [b \bmod N]$. Indeed, if $a = sN+r$ and $b = tN+r$, then $a-b = (s-t)N$. Reduction is compatible with addition and multiplication: $[ab \bmod N] = [[a \bmod N] \cdot [b \bmod N] \bmod N]$, and similarly for $+$ and $-$. Division is not always possible:</p>
 <div class="env prop" id="prop-inverse" data-title="Inverses">
 <p>$a$ is invertible modulo $N$ (there is $b$ with $ab \equiv 1 \pmod N$) if and only if $\gcd(a, N) = 1$. The inverse $b = [a^{-1} \bmod N]$ is computed with the extended Euclidean algorithm: from $ax + Ny = 1$ we get $a x \equiv 1$.</p>
 </div>
 <p><b>Efficient exponentiation</b> (square-and-multiply): to compute $[a^e \bmod N]$, go through the bits of $e$ from the most significant one; for each bit square the current value and, if the bit is $1$, multiply by $a$. This needs at most $2 \log_2 e$ multiplications modulo $N$, so it is polynomial in the input length even for exponents with thousands of bits.</p>
 <div class="env thm" id="thm-crt1" data-title="Chinese remainder theorem">
-<p>Let $N = pq$ with $\gcd(p, q) = 1$. For all $a_p, a_q$ there is exactly one $x \in \{0, \dots, N-1\}$ with $x \equiv a_p \pmod p$ and $x \equiv a_q \pmod q$. It is computed as $x = [a_p \cdot q \cdot (q^{-1} \bmod p) + a_q \cdot p \cdot (p^{-1} \bmod q) \bmod N]$.</p>
+<p>Let $p, q \ge 2$, $N = pq$ and $\gcd(p, q) = 1$. For all $a_p, a_q$ there is exactly one $x \in \{0, \dots, N-1\}$ with $x \equiv a_p \pmod p$ and $x \equiv a_q \pmod q$. It is computed as $x = [a_p \cdot q \cdot (q^{-1} \bmod p) + a_q \cdot p \cdot (p^{-1} \bmod q) \bmod N]$. More generally, for pairwise coprime moduli $m_1, \dots, m_r \ge 2$, any prescribed residues determine exactly one solution modulo $\prod_{i=1}^r m_i$.</p>
 </div>
+<p class="small">Example: solve $x \equiv 2 \pmod{20}$, $x \equiv 3 \pmod{57}$ and $x \equiv 1 \pmod 7$. Since $1 = 20 \cdot 20 - 7 \cdot 57$, the first two congruences give $x \equiv 2(-7 \cdot 57) + 3(20 \cdot 20) = 402 \pmod{1140}$. Write $x = 402 + 1140j$. Modulo $7$ this becomes $3 + 6j \equiv 1$, so $j \equiv 2 \pmod 7$. Thus $x \equiv 2682 \pmod{7980}$.</p>
 <p>Use in RSA: instead of computing $[y^d \bmod N]$ with a full-size modulus, compute $y^{d \bmod (p-1)} \bmod p$ and $y^{d \bmod (q-1)} \bmod q$ with half-size numbers and combine them; this is about 4 times faster.</p>
 <div class="env thm" id="thm-fermat" data-title="Fermat's little theorem">
 <p>If $p$ is prime and $p \nmid a$, then $a^{p-1} \equiv 1 \pmod p$. Hence $a^p \equiv a \pmod p$ for all $a$.</p>
@@ -1012,7 +1013,7 @@ $$\mathbb{Z}_N^* = \{a \in \{1, \dots, N-1\} : \gcd(a, N) = 1\}$$
 
 <section class="sub" id="sec-factoring">
 <h3>Factoring and RSA</h3>
-<p>Multiplying two primes is easy; recovering them from the product is believed to be hard. Let $\mathsf{GenModulus}(1^n)$ be a PPT algorithm that outputs $(N, p, q)$ with $N = pq$ and $p, q$ random $n$-bit primes (except with negligible probability).</p>
+<p>Multiplying two primes is easy; recovering them from the product is believed to be hard. Let $\mathsf{GenModulus}(1^n)$ be a PPT algorithm that outputs $(N, p, q)$ with $N = pq$ and $p, q$ distinct random $n$-bit primes (except with negligible probability).</p>
 <div class="game" id="game-factor">
 <div class="gtitle">$\mathsf{Factor}_{\mathcal{A},\mathsf{GenModulus}}(n)$:</div>
 <ol>
@@ -1222,7 +1223,9 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
 <tr><td>$\mathsf{Enc}$</td><td>input $pk$, $m \in \mathbb{Z}_N^*$: $c := [m^e \bmod N]$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>input $sk$, $c$: $m := [c^d \bmod N]$</td></tr>
 </table></div>
-<p>Correctness follows from $ed \equiv 1 \pmod{\phi(N)}$ and <a class="xref" href="#thm-group-order"></a> (it even holds for all $m \in \mathbb{Z}_N$, by the CRT). The RSA assumption only says that the <i>whole</i> message of a <i>uniform</i> $m$ cannot be recovered. That is far from security:</p>
+<p>Correctness follows from $ed \equiv 1 \pmod{\phi(N)}$ and <a class="xref" href="#thm-group-order"></a> (it even holds for all $m \in \mathbb{Z}_N$, by the CRT).</p>
+<p class="small">Example using this extension to $\mathbb{Z}_N$: $p = 11$, $q = 7$ give $N = 77$ and $\phi(N) = 10 \cdot 6 = 60$. Choose $e = 13$ and $d = 37$, since $13 \cdot 37 = 481 \equiv 1 \pmod{60}$. The message $m = 42$ encrypts to $c = [42^{13} \bmod 77] = 14$ and decrypts to $[14^{37} \bmod 77] = 42$. The exponent $e = 3$ is invalid for this modulus because $\gcd(3,60) = 3$, so it has no inverse modulo $\phi(77)$.</p>
+<p>The RSA assumption only says that the <i>whole</i> message of a <i>uniform</i> $m$ cannot be recovered. That is far from security:</p>
 <ul>
   <li><b>Deterministic</b>, hence not CPA-secure; a small message space (e.g. "yes"/"no") is decrypted by encrypting all candidates.</li>
   <li><b>Small $e$ and short messages:</b> if $e = 3$ and $m \lt N^{1/3}$, then $m^3 \lt N$, so $c = m^3$ over the integers and $m = \sqrt[3]{c}$ (ordinary cube root).</li>
@@ -1337,6 +1340,15 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
 <div class="env def" id="def-owf" data-title="One-way function">
 <p>A polynomial-time computable $f : \{0,1\}^* \to \{0,1\}^*$ is one-way if for every PPT $\mathcal{A}$: $\Pr[f(\mathcal{A}(1^n, f(x))) = f(x)] \le \mathsf{negl}(n)$ for $x \leftarrow \{0,1\}^n$ (the experiment $\mathsf{Invert}_{\mathcal{A},f}$). It is a one-way <b>permutation</b> if additionally it is length-preserving and bijective on each $\{0,1\}^n$.</p>
 </div>
+<div class="game" id="game-invert">
+<div class="gtitle">$\mathsf{Invert}_{\mathcal{A},f}(n)$:</div>
+<ol>
+  <li>$x \leftarrow \{0,1\}^n$; $y := f(x)$.</li>
+  <li>$x' \leftarrow \mathcal{A}(1^n, y)$.</li>
+  <li>Output $1$ iff $f(x') = y$.</li>
+</ol>
+</div>
+<p>The adversary receives the image $y$, while the original pre-image $x$ remains hidden. Any pre-image $x'$ with $f(x') = y$ counts as a successful inversion; it need not equal $x$. For a random oracle $H$, the same experiment gives $\mathcal{A}$ oracle access to $H$ and the challenge $y = H(x)$.</p>
 <p>Candidates: $f(p, q) = pq$ (factoring), $x \mapsto g^x$ (discrete log), $x \mapsto x^e \bmod N$ (RSA), cryptographic hash functions. A random oracle is one-way.</p>
 <div class="alg" id="constr-lamport"><table>
 <tr><td colspan="2">Lamport's scheme for messages $m \in \{0,1\}^\ell$, one-way function $f$:</td></tr>
