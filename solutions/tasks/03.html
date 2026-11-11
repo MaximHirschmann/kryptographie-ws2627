@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 3</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="3">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Show that the shift, substitution, and Vigenère ciphers are all trivial to break using a known-plaintext attack. How much known plaintext is needed to completely recover the key for each of the ciphers?</p>
+  </div>
+
+  <div class="solution">
+    <h2>Attack model</h2>
+    <p>In a <b>known-plaintext attack</b>, the attacker gets pairs $(m, c)$ with $c = \mathsf{Enc}_k(m)$ but cannot choose $m$. Every cipher below encrypts letter by letter, so each pair of letters $(m_x, c_x)$ is one equation in the unknown key. The notation follows <a href="01.html">Question 1</a>.</p>
+
+    <h2>Shift cipher</h2>
+    <p>$c_0 = m_0 + k \bmod 26$, so one pair of letters is enough:</p>
+    $$k = c_0 - m_0 \bmod 26.$$
+    <div class="box result"><span class="label">Needed:</span> 1 letter of known plaintext.</div>
+
+    <h2>Mono-alphabetic substitution cipher</h2>
+    <p>Every pair gives one value of the permutation: $c_x = \pi_k(m_x)$, so $\pi_k(m_x) = c_x$ is now known. Once $\pi_k$ is known for $25$ different letters, the last value follows because $\pi_k$ is a bijection: it is the one letter that has not been used yet.</p>
+    <div class="box result"><span class="label">Needed:</span> known plaintext that contains at least $25$ <i>different</i> letters.</div>
+    <p class="note">The attacker cannot choose the text. Rare letters such as <i>q</i>, <i>x</i> or <i>z</i> may show up only after a lot of text, so the amount of plaintext needed can be much larger than 25 letters. However, even a short pair already reveals the most common letters, and these are enough to decrypt most of any ciphertext.</p>
+
+    <h2>Vigenère cipher</h2>
+    <p>With key $k = (k_0, \dots, k_{t-1})$ we have $c_x = m_x + k_{x \bmod t}$, so every pair gives one key letter:</p>
+    $$k_{x \bmod t} = c_x - m_x \bmod 26.$$
+    <p>Any $t$ consecutive letters cover every residue $x \bmod t$ once and therefore give the whole key.</p>
+    <div class="box result"><span class="label">Needed:</span> $t$ letters of known plaintext if the key length $t$ is known. If $t$ is unknown, compute $c_x - m_x$ for every position; this sequence is the key repeated. About $2t$ letters show the first repetition and therefore $t$.</div>
+
+    <h2>Summary</h2>
+    <table class="data">
+      <tr><th>Cipher</th><th>Key from one pair of letters</th><th>Known plaintext needed</th></tr>
+      <tr><td>Shift</td><td>$k = c - m$</td><td>1 letter</td></tr>
+      <tr><td>Substitution</td><td>$\pi_k(m_x) = c_x$</td><td>text with 25 different letters</td></tr>
+      <tr><td>Vigenère</td><td>$k_{x \bmod t} = c_x - m_x$</td><td>$t$ letters ($\approx 2t$ if $t$ unknown)</td></tr>
+    </table>
+    <p>In every case the attacker only has to solve one simple equation per letter, without any search or statistics. That is why these attacks are trivial.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

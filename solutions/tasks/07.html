@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 7</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="7">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Assume that we require only that an encryption scheme $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ over a message space $\mathcal{M}$ satisfies the following: for all $m \in \mathcal{M}$, the probability that $\mathsf{Dec}_k(\mathsf{Enc}_k(m)) = m$ is at least $2^{-t}$. This probability is taken over the choice of $k$ as well as any randomness that may be used during encryption and decryption. Show that perfect secrecy as in Definition 2.1 is achievable with $|\mathcal{K}| \lt |\mathcal{M}|$ when $t \ge 1$. Can you prove a lower bound?</p>
+    <p><i>Hints: define an encryption scheme that fulfills the requirements; formulate a theorem that captures precisely what you are going to prove; prove your theorem while clearly reasoning from one step to the next.</i></p>
+  </div>
+
+  <div class="solution">
+    <p class="note">Definition 2.1 is <a href="../script.html#def-ps-1">Definition 3</a> in the script: $\Pr[M = m \mid C = c] = \Pr[M = m]$ for every distribution over $\mathcal{M}$. By the script's <a href="../script.html#thm-ps-1-2">Theorems 2</a> and <a href="../script.html#thm-ps-3-2">3</a>, it is enough to show <a href="../script.html#def-ps-3">Definition 5</a>: $\Pr[C = c \mid M = m_0] = \Pr[C = c \mid M = m_1]$.</p>
+
+    <h2>Idea</h2>
+    <p>Encrypt only the first $\ell - t$ bits of the message with a one-time pad and throw the last $t$ bits away. The receiver guesses the missing $t$ bits and is right with probability exactly $2^{-t}$. The key only has to cover $\ell - t$ bits, so it is shorter than the message.</p>
+
+    <h2>Part 1: A scheme with $|\mathcal{K}| \lt |\mathcal{M}|$</h2>
+    <p>Let $\mathcal{M} = \{0,1\}^\ell$ with $\ell \gt t$. For $m \in \mathcal{M}$, write $m = m' \,\|\, m''$ with $m' \in \{0,1\}^{\ell - t}$ and $m'' \in \{0,1\}^t$. Let $\mathcal{K} = \mathcal{C} = \{0,1\}^{\ell - t}$.</p>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td><span class="line">$k \leftarrow \{0,1\}^{\ell - t}$ uniformly; output $k$</span></td></tr>
+      <tr><td>Enc</td><td>
+        <span class="line">input $k \in \mathcal{K}$, $m = m' \| m'' \in \mathcal{M}$</span>
+        <span class="line">output $c := m' \oplus k$</span>
+      </td></tr>
+      <tr><td>Dec</td><td>
+        <span class="line">input $k \in \mathcal{K}$, $c \in \mathcal{C}$</span>
+        <span class="line">$r \leftarrow \{0,1\}^t$ uniformly</span>
+        <span class="line">output $(c \oplus k) \,\|\, r$</span>
+      </td></tr>
+    </table></div>
+
+    <div class="box claim"><span class="label">Theorem.</span> Let $t \ge 1$ and $\ell \gt t$. The scheme above satisfies
+      <ol>
+        <li>$\Pr[\mathsf{Dec}_K(\mathsf{Enc}_K(m)) = m] = 2^{-t}$ for all $m \in \mathcal{M}$,</li>
+        <li>perfect secrecy (Definition 2.1),</li>
+        <li>$|\mathcal{K}| = 2^{\ell - t} \lt 2^\ell = |\mathcal{M}|$.</li>
+      </ol>
+    </div>
+
+    <h3>Proof</h3>
+    <p><b>1. Decryption probability.</b> $\mathsf{Dec}_k(\mathsf{Enc}_k(m)) = (m' \oplus k \oplus k) \,\|\, r = m' \,\|\, r$. This equals $m$ if and only if $r = m''$. The string $r$ is uniform over $\{0,1\}^t$, so</p>
+    $$\Pr[\mathsf{Dec}_K(\mathsf{Enc}_K(m)) = m] = \Pr[r = m''] = 2^{-t}.$$
+
+    <p><b>2. Perfect secrecy.</b> Fix any distribution over $\mathcal{M}$, a message $m = m' \| m''$ and a ciphertext $c$. $K$ is independent of $M$ and uniform, so, as for the one-time pad (script <a href="../script.html#thm-otp">Theorem 5</a>):</p>
+    $$\Pr[C = c \mid M = m] = \Pr[m' \oplus K = c] = \Pr[K = m' \oplus c] = 2^{-(\ell - t)}.$$
+    <p>This value does not depend on $m$. So $\Pr[C = c \mid M = m_0] = \Pr[C = c \mid M = m_1]$ for all $m_0, m_1, c$. That is the script's <a href="../script.html#def-ps-3">Definition 5</a>, which is equivalent to Definition 2.1.</p>
+
+    <p><b>3. Key size.</b> $|\mathcal{K}| = 2^{\ell-t} \lt 2^\ell = |\mathcal{M}|$, because $t \ge 1$. <span class="qed">$\blacksquare$</span></p>
+
+    <p class="note">If $t \ge \ell$, a single key suffices: $\mathsf{Enc}$ outputs a constant and $\mathsf{Dec}$ outputs a uniformly random message. That succeeds with probability $2^{-\ell} \ge 2^{-t}$ and is trivially perfectly secret.</p>
+
+    <h2>Part 2: Lower bound</h2>
+    <div class="box claim"><span class="label">Theorem.</span> Let $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ be perfectly secret over a finite $\mathcal{M}$, and suppose $\Pr[\mathsf{Dec}_K(\mathsf{Enc}_K(m)) = m] \ge 2^{-t}$ for all $m$. Then
+      $$|\mathcal{K}| \ \ge\ 2^{-t} \cdot |\mathcal{M}|.$$
+      The scheme from Part 1 meets this bound with equality, so the bound is tight.
+    </div>
+
+    <h3>Proof</h3>
+    <p>Let $M$ be uniform over $\mathcal{M}$. Each single message decrypts correctly with probability at least $2^{-t}$, so the average does too:</p>
+    $$2^{-t} \le \Pr[\mathsf{Dec}_K(C) = M] = \sum_{k \in \mathcal{K}} \sum_{c \in \mathcal{C}} \Pr[K = k \wedge C = c \wedge \mathsf{Dec}_k(c) = M].$$
+    <p>Split each summand by the value of $M$. The random coins of $\mathsf{Dec}$ are independent of $K$, $M$ and $C$, so</p>
+    $$
+    \begin{aligned}
+    \Pr[K = k \wedge C = c \wedge \mathsf{Dec}_k(c) = M]
+    &= \sum_{m \in \mathcal{M}} \Pr[K = k \wedge C = c \wedge M = m] \cdot \Pr[\mathsf{Dec}_k(c) = m] \\
+    &\overset{(a)}{\le} \sum_{m \in \mathcal{M}} \Pr[C = c \wedge M = m] \cdot \Pr[\mathsf{Dec}_k(c) = m] \\
+    &\overset{(b)}{=} \sum_{m \in \mathcal{M}} \Pr[C = c] \cdot \frac{1}{|\mathcal{M}|} \cdot \Pr[\mathsf{Dec}_k(c) = m] \\
+    &\overset{(c)}{=} \frac{\Pr[C = c]}{|\mathcal{M}|}.
+    \end{aligned}
+    $$
+    <ol type="a">
+      <li>Dropping the event $K = k$ can only increase the probability.</li>
+      <li>Perfect secrecy: $M$ and $C$ are independent, and $\Pr[M = m] = \frac{1}{|\mathcal{M}|}$.</li>
+      <li>$\sum_m \Pr[\mathsf{Dec}_k(c) = m] = 1$, because $\mathsf{Dec}_k(c)$ outputs exactly one message.</li>
+    </ol>
+    <p>Putting this back in:</p>
+    $$2^{-t} \le \sum_{k \in \mathcal{K}} \sum_{c \in \mathcal{C}} \frac{\Pr[C = c]}{|\mathcal{M}|} = \sum_{k \in \mathcal{K}} \frac{1}{|\mathcal{M}|} = \frac{|\mathcal{K}|}{|\mathcal{M}|}.$$
+    <p>Multiplying by $|\mathcal{M}|$ gives $|\mathcal{K}| \ge 2^{-t} |\mathcal{M}|$. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Summary.</span> If decryption only has to succeed with probability $2^{-t}$, the key space can shrink by a factor of exactly $2^t$, but no more: $|\mathcal{K}| \ge 2^{-t}|\mathcal{M}|$. For $t = 0$ this is the usual bound $|\mathcal{K}| \ge |\mathcal{M}|$ (script <a href="../script.html#thm-key-length">Theorem 6</a>).</div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

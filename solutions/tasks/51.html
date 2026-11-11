@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 51</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="51">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Show that for any CPA-secure public-key encryption scheme, the size of the ciphertext after encrypting a single bit is superlogarithmic in the security parameter. That is, for $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ it must hold that $|\mathsf{Enc}_{pk}(b)| = \omega(\log n)$ for any $b \in \{0,1\}$.</p>
+    <p><i>Hint: If not then the range of possible ciphertexts is only polynomial in size.</i></p>
+  </div>
+
+  <div class="solution">
+    <h2>Proof (contrapositive)</h2>
+    <p>Suppose ciphertexts of single bits have length at most $c \log n$ for some constant $c$ (for infinitely many $n$). Then there are at most</p>
+    $$N := 2^{c \log n + 1} = 2n^c$$
+    <p>possible ciphertexts, which is <b>polynomially many</b>. Since $pk$ is public, the attacker can produce encryptions of $0$ itself and check whether the challenge "looks like" one of them.</p>
+
+    <h3>Adversary</h3>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{A}(pk)$</td><td>
+        <span class="line">output $m_0 = 0$, $m_1 = 1$; receive the challenge $c^*$</span>
+        <span class="line">compute one fresh encryption $c_0 \leftarrow \mathsf{Enc}_{pk}(0)$</span>
+        <span class="line">if $c^* = c_0$ output $0$, else output $1$</span>
+      </td></tr>
+    </table></div>
+
+    <h3>Analysis</h3>
+    <p>Let $p_c := \Pr[\mathsf{Enc}_{pk}(0) = c]$ for each of the at most $N$ possible ciphertexts $c$.</p>
+    <ul>
+      <li><b>$b = 0$:</b> $c^*$ and $c_0$ are independent samples from the same distribution. By the Cauchy–Schwarz inequality,
+      $$\Pr[c^* = c_0] = \sum_c p_c^2 \ \ge\ \frac{\big(\sum_c p_c\big)^2}{N} = \frac{1}{N}.$$</li>
+      <li><b>$b = 1$:</b> by correctness, an encryption of $1$ is never equal to an encryption of $0$, because it would decrypt to two different bits. So $c^* \ne c_0$ and $\mathcal{A}$ outputs $1$, which is correct.</li>
+    </ul>
+    $$\Pr[\mathsf{PubK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] \ \ge\ \tfrac12 \cdot \frac1N + \tfrac12 \cdot 1 = \tfrac12 + \frac{1}{4n^c}.$$
+    <p>This advantage is an inverse polynomial, hence not negligible, so $\Pi$ is not CPA-secure. By contraposition, a CPA-secure scheme has $|\mathsf{Enc}_{pk}(b)| = \omega(\log n)$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The attack needs no oracle at all; $pk$ is enough. This is the public-key analogue of <a href="30.html">Question 30</a>: with only polynomially many possible values, the attacker can "hit" the right one with noticeable probability. If decryption errors are allowed, the case $b = 1$ loses only a negligible amount.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

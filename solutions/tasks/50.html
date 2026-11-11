@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 50</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="50">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Agree or disagree with the following statement: if a public-key encryption scheme $\Pi$ has indistinguishable encryptions in the presence of an eavesdropper then $\Pi$ also has indistinguishable encryptions under a chosen-plaintext attack. Justify your answer.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box result"><span class="label">Answer.</span> <b>Agree.</b> In the public-key setting the adversary knows $pk$, so it can encrypt any message itself. The encryption oracle of the CPA game gives it nothing new.</div>
+
+    <h2>Justification</h2>
+    <p>Let $\mathcal{A}$ be a PPT adversary in $\mathsf{PubK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}$, with oracle access to $\mathsf{Enc}_{pk}(\cdot)$. Build $\mathcal{A}'$ for $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}',\Pi}$:</p>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{A}'(pk)$</td><td>
+        <span class="line">run $\mathcal{A}(pk)$</span>
+        <span class="line">whenever $\mathcal{A}$ queries its oracle on $m$: compute $c \leftarrow \mathsf{Enc}_{pk}(m)$ <b>itself</b> and return $c$</span>
+        <span class="line">forward $\mathcal{A}$'s challenge messages $m_0, m_1$, and the challenge ciphertext back to $\mathcal{A}$</span>
+        <span class="line">output $\mathcal{A}$'s guess</span>
+      </td></tr>
+    </table></div>
+    <p>$\mathsf{Enc}$ is public and PPT, so $\mathcal{A}'$ is PPT. The self-computed answers have exactly the distribution of real oracle answers. So $\mathcal{A}$'s view is identical in both games, and</p>
+    $$\Pr[\mathsf{PubK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] = \Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}',\Pi}(n) = 1] \le \tfrac12 + \mathsf{negl}(n). \qquad \blacksquare$$
+    <p class="note">This differs from the private-key setting, where an EAV-secure scheme need not be CPA-secure (e.g. $m \oplus F_k(0^n)$, <a href="20.html">Question 20</a>). A consequence is that a deterministic public-key scheme, such as textbook RSA, cannot even be EAV-secure: the adversary just encrypts $m_0$ itself and compares.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

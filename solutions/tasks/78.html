@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 78</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="78">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $N = pq$ for distinct primes $p, q$ and $ed \equiv 1 \pmod{\phi(N)}$. The book shows $(x^e)^d \equiv x \pmod N$ for $x \in \mathbb{Z}_N^*$. Show that this holds for <b>all</b> $x \in \mathbb{Z}_N$, including those with $\gcd(x, N) \ne 1$.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 7.10 (restated). Hint: Chinese remainder theorem.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Setup</h2>
+    <p>$ed \equiv 1 \pmod{\phi(N)}$ and $\phi(N) = (p-1)(q-1)$, so</p>
+    $$ed = 1 + t(p-1)(q-1) \quad \text{for some integer } t \ge 0.$$
+    <p>By the Chinese remainder theorem, $a \equiv b \pmod N$ iff $a \equiv b \pmod p$ and $a \equiv b \pmod q$. So it suffices to show $x^{ed} \equiv x$ modulo $p$ and modulo $q$.</p>
+
+    <h2>Modulo $p$</h2>
+    <p><b>Case $p \mid x$:</b> then $x \equiv 0$ and $x^{ed} \equiv 0 \pmod p$ (since $ed \ge 1$). Both sides are $0$.</p>
+    <p><b>Case $p \nmid x$:</b> by Fermat's little theorem $x^{p-1} \equiv 1 \pmod p$, so</p>
+    $$x^{ed} = x \cdot \left(x^{p-1}\right)^{t(q-1)} \equiv x \cdot 1 = x \pmod p.$$
+
+    <h2>Modulo $q$</h2>
+    <p>The same argument with the roles of $p$ and $q$ swapped (using $x^{q-1} \equiv 1 \pmod q$ when $q \nmid x$) gives $x^{ed} \equiv x \pmod q$.</p>
+
+    <h2>Combine</h2>
+    <p>$x^{ed} - x$ is divisible by $p$ and by $q$, and $p \ne q$ are primes, so it is divisible by $pq = N$:</p>
+    $$(x^e)^d = x^{ed} \equiv x \pmod N \quad \text{for all } x \in \mathbb{Z}_N. \quad \blacksquare$$
+
+    <div class="box result"><span class="label">Result.</span> RSA decryption is correct for every $x \in \mathbb{Z}_N$. Elements not in $\mathbb{Z}_N^*$ are $0$ modulo one of the primes, where the equation holds trivially. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">Such $x$ are irrelevant in practice anyway: an $x$ with $\gcd(x, N) \notin \{1, N\}$ reveals a factor of $N$ via $\gcd(x, N)$, and a random $x$ is one with probability $\frac{p + q - 1}{N}$, which is negligible. The argument needs $N$ to be squarefree; it fails for $N = p^2$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

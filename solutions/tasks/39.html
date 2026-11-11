@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 39</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="39">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Show that DES has the property that $\mathrm{DES}_K(x) = \overline{\mathrm{DES}_{\overline K}(\overline x)}$ for every key $k$ and input $x$ (where $\overline z$ denotes the bitwise complement of $z$). This is called the <i>complementarity property</i> of DES. The illustrations on the sheet show the Feistel structure, the round function (expansion, XOR with the 48-bit subkey, S-boxes 1–8, permutation) and the key schedule (PC-1, left rotations, PC-2).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Two XOR rules</h2>
+    $$\overline a \oplus \overline b = a \oplus b, \qquad \overline a \oplus b = \overline{a \oplus b}.$$
+    <p>Also, any <b>bit permutation or bit selection</b> $\sigma$ (which may repeat or drop bits) commutes with complementing: $\sigma(\overline z) = \overline{\sigma(z)}$. Each output bit is just some input bit, and that bit gets flipped.</p>
+
+    <h2>Step 1: Key schedule</h2>
+    <p>PC-1, the left rotations and PC-2 are all bit selections or permutations. So complementing the key complements every round key:</p>
+    $$K \mapsto \overline K \quad \Longrightarrow \quad k_i \mapsto \overline{k_i} \quad (i = 1, \dots, 16).$$
+
+    <h2>Step 2: Round function</h2>
+    <p>$f(R, k) = P\big(S(E(R) \oplus k)\big)$, with $E$ the expansion (a bit selection) and $P$ a permutation. Then</p>
+    $$E(\overline R) \oplus \overline k = \overline{E(R)} \oplus \overline k = E(R) \oplus k,$$
+    <p>so the S-boxes get <b>exactly the same input</b>:</p>
+    $$f(\overline R, \overline k) = f(R, k).$$
+
+    <h2>Step 3: Induction over the rounds</h2>
+    <p>The initial permutation $IP$ is a bit permutation, so $IP(\overline x) = \overline{IP(x)}$, and the computation for $(\overline x, \overline K)$ starts with $(\overline{L_0}, \overline{R_0})$. Suppose that after round $i - 1$ it holds $(\overline{L_{i-1}}, \overline{R_{i-1}})$. Then</p>
+    $$L'_i = \overline{R_{i-1}} = \overline{L_i}, \qquad R'_i = \overline{L_{i-1}} \oplus f(\overline{R_{i-1}}, \overline{k_i}) = \overline{L_{i-1}} \oplus f(R_{i-1}, k_i) = \overline{L_{i-1} \oplus f(R_{i-1}, k_i)} = \overline{R_i}.$$
+    <p>So every intermediate state is complemented, including the final one. The final swap and $IP^{-1}$ are bit permutations as well, so</p>
+    $$\mathrm{DES}_{\overline K}(\overline x) = \overline{\mathrm{DES}_K(x)} \quad \Longleftrightarrow \quad \mathrm{DES}_K(x) = \overline{\mathrm{DES}_{\overline K}(\overline x)}. \qquad \blacksquare$$
+    <p class="note">The only non-linear part, the S-boxes, never sees the complement, because the complements of the key and of the data cancel in the XOR just before it. <a href="40.html">Question 40</a> uses this to halve the cost of an exhaustive key search.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

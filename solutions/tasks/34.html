@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 34</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="34">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Consider the following fixed-length MAC for messages of length $\ell(n) = 2n - 2$ using a pseudorandom function $F$: On input a message $m_0 \| m_1$ with $|m_0| = |m_1| = n - 1$ and key $k \in \{0,1\}^n$, algorithm $\mathsf{Mac}$ outputs $t = F_k(0 \| m_0) \,\|\, F_k(1 \| m_1)$. Algorithm $\mathsf{Vrfy}$ is defined in the natural way. Is $(\mathsf{Gen}, \mathsf{Mac}, \mathsf{Vrfy})$ existentially unforgeable under a chosen-message attack? Prove your answer.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box result"><span class="label">Answer.</span> <b>No.</b> The two halves are authenticated <i>independently</i>, so halves from different messages can be combined ("mix and match").</div>
+
+    <h2>Attack</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Query $m_0 \| m_1$ and receive $t = F_k(0 \| m_0) \,\|\, F_k(1 \| m_1) =: t_0 \| t_1$.</td></tr>
+      <tr><td>2.</td><td>Query $m'_0 \| m'_1$ with $m'_0 \ne m_0$ and $m'_1 \ne m_1$, and receive $t'_0 \| t'_1$.</td></tr>
+      <tr><td>3.</td><td>Output the forgery $(m_0 \| m'_1,\ t_0 \| t'_1)$.</td></tr>
+    </table></div>
+
+    <h2>Why it works</h2>
+    <p>$\mathsf{Mac}_k(m_0 \| m'_1) = F_k(0 \| m_0) \,\|\, F_k(1 \| m'_1) = t_0 \| t'_1$, so the tag is valid. The message $m_0 \| m'_1$ differs from both queried messages: from the first in the second half, and from the second in the first half. So it is a new message, and the forgery succeeds with probability $1$:</p>
+    $$\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n) = 1] = 1. \qquad \blacksquare$$
+    <p class="note">The prefixes $0$/$1$ only prevent swapping the two halves of one message. They do not bind the halves together. A secure fix is to MAC the whole message with one PRF call, $F_k(m_0 \| m_1)$, or to use CBC-MAC.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

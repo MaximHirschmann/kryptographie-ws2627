@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 63</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="63">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>For $g : \{0,1\}^n \to \{0,1\}^n$, let $g^{\$}$ be an oracle that on each call picks a fresh uniform $r \in \{0,1\}^n$ and returns $(r, g(r))$. A keyed function $F$ is a <b>weak PRF</b> if every PPT $D$ distinguishes $F_k^{\$}$ from $f^{\$}$ (for random $f \in \mathsf{Func}_n$) with at most negligible advantage. In short: $F$ only has to look random on <i>random</i> inputs.</p>
+    <ol type="a">
+      <li>Show that every PRF is a weak PRF.</li>
+      <li>For a PRF $F'$ let $F_k(x) = F'_k(x)$ if $x$ is even and $F_k(x) = F'_k(x+1)$ if $x$ is odd. Show that $F$ is a weak PRF but not a PRF.</li>
+      <li>Is counter mode with a weak PRF necessarily CPA-secure? Does it necessarily have indistinguishable encryptions for an eavesdropper?</li>
+      <li>Construct a CPA-secure encryption scheme from a weak PRF.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 3.20 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) PRF ⇒ weak PRF</h2>
+    <p>Let $D$ be a distinguisher for the weak game. Build $D'$ with an ordinary oracle $O$: whenever $D$ asks its oracle, $D'$ picks $r \leftarrow \{0,1\}^n$, queries $O(r)$ and returns $(r, O(r))$. Finally $D'$ outputs what $D$ outputs.</p>
+    <p>If $O = F_k$, $D$ sees exactly $F_k^{\$}$; if $O = f$, exactly $f^{\$}$. So $D'$ has the same advantage as $D$, which is negligible because $F$ is a PRF. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(b) Weak PRF but not PRF</h2>
+    <p>Write $\varphi(x) = x$ for even $x$ and $\varphi(x) = x + 1 \bmod 2^n$ for odd $x$, so $F_k(x) = F'_k(\varphi(x))$. Note $\varphi(2j+1) = 2j+2 = \varphi(2j+2)$.</p>
+    <p><b>Not a PRF.</b> Query $1$ and $2$: $F_k(1) = F'_k(2) = F_k(2)$ always, while a random function gives equal values with probability $2^{-n}$. Advantage $1 - 2^{-n}$.</p>
+    <p><b>Weak PRF.</b> Let $D$ make $q$ oracle calls with random points $r_1, \dots, r_q$. Compare three worlds:</p>
+    <ul>
+      <li>$W_1$: answers $(r_i, F'_k(\varphi(r_i)))$, i.e. $F_k^{\$}$.</li>
+      <li>$W_2$: answers $(r_i, f(\varphi(r_i)))$ for a random function $f$.</li>
+      <li>$W_3$: answers $(r_i, f(r_i))$, i.e. $f^{\$}$.</li>
+    </ul>
+    <p><b>$W_1 \approx W_2$:</b> a distinguisher $D_1$ with oracle $O$ picks $r_i$ itself and answers $(r_i, O(\varphi(r_i)))$. With $O = F'_k$ this is $W_1$, with $O = f$ it is $W_2$. By pseudorandomness of $F'$ the difference is negligible.</p>
+    <p><b>$W_2 \approx W_3$:</b> let $\mathsf{Coll}$ be the event that two of the $\varphi(r_i)$ are equal (which includes $r_i = r_j$). If $\mathsf{Coll}$ does not happen, the values $\varphi(r_i)$ are distinct and the $r_i$ are distinct, so in both worlds the answers are independent uniform strings, and the $r_i$ have the same distribution. The two worlds differ by at most $\Pr[\mathsf{Coll}]$. Every value of $\varphi$ has at most 2 preimages, so $\Pr[\varphi(r_i) = \varphi(r_j)] \le 2/2^n$ and by the union bound $\Pr[\mathsf{Coll}] \le q^2/2^n$.</p>
+    <p>In total the advantage is at most $\mathsf{negl}(n) + q^2/2^n$, which is negligible. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(c) Counter mode with a weak PRF</h2>
+    <p>Counter mode: $\mathsf{Enc}_k(m_1 \cdots m_\ell) = \langle \mathit{ctr}, c_1, \dots, c_\ell \rangle$ with $\mathit{ctr} \leftarrow \{0,1\}^n$ and $c_i = F_k(\mathit{ctr} + i) \oplus m_i$.</p>
+    <p><b>No, not even EAV-secure</b> (and therefore not CPA-secure). Use the weak PRF $F$ from (b). If $\mathit{ctr}$ is even, then $\mathit{ctr}+1$ is odd and $F_k(\mathit{ctr}+1) = F'_k(\mathit{ctr}+2) = F_k(\mathit{ctr}+2)$: the first two pads are equal.</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Output $m_0 = 0^n \| 0^n$ and $m_1 = 0^n \| 1^n$.</td></tr>
+      <tr><td>2.</td><td>Receive $\langle \mathit{ctr}, c_1, c_2\rangle$. If $\mathit{ctr}$ is even: output $0$ if $c_1 \oplus c_2 = 0^n$ and $1$ otherwise. If $\mathit{ctr}$ is odd: guess.</td></tr>
+    </table></div>
+    <p>For even $\mathit{ctr}$, $c_1 \oplus c_2 = m_{b,1} \oplus m_{b,2}$, which is $0^n$ for $b = 0$ and $1^n$ for $b = 1$, so the guess is always right. Success probability $\frac12 \cdot 1 + \frac12 \cdot \frac12 = \frac34$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The problem is that counter mode evaluates $F_k$ at related, non-random inputs $\mathit{ctr}+1, \mathit{ctr}+2, \dots$, and a weak PRF guarantees nothing there. For one-block messages, counter mode only uses the random point $\mathit{ctr}+1$ and is secure.</p>
+
+    <h2>(d) CPA security from a weak PRF</h2>
+    <p>Use the randomized construction from the lecture, which only evaluates $F_k$ at uniformly random points:</p>
+    $$\mathsf{Enc}_k(m) = \langle r, F_k(r) \oplus m \rangle,\ r \leftarrow \{0,1\}^n, \qquad \mathsf{Dec}_k(\langle r, s \rangle) = F_k(r) \oplus s.$$
+    <p><b>Proof.</b> Let $\mathcal{A}$ be a CPA adversary making $q$ encryption queries. Build $D$ with oracle $g^{\$}$: for each encryption query $m$ of $\mathcal{A}$, get a fresh pair $(r, y) \leftarrow g^{\$}$ and answer $\langle r, y \oplus m \rangle$. For the challenge, choose $b$, get a fresh $(r^*, y^*)$ and answer $\langle r^*, y^* \oplus m_b \rangle$. Output $1$ iff $\mathcal{A}$ guesses $b$.</p>
+    <ul>
+      <li>With $g = F_k$: this is exactly $\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}$.</li>
+      <li>With $g = f$ random: unless $r^*$ equals one of the $q$ other random points (probability $\le q/2^n$), $y^* = f(r^*)$ is a fresh uniform pad and $\mathcal{A}$ wins with probability exactly $\frac12$.</li>
+    </ul>
+    <p>Hence $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] \le \frac12 + \frac{q}{2^n} + \mathsf{negl}(n)$. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> (a) Yes. (b) Pairing odd inputs with the next even one keeps random-input outputs random, but two chosen inputs expose the pairing. (c) No: counter mode can be broken even by an eavesdropper. (d) $\langle r, F_k(r) \oplus m\rangle$ is CPA-secure, because it only ever uses $F_k$ at random points. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

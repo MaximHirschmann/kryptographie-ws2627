@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 48</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="48">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>The natural way of applying hybrid encryption to the El Gamal encryption scheme is as follows. The public key is $pk = \langle \mathbb{G}, q, g, h \rangle$ as in the El Gamal scheme, and to encrypt a message $m$ the sender chooses random $k \leftarrow \{0,1\}^n$ and sends</p>
+    $$\langle g^r,\ h^r \cdot k,\ \mathsf{Enc}_k(m) \rangle,$$
+    <p>where $r \leftarrow \mathbb{Z}_q$ is chosen at random and $\mathsf{Enc}$ represents a private-key encryption scheme. Suggest an improvement that results in a shorter ciphertext containing only a single group element followed by a private-key encryption of m.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Observation</h2>
+    <p>In ElGamal, $h^r = g^{xr}$ is already a fresh Diffie–Hellman value that only the sender and the receiver can compute. There is no need to choose $k$ separately and transport it with $h^r \cdot k$. We can <b>derive the key from $h^r$</b> directly. This is the key-encapsulation (KEM) approach.</p>
+
+    <h2>Improved scheme (DHIES / ECIES)</h2>
+    <p>Let $H : \mathbb{G} \to \{0,1\}^n$ be a key-derivation function, e.g. a hash function modelled as a random oracle, or a randomness extractor.</p>
+    <div class="algo"><table>
+      <tr><td>Enc</td><td>$r \leftarrow \mathbb{Z}_q$; &nbsp; $k := H(h^r)$; &nbsp; output $\langle g^r,\ \mathsf{Enc}_k(m) \rangle$</td></tr>
+      <tr><td>Dec</td><td>input $x$ and $\langle c_1, c_2 \rangle$: &nbsp; $k := H(c_1^{\,x})$; &nbsp; output $\mathsf{Dec}_k(c_2)$</td></tr>
+    </table></div>
+    <p><b>Correctness:</b> $c_1^{\,x} = g^{rx} = (g^x)^r = h^r$, so both sides derive the same $k$.</p>
+    <p><b>Shorter:</b> the ciphertext contains <b>one</b> group element $g^r$ instead of two, followed by the private-key encryption.</p>
+
+    <p class="note">The lecture uses the same idea in the random-oracle model ("Public-Key Encryption in the RO Model", Mitschrift 16.2): $c_1 := [r^e \bmod N]$, $c_2 := H(r) \oplus m$. The key is derived from the encapsulated value by $H$, and nothing else is transported.</p>
+
+    <h2>Why it is secure (sketch)</h2>
+    <p>$(g, h = g^x, g^r)$ is a Diffie–Hellman transcript. Under DDH, $h^r$ looks like a uniform group element. $H$ turns it into a (pseudo)random $n$-bit key $k$, either as a random oracle under CDH or as an extractor under DDH. Then the hybrid argument goes through as for Construction 10.12 (<a href="49.html">Question 49</a>): $\langle g^r, \mathsf{Enc}_k(m) \rangle$ is indistinguishable from $\langle g^r, \mathsf{Enc}_{k'}(m) \rangle$ for an independent uniform $k'$, and the latter hides $m$ by the security of the private-key scheme.</p>
+    <p class="note">We need $H$: $h^r$ itself is a <i>group element</i>, not a uniform bit string, and its encoding might have structure. The KDF turns it into a uniform symmetric key.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 97</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="97">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Three users have RSA public keys $\langle N_1, 3\rangle$, $\langle N_2, 3\rangle$, $\langle N_3, 3\rangle$ with $N_1 \lt N_2 \lt N_3$. To send the same $m$ to all three, the sender picks one $r \leftarrow \mathbb{Z}_{N_1}$ and broadcasts</p>
+    $$\big\langle\, [r^3 \bmod N_1],\ [r^3 \bmod N_2],\ [r^3 \bmod N_3],\ H(r) \oplus m \,\big\rangle.$$
+    <ol type="a">
+      <li>Show that an adversary can recover $m$, even if $H$ is a random oracle.</li>
+      <li>Fix the scheme to get CPA security with ciphertext length $3|m| + O(n)$.</li>
+      <li>Do better: CPA security with ciphertext length $|m| + O(n)$.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 13.6 (restated). This is Håstad's broadcast attack.</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) Attack via the CRT</h2>
+    <p>Let $c_i = r^3 \bmod N_i$. If two moduli share a factor, $\gcd(N_i, N_j)$ factors both and the attacker can decrypt directly. So assume the $N_i$ are pairwise coprime.</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Use the CRT to find the unique $R \in \mathbb{Z}_{N_1N_2N_3}$ with $R \equiv c_i \pmod{N_i}$ for $i = 1,2,3$.</td></tr>
+      <tr><td>2.</td><td>Since $r \lt N_1 \lt N_2 \lt N_3$, we have $r^3 \lt N_1 N_2 N_3$, so $R = r^3$ <b>as an integer</b>, with no modular reduction.</td></tr>
+      <tr><td>3.</td><td>Compute the ordinary integer cube root $r = \sqrt[3]{R}$ (binary search, polynomial time).</td></tr>
+      <tr><td>4.</td><td>Query $H(r)$ and output $m = H(r) \oplus c_4$.</td></tr>
+    </table></div>
+    <p>The random oracle does not help: the security proof assumes $r$ stays hidden, but here $r$ is recovered completely without ever inverting RSA. The problem is that the <b>same</b> $r$ is encrypted under three moduli with the small exponent $e = 3$. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(b) Independent randomness per recipient: $3|m| + O(n)$</h2>
+    <p>Encrypt separately for each recipient with fresh randomness $r_i \leftarrow \mathbb{Z}_{N_i}$:</p>
+    $$\big\langle\, r_1^3 \bmod N_1,\ H(r_1) \oplus m,\ \ r_2^3 \bmod N_2,\ H(r_2) \oplus m,\ \ r_3^3 \bmod N_3,\ H(r_3) \oplus m \,\big\rangle.$$
+    <p>Each part is the RSA scheme from <a href="96.html">Question 96</a>, which is CPA-secure in the random oracle model under the RSA assumption. Three independent encryptions under independent keys remain CPA-secure by a hybrid argument (replace $m_0$ by $m_1$ in one part at a time). Length: $3 \cdot (\|N\| + |m|) = 3|m| + O(n)$, with $\|N_i\| = O(n)$.</p>
+
+    <h2>(c) Hybrid encryption: $|m| + O(n)$</h2>
+    <p>Encrypt the message only once, under a fresh short key, and send that key to everyone:</p>
+    $$k \leftarrow \{0,1\}^n, \qquad \big\langle\, r_i^3 \bmod N_i,\ H(r_i) \oplus k \,\big\rangle_{i = 1,2,3},\ \ G(k) \oplus m,$$
+    <p>with independent $r_i \leftarrow \mathbb{Z}_{N_i}$, $H$ with $n$-bit output, and a second random oracle $G$ with $|m|$-bit output. (Equivalently, the last part can be $\mathsf{Enc}'_k(m)$ for any EAV-secure private-key scheme.)</p>
+    <ul>
+      <li><b>Length:</b> $3(\|N\| + n) + |m| = |m| + O(n)$.</li>
+      <li><b>Security sketch:</b> unless the adversary queries $H$ at some $r_i$ (which requires inverting RSA for a uniform $r_i$, so negligible), the three values $H(r_i) \oplus k$ are one-time pads and $k$ stays uniform. Unless the adversary then queries $G(k)$ (probability $\le q_G/2^n$), $G(k) \oplus m$ is a one-time pad of $m$. So the advantage is negligible.</li>
+    </ul>
+
+    <div class="box result"><span class="label">Result.</span> (a) The same $r$ with $e = 3$ under three moduli gives $r^3$ over the integers via the CRT, and an integer cube root reveals $r$. (b) Fresh $r_i$ per recipient fixes it at cost $3|m|$. (c) Hybrid encryption sends the long message once: encrypt a short key $k$ three times and $m$ once under $k$. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">The lesson for practice: never encrypt the same (or related) values with small $e$ under several keys. Randomized padding or hybrid encryption with independent randomness per recipient is required.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

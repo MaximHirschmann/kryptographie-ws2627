@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 73</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="73">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Two-key triple encryption: for a block cipher $F$ with $n$-bit blocks and $n$-bit keys, let $F_{k_1,k_2}(x) = F_{k_1}(F^{-1}_{k_2}(F_{k_1}(x)))$.</p>
+    <ol type="a">
+      <li>Assume that, given $(m_1, m_2)$, all keys $k_2$ with $m_2 = F^{-1}_{k_2}(m_1)$ can be found in constant time. Show how to recover the whole key in about $2^n$ time from three known input/output pairs.</li>
+      <li>In general this is not possible in constant time. Show that after a $2^n$-time preprocessing step, all $k_2$ with $m_2 = F^{-1}_{k_2}(0^n)$ can be found in (essentially) constant time for any given $m_2$.</li>
+      <li>Assume $k_1$ is known and the preprocessing is done. Show how one encryption of a chosen input gives $k_2$ in constant time.</li>
+      <li>Combine everything into an attack that runs in about $2^n$ time and uses about $2^n$ chosen plaintexts.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 5.12 (restated). This is the Merkle–Hellman attack.</p>
+  </div>
+
+  <div class="solution">
+    <p>Throughout, write the middle value as $F^{-1}_{k_2}(a) = b$, where $a = F_{k_1}(x)$ and $b = F^{-1}_{k_1}(y)$ for a pair $y = F_{k_1,k_2}(x)$.</p>
+
+    <h2>(a) With the magic oracle</h2>
+    <div class="algo"><table>
+      <tr><td>For each</td><td>$k_1 \in \{0,1\}^n$:</td></tr>
+      <tr><td>1.</td><td>Using pair 1 $(x_1, y_1)$: compute $a = F_{k_1}(x_1)$ and $b = F^{-1}_{k_1}(y_1)$.</td></tr>
+      <tr><td>2.</td><td>Use the oracle to get all $k_2$ with $F^{-1}_{k_2}(a) = b$ (on average about one).</td></tr>
+      <tr><td>3.</td><td>For each candidate $(k_1, k_2)$, check pairs 2 and 3; output the key if both match.</td></tr>
+    </table></div>
+    <p>The real key always passes. A wrong $(k_1,k_2)$ passes a check with probability about $2^{-n}$, so after two extra checks false keys survive with probability about $2^{2n} \cdot 2^{-n} \cdot 2^{-2n} = 2^{-n}$ in total. Time: $2^n$ iterations, each constant. (Two pairs would usually suffice; the third removes the remaining false positives.)</p>
+
+    <h2>(b) Preprocessing</h2>
+    <p>For every $k_2 \in \{0,1\}^n$ compute $v = F^{-1}_{k_2}(0^n)$ and store $k_2$ in a hash table (or sorted list) under index $v$. This takes $2^n$ time and memory. Afterwards, the keys $k_2$ with $F^{-1}_{k_2}(0^n) = m_2$ are exactly the entries stored under $m_2$, which a table lookup returns in expected constant time.</p>
+
+    <h2>(c) $k_1$ known: one chosen plaintext</h2>
+    <p>Choose $x := F^{-1}_{k_1}(0^n)$, so that the first layer produces $F_{k_1}(x) = 0^n$. Ask for $y = F_{k_1,k_2}(x) = F_{k_1}(F^{-1}_{k_2}(0^n))$. Then</p>
+    $$m_2 := F^{-1}_{k_1}(y) = F^{-1}_{k_2}(0^n),$$
+    <p>and the table from (b) returns all $k_2$ with this property in constant time.</p>
+
+    <h2>(d) Full attack</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Preprocessing (b): table of $F^{-1}_{k_2}(0^n)$ for all $k_2$. Time and memory $2^n$.</td></tr>
+      <tr><td>2.</td><td>For every $k_1 \in \{0,1\}^n$ set $x_{k_1} := F^{-1}_{k_1}(0^n)$ and request $y_{k_1} = F_{k_1^*,k_2^*}(x_{k_1})$ from the encryption oracle. ($2^n$ chosen plaintexts; they don't depend on the secret, so they can be requested all at once.)</td></tr>
+      <tr><td>3.</td><td>For every $k_1$: compute $m_2 = F^{-1}_{k_1}(y_{k_1})$, look up the candidates $k_2$, and test each $(k_1, k_2)$ on one or two further pairs.</td></tr>
+    </table></div>
+    <p><b>Correctness.</b> For the true $k_1 = k_1^*$, step (c) applies and the true $k_2^*$ is among the candidates.</p>
+    <p><b>Cost.</b> For a wrong $k_1$, $m_2$ is essentially random, so on average about one candidate is returned. Each loop iteration is therefore expected constant time, and the total is about $2^n$ time, $2^n$ memory and $2^n$ chosen plaintexts, instead of the $2^{2n}$ of a brute-force search over $(k_1, k_2)$.</p>
+
+    <div class="box result"><span class="label">Result.</span> Fixing the middle value to $0^n$ by choosing $x = F^{-1}_{k_1}(0^n)$ decouples the two keys. A table of $F^{-1}_{k_2}(0^n)$ then turns each guess of $k_1$ into a constant-time lookup. Two-key triple encryption offers only about $n$ bits of security against chosen-plaintext attacks with $2^n$ queries. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">For 2-key 3DES ($n = 56$, 64-bit blocks) this means about $2^{56}$ time but also $2^{56}$ chosen plaintexts, so the attack is impractical. Still, it shows that the "112-bit" security is not guaranteed.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

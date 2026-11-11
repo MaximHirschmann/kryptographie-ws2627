@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 14</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="14">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Assume that $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ satisfies Definition 2.1 for all distributions over $\mathcal{M}$ so that $\Pr[M = m] \gt 0$ for all $m \in \mathcal{M}$. Show that the scheme satisfies the definition for all distributions over $\mathcal{M}$, i.e., including those where $\Pr[M = m] = 0$ for some $m \in \mathcal{M}$. Conclude that the scheme is also perfectly secret for any message space $\mathcal{M}' \subseteq \mathcal{M}$.</p>
+    <p><b>Definition 2.1</b> An encryption scheme $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ over a message space $\mathcal{M}$ is perfectly secret if for every probability distribution over $\mathcal{M}$, every $m \in \mathcal{M}$, and every ciphertext $c \in \mathcal{C}$ for which $\Pr[C = c] \gt 0$ it holds that $\Pr[M = m \mid C = c] = \Pr[M = m]$.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Key observation</h2>
+    <p>For every $m \in \mathcal{M}$ and $c \in \mathcal{C}$ define</p>
+    $$p_m(c) := \Pr[\mathsf{Enc}_K(m) = c].$$
+    <p>This depends only on $\mathsf{Gen}$ and $\mathsf{Enc}$, <b>not</b> on the distribution of $M$, because $K$ is chosen independently of $M$. For every distribution over $\mathcal{M}$ (writing $\Pr_D$ for probabilities under $D$),</p>
+    $$\Pr_D[M = m \wedge C = c] = \Pr_D[M = m] \cdot p_m(c). \tag{$*$}$$
+    <p>This also holds when $\Pr_D[M = m] = 0$, because then both sides are $0$.</p>
+
+    <h2>Step 1: $p_m(c)$ does not depend on $m$</h2>
+    <p>Let $U$ be the uniform distribution over $\mathcal{M}$ ($\mathcal{M}$ is finite). Every message has probability $\frac{1}{|\mathcal{M}|} \gt 0$, so the assumption applies to $U$. Fix $c \in \mathcal{C}$.</p>
+    <p><b>Case $\Pr_U[C = c] \gt 0$.</b> For every $m$, by the assumption and $(*)$:</p>
+    $$\frac{1}{|\mathcal{M}|} = \Pr_U[M = m] = \Pr_U[M = m \mid C = c] = \frac{\Pr_U[M = m \wedge C = c]}{\Pr_U[C = c]} \overset{(*)}{=} \frac{\frac{1}{|\mathcal{M}|} \cdot p_m(c)}{\Pr_U[C = c]}.$$
+    <p>Hence $p_m(c) = \Pr_U[C = c]$ for every $m$.</p>
+    <p><b>Case $\Pr_U[C = c] = 0$.</b> Then $0 = \Pr_U[C = c] = \sum_m \frac{1}{|\mathcal{M}|} p_m(c)$. A sum of non-negative terms is $0$ only if every term is $0$, so $p_m(c) = 0$ for every $m$.</p>
+    <p>In both cases there is a value $p(c)$ with $p_m(c) = p(c)$ for all $m \in \mathcal{M}$.</p>
+
+    <h2>Step 2: Definition 2.1 for an arbitrary distribution</h2>
+    <p>Let $D$ be any distribution over $\mathcal{M}$, possibly with $\Pr_D[M = m] = 0$ for some $m$. Fix $m \in \mathcal{M}$ and $c$ with $\Pr_D[C = c] \gt 0$. By the law of total probability, $(*)$ and Step 1:</p>
+    $$\Pr_D[C = c] = \sum_{m' \in \mathcal{M}} \Pr_D[M = m'] \cdot p_{m'}(c) = p(c) \sum_{m' \in \mathcal{M}} \Pr_D[M = m'] = p(c).$$
+    <p>So $p(c) \gt 0$, and</p>
+    $$\Pr_D[M = m \mid C = c] = \frac{\Pr_D[M = m \wedge C = c]}{\Pr_D[C = c]} \overset{(*)}{=} \frac{\Pr_D[M = m] \cdot p(c)}{p(c)} = \Pr_D[M = m].$$
+    <p>This is Definition 2.1 for $D$. Since $D$ was arbitrary, the scheme is perfectly secret for all distributions over $\mathcal{M}$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">We could not simply use Bayes with $\Pr[C = c \mid M = m]$: if $\Pr_D[M = m] = 0$, that conditional probability is undefined. Working with the joint probability $(*)$ avoids the problem.</p>
+
+    <h2>Conclusion: every $\mathcal{M}' \subseteq \mathcal{M}$</h2>
+    <p>Restrict the scheme to a message space $\mathcal{M}' \subseteq \mathcal{M}$. Any distribution $D'$ over $\mathcal{M}'$ is also a distribution $D$ over $\mathcal{M}$, with $\Pr_D[M = m] = 0$ for $m \notin \mathcal{M}'$. Both give the same random variables $M$ and $C$. By Step 2, $\Pr_{D'}[M = m \mid C = c] = \Pr_{D'}[M = m]$ for all $m \in \mathcal{M}'$ and all $c$ with $\Pr_{D'}[C = c] \gt 0$. Hence the scheme is perfectly secret over $\mathcal{M}'$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">This is used in <a href="15.html">Question 15</a>: in the PrivK game, the message is uniform over just two messages $\{m_0, m_1\} \subseteq \mathcal{M}$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

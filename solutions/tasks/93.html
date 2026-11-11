@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 93</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="93">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Lamport's one-time signature scheme is only secure for one signature. Describe an adversary that obtains signatures on two messages of its choice and can then forge a signature on <b>any</b> message.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 12.7 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Lamport's scheme</h2>
+    <p>For messages $m \in \{0,1\}^\ell$ and a one-way function $f$:</p>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>$sk = (x_{i,b})_{i \le \ell,\, b \in \{0,1\}}$ uniform; $pk = (y_{i,b})$ with $y_{i,b} = f(x_{i,b})$</td></tr>
+      <tr><td>Sign</td><td>$\sigma = (x_{1,m_1}, \dots, x_{\ell,m_\ell})$: for each position, reveal the pre-image for the bit value</td></tr>
+      <tr><td>Vrfy</td><td>check $f(\sigma_i) = y_{i,m_i}$ for all $i$</td></tr>
+    </table></div>
+
+    <h2>Attack with two queries</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Ask for the signature on $0^\ell$: this reveals $x_{1,0}, \dots, x_{\ell,0}$.</td></tr>
+      <tr><td>2.</td><td>Ask for the signature on $1^\ell$: this reveals $x_{1,1}, \dots, x_{\ell,1}$.</td></tr>
+      <tr><td>3.</td><td>Now the whole private key is known. For any $m^* \notin \{0^\ell, 1^\ell\}$, output $\sigma^* = (x_{1,m^*_1}, \dots, x_{\ell,m^*_\ell})$.</td></tr>
+    </table></div>
+    <p>$\sigma^*$ passes verification by definition, and $m^*$ was not queried. The forgery succeeds with probability $1$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The same works with any two messages $m, \bar m$ where $\bar m$ is the bitwise complement of $m$. More generally, two signatures on $m, m'$ allow forgeries on every message that agrees with $m$ or $m'$ in each position. For example, $00$ and $11$ also give $01$ and $10$.</p>
+
+    <div class="box result"><span class="label">Result.</span> Each signature reveals half of the secret values. Signatures on two complementary messages reveal all of them, and then any message can be signed. Lamport keys must be used at most once. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 18</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="18">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove that any pseudorandom permutation is also a pseudorandom function. Hint: Show first that in polynomial time, a random permutation cannot be distinguished from a random function. Use the "birthday bound" when necessary.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Setup</h2>
+    <p>Let $F : \{0,1\}^n \times \{0,1\}^n \to \{0,1\}^n$ be a pseudorandom permutation (PRP): for every PPT distinguisher $D$,</p>
+    $$\big|\Pr[D^{F_k(\cdot)}(1^n) = 1] - \Pr[D^{\pi(\cdot)}(1^n) = 1]\big| \le \mathsf{negl}(n),$$
+    <p>where $k \leftarrow \{0,1\}^n$ and $\pi$ is a uniformly random permutation of $\{0,1\}^n$. We have to show the same with a uniformly random <i>function</i> $f$ in place of $\pi$.</p>
+
+    <h2>Step 1: Random permutation vs. random function</h2>
+    <div class="box claim"><span class="label">Lemma.</span> If $D$ makes at most $q = q(n)$ oracle queries, then $\big|\Pr[D^{\pi} = 1] - \Pr[D^{f} = 1]\big| \le \frac{q^2}{2^{n+1}}$.</div>
+    <p><b>Proof.</b> Without loss of generality $D$ never repeats a query, because it can remember the answers. Answer the oracle by "lazy sampling":</p>
+    <ul>
+      <li><b>Random function $f$:</b> each new query gets an independent uniform answer $y_i \leftarrow \{0,1\}^n$.</li>
+      <li><b>Random permutation $\pi$:</b> each new query gets a uniform answer from the values <i>not used before</i>. Equivalently: draw $y_i$ uniformly as for $f$, and if $y_i$ equals an earlier answer, draw again.</li>
+    </ul>
+    <p>Run both with the same random $y_i$. The two oracles answer identically as long as no $y_i$ repeats an earlier $y_j$. Let $\mathsf{Coll}$ be the event that this happens. Then $D$'s output can differ only if $\mathsf{Coll}$ occurs, so</p>
+    $$\big|\Pr[D^{\pi} = 1] - \Pr[D^{f} = 1]\big| \le \Pr[\mathsf{Coll}] \le \sum_{1 \le j \lt i \le q} \Pr[y_i = y_j] = \binom{q}{2} \cdot 2^{-n} \le \frac{q^2}{2^{n+1}}.$$
+    <p>This is the birthday bound. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>Step 2: PRP $\Rightarrow$ PRF</h2>
+    <p>Let $D$ be any PPT distinguisher. It runs in polynomial time, so it makes at most a polynomial number $q(n)$ of queries. By the triangle inequality:</p>
+    $$
+    \begin{aligned}
+    \big|\Pr[D^{F_k} = 1] - \Pr[D^{f} = 1]\big|
+    &\le \underbrace{\big|\Pr[D^{F_k} = 1] - \Pr[D^{\pi} = 1]\big|}_{\le\, \mathsf{negl}(n) \text{ (F is a PRP)}} + \underbrace{\big|\Pr[D^{\pi} = 1] - \Pr[D^{f} = 1]\big|}_{\le\, q(n)^2 / 2^{n+1} \text{ (Lemma)}}.
+    \end{aligned}
+    $$
+    <p>$\frac{q(n)^2}{2^{n+1}}$ is negligible (a polynomial times $2^{-n}$, see <a href="17.html">Question 17</a>), and the sum of two negligible functions is negligible. Hence $F$ is a pseudorandom function. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The polynomial bound on $D$ is essential. An unbounded distinguisher that makes $2^{n/2}$ or more queries will see a collision of $f$ with constant probability, and that never happens for a permutation.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

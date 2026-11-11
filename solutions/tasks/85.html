@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 85</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="85">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>The RSA public exponent $e$ only has to satisfy $\gcd(e, \phi(N)) = 1$. In practice $e = 3$ or $e = 2^{16} + 1$ are popular. Explain why these values are better than a random $e$ of the same length.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 10.8 (restated). Hint: look at the square-and-multiply algorithm.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Cost of square-and-multiply</h2>
+    <p>To compute $x^e \bmod N$, square-and-multiply goes through the bits of $e$ from the top: for each bit after the first it <b>squares</b>, and for each further $1$-bit it also <b>multiplies</b> by $x$. With $\|e\|$ the bit length and $\mathrm{wt}(e)$ the number of $1$-bits:</p>
+    $$\#\text{modular multiplications} = (\|e\| - 1) + (\mathrm{wt}(e) - 1).$$
+
+    <table class="data">
+      <tr><th>$e$</th><th>binary</th><th>squarings</th><th>multiplications</th><th>total</th></tr>
+      <tr><td>$3$</td><td><code>11</code></td><td>1</td><td>1</td><td>2</td></tr>
+      <tr><td>$2^{16}+1 = 65537$</td><td><code>1 0000000000000000 1</code></td><td>16</td><td>1</td><td>17</td></tr>
+      <tr><td>random 17-bit $e$</td><td>about half the bits set</td><td>16</td><td>$\approx 8$</td><td>$\approx 24$</td></tr>
+      <tr><td>random $e$ with $\|e\| \approx \|N\| = 2048$</td><td></td><td>2047</td><td>$\approx 1024$</td><td>$\approx 3000$</td></tr>
+    </table>
+
+    <h2>Why it matters</h2>
+    <ul>
+      <li><b>Speed:</b> $3$ and $65537$ have only two $1$-bits, which minimizes the multiplications for their length. Compared with a "random" $e$ of the same length, about $\mathrm{wt}(e)/2$ multiplications are saved. Compared with a random full-size $e$, encryption and signature verification become roughly 100 times faster.</li>
+      <li><b>Security is not hurt</b>: the hardness of RSA rests on the secret $d$ and the factorization of $N$. $e$ is public anyway, and $d = e^{-1} \bmod \phi(N)$ is still a large random-looking number. (Small $d$ would be dangerous, small $e$ is not.)</li>
+      <li><b>Fixed $e$ for everyone:</b> one can choose $p, q$ with $\gcd(e, p-1) = \gcd(e, q-1) = 1$ and can then hard-code $e$.</li>
+    </ul>
+
+    <h2>Why $65537$ rather than $3$?</h2>
+    <p>With textbook RSA, very small $e$ allows attacks: if $m^3 \lt N$, then $c = m^3$ over the integers and $m = \sqrt[3]{c}$; and the same message sent to three recipients with $e = 3$ can be recovered with the CRT (<a href="97.html">Question 97</a>). Proper padding prevents both, but $65537$ is a common safety margin that is almost as fast.</p>
+
+    <div class="box result"><span class="label">Result.</span> Exponentiation cost grows with the bit length <i>and</i> the number of $1$-bits of $e$. $3$ and $2^{16}+1$ are short with only two $1$-bits, so public-key operations need only 2 or 17 multiplications, without making the private key easier to find. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

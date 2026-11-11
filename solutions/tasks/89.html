@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 89</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="89">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Coin flipping with a trusted party $T$: $T$ publishes a public key $pk$. Party $A$ picks a random bit $b_A$ and announces $c_A \leftarrow \mathsf{Enc}_{pk}(b_A)$. Then $B$ announces a ciphertext $c_B \ne c_A$ of its bit $b_B$. Finally $T$ decrypts both and the coin is $b_A \oplus b_B$.</p>
+    <ol type="a">
+      <li>Argue that the coin is uniform if $B$ is honest, even if $A$ cheats.</li>
+      <li>With ElGamal (bit $b$ encoded as $g^b$), show that a dishonest $B$ can force the coin to any value.</li>
+      <li>Which kind of encryption scheme should be used? Define a suitable security notion and prove that your suggestion achieves it.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 10.17 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) Honest $B$</h2>
+    <p>$A$ commits to $c_A$ <b>before</b> $B$ chooses anything. Whatever $A$ does, $b_A := \mathsf{Dec}_{sk}(c_A)$ is a fixed value (treat $\bot$ as $0$). An honest $B$ then chooses $b_B$ uniformly and independently of $c_A$. For any fixed $b_A$, $b_A \oplus b_B$ is uniform, so the coin is uniform. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(b) Dishonest $B$ with ElGamal</h2>
+    <p>ElGamal with $pk = (\mathbb{G}, q, g, h = g^x)$: $c_A = (g^y, h^y \cdot g^{b_A})$. ElGamal is <b>homomorphic</b>: multiplying ciphertexts component-wise multiplies the plaintexts, and inverting a ciphertext inverts its plaintext. $B$ does not know $b_A$, but it can still create ciphertexts that depend on it.</p>
+    <p><b>Force coin $= 0$:</b> make $b_B = b_A$ by re-randomizing $c_A$. Choose $y' \leftarrow \mathbb{Z}_q$:</p>
+    $$c_B = (g^{y} \cdot g^{y'},\; h^{y} g^{b_A} \cdot h^{y'}) = (g^{y+y'},\, h^{y+y'} g^{b_A}).$$
+    <p>This is a fresh-looking encryption of $g^{b_A}$, and $c_B \ne c_A$ since $y' \ne 0$ (with probability $1 - 1/q$).</p>
+    <p><b>Force coin $= 1$:</b> make $b_B = 1 - b_A$. Invert $c_A$ to get an encryption of $g^{-b_A}$, then multiply by an encryption of $g^1$:</p>
+    $$c_B = (g^{-y} \cdot g^{y'},\; h^{-y} g^{-b_A} \cdot h^{y'} g) = (g^{y'-y},\, h^{y'-y} g^{1-b_A}).$$
+    <p>$g^{1-b_A} \in \{g^0, g^1\}$ is a valid encoding, so $T$ decrypts $b_B = 1 - b_A$ and the coin is $1$. $B$ never learned $b_A$, but it chose the result. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(c) Use a non-malleable (CCA-secure) scheme</h2>
+    <p>What is needed is that $B$ cannot produce a ciphertext whose plaintext is <i>related</i> to $A$'s hidden bit. This is <b>non-malleability</b>, and CCA security implies it.</p>
+    <p><b>Definition.</b> The protocol is <i>fair against $B$</i> if for every PPT strategy $B^*$, with $A$ honest:</p>
+    $$\big|\Pr[\text{coin} = 1] - \tfrac12\big| \le \mathsf{negl}(n),$$
+    <p>where $B^*$ sees $pk$ and $c_A$ and outputs any $c_B \ne c_A$; $T$ decrypts and a $\bot$ counts as $0$.</p>
+    <p><b>Claim.</b> If the scheme is CCA-secure, the protocol is fair against $B$.</p>
+    <p><b>Proof.</b> Suppose $B^*$ makes $\Pr[\text{coin} = \beta] \ge \frac12 + \varepsilon(n)$ for some $\beta$ and a non-negligible $\varepsilon$. Build a CCA adversary $\mathcal{D}$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>On $pk$: output the challenge messages $0$ and $1$; receive $c^* = \mathsf{Enc}_{pk}(b)$.</td></tr>
+      <tr><td>2.</td><td>Run $B^*(pk, c^*)$ to get $c_B \ne c^*$, and ask the decryption oracle for $b_B = \mathsf{Dec}_{sk}(c_B)$. This is allowed since $c_B \ne c^*$.</td></tr>
+      <tr><td>3.</td><td>Output $b' := \beta \oplus b_B$.</td></tr>
+    </table></div>
+    <p>$c^*$ is distributed exactly like $A$'s $c_A$ with $b_A = b$ uniform, so</p>
+    $$\Pr[b' = b] = \Pr[b \oplus b_B = \beta] = \Pr[\text{coin} = \beta] \ge \tfrac12 + \varepsilon(n),$$
+    <p>which contradicts CCA security. (If the direction $\beta$ of the bias is unknown, run $\mathcal{D}$ for both values of $\beta$; one of the two adversaries has advantage $\varepsilon$.) <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> (a) Committing first makes the coin uniform for an honest $B$. (b) ElGamal is malleable: re-randomizing or inverting $c_A$ lets $B$ copy or flip $A$'s bit without knowing it. (c) Use a CCA-secure (hence non-malleable) scheme; a biased coin would directly give a CCA attacker. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">Encryption here is really used as a <i>commitment</i>. CPA security only gives hiding, while fairness also needs that no related commitment can be created.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

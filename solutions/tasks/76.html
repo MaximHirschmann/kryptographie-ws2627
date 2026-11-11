@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 76</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="76">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>About Euler's function $\phi$:</p>
+    <ol type="a">
+      <li>For a prime $p$ and an integer $e \ge 1$, show $\phi(p^e) = p^{e-1}(p-1)$.</li>
+      <li>For relatively prime $p, q$ (not necessarily prime), show $\phi(pq) = \phi(p)\phi(q)$ <b>without</b> using the Chinese remainder theorem.</li>
+      <li>Conclude the general formula (Theorem 7.19): if $N = \prod_i p_i^{e_i}$ with distinct primes $p_i$, then $\phi(N) = \prod_i p_i^{e_i - 1}(p_i - 1)$.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 7.4 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <p>Recall $\phi(N) = |\{x \in \{1, \dots, N\} : \gcd(x, N) = 1\}| = |\mathbb{Z}_N^*|$.</p>
+
+    <h2>(a) Prime powers</h2>
+    <p>The only prime factor of $p^e$ is $p$, so $\gcd(x, p^e) \ne 1$ iff $p \mid x$. The multiples of $p$ in $\{1, \dots, p^e\}$ are $p, 2p, \dots, p^{e-1} \cdot p$: exactly $p^{e-1}$ numbers. Hence</p>
+    $$\phi(p^e) = p^e - p^{e-1} = p^{e-1}(p - 1). \quad \blacksquare$$
+
+    <h2>(b) Multiplicativity without CRT</h2>
+    <p>Count the $x \in \{0, \dots, pq - 1\}$ with $\gcd(x, pq) = 1$. Since $p$ and $q$ are coprime, $\gcd(x, pq) = 1 \iff \gcd(x, p) = 1 \text{ and } \gcd(x, q) = 1$.</p>
+    <p>Write every such $x$ uniquely as $x = r + jp$ with $0 \le r \lt p$ and $0 \le j \lt q$, i.e. arrange the numbers in $p$ columns $r$ with $q$ entries each:</p>
+    $$\text{column } r: \quad r,\; r + p,\; r + 2p,\; \dots,\; r + (q-1)p.$$
+    <p><b>Coprime to $p$.</b> $\gcd(r + jp, p) = \gcd(r, p)$. So either the whole column is coprime to $p$ or none of it is, and exactly $\phi(p)$ columns are coprime to $p$.</p>
+    <p><b>Coprime to $q$ inside a column.</b> The $q$ entries of a column are pairwise distinct modulo $q$: if $r + ip \equiv r + jp \pmod q$, then $q \mid (i - j)p$, and since $\gcd(p, q) = 1$, $q \mid i - j$, so $i = j$. Hence the column contains every residue modulo $q$ exactly once. Since $\gcd(x, q)$ depends only on $x \bmod q$, exactly $\phi(q)$ entries of each column are coprime to $q$.</p>
+    <p>In total: $\phi(p)$ good columns, each with $\phi(q)$ good entries:</p>
+    $$\phi(pq) = \phi(p)\,\phi(q). \quad \blacksquare$$
+
+    <h2>(c) General formula</h2>
+    <p>Induction on the number $t$ of distinct prime factors. For $t = 1$ this is (a). For $t \gt 1$, write $N = p_1^{e_1} \cdot N'$ with $N' = \prod_{i \ge 2} p_i^{e_i}$. Since $p_1 \nmid N'$, the two factors are coprime, so by (b), (a) and the induction hypothesis</p>
+    $$\phi(N) = \phi(p_1^{e_1}) \, \phi(N') = p_1^{e_1-1}(p_1 - 1) \prod_{i \ge 2} p_i^{e_i - 1}(p_i - 1). \quad \blacksquare$$
+
+    <div class="box result"><span class="label">Result.</span> $\phi(p^e) = p^{e-1}(p-1)$; $\phi$ is multiplicative on coprime arguments; hence $\phi(N) = \prod_i p_i^{e_i-1}(p_i - 1) = N \prod_i \left(1 - \frac{1}{p_i}\right)$. In particular $\phi(pq) = (p-1)(q-1)$ for an RSA modulus. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

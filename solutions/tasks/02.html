@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="2">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>In an attempt to prevent Kasiski's attack on the Vigenère cipher, the following modification has been proposed. Given the period $t$ of the cipher, the plaintext is broken up into blocks of size $t$. Recall that within each block, the Vigenère cipher works by encrypting the $i$th character with the $i$th key (using a shift cipher). Letting the key be $k_1, \dots, k_t$, this means the $i$th character in each block is encrypted by adding $k_i$ to it, modulo 26. The proposed modification is to encrypt the $i$th character in the $j$th block by adding $k_i + j \bmod 26$.</p>
+    <ol>
+      <li>Show that decryption can be carried out.</li>
+      <li>Describe the effect of the above modification on Kasiski's attack.</li>
+      <li>Devise an alternate way to determine the period for this scheme.</li>
+    </ol>
+  </div>
+
+  <div class="solution">
+    <h2>Setup</h2>
+    <p>As in Question 1, we count from $0$: the key is $k_0, \dots, k_{t-1}$, and the letter at position $x$ lies in block $j = \lfloor x / t \rfloor$ at place $i = x \bmod t$, so $x = jt + i$. The modified encryption is</p>
+    $$c_x = m_x + k_{x \bmod t} + \lfloor x / t \rfloor \bmod 26.$$
+
+    <h2>1. Decryption is possible</h2>
+    <p>The receiver knows the key $k_0, \dots, k_{t-1}$ and the period $t$. For every position $x$ they also know $x$, so they can compute the block number $\lfloor x/t \rfloor$ and the place $x \bmod t$. Therefore:</p>
+    <div class="algo"><table>
+      <tr><td>Dec</td><td>
+        <span class="line">input $k_0, \dots, k_{t-1}$, $c \in \Sigma^*$</span>
+        <span class="line">for $x = 0$ to $|c| - 1$ do</span>
+        <span class="line ind">$m_x := c_x - k_{x \bmod t} - \lfloor x/t \rfloor \bmod 26$</span>
+        <span class="line">output $m = m_0 \cdots m_{|c|-1}$</span>
+      </td></tr>
+    </table></div>
+    <p><b>Correctness:</b> $\big(m_x + k_{x \bmod t} + \lfloor x/t \rfloor\big) - k_{x \bmod t} - \lfloor x/t \rfloor = m_x \bmod 26$.</p>
+
+    <h2>2. Effect on Kasiski's attack</h2>
+    <p>Kasiski relies on this: the same plaintext word at the same place in two different blocks gives the same ciphertext. With the modification, the shift used at position $x$ is</p>
+    $$k'_x := k_{x \bmod t} + \lfloor x/t \rfloor \bmod 26.$$
+    <p>Take the same word at positions $x$ and $x + d$ with $d = s \cdot t$. Then the two shifts differ by exactly $s$:</p>
+    $$k'_{x+st} - k'_x = s \bmod 26.$$
+    <p>So the two copies are encrypted the same way only if $s \equiv 0 \pmod{26}$, that is, only if $d$ is a multiple of $26t$.</p>
+
+    <div class="box result"><span class="label">Effect.</span> The scheme is really an ordinary Vigenère cipher with the longer key $k'_0, \dots, k'_{26t-1}$ of period $26t$, because $\lfloor (x + 26t)/t \rfloor = \lfloor x/t \rfloor + 26$. Kasiski's attack is not prevented, but:
+      <ul>
+        <li>repetitions now appear only at distances that are multiples of $26t$ instead of $t$, so the attacker needs about 26 times more ciphertext before such repetitions occur;</li>
+        <li>if the attacker does find them, Kasiski gives the period $26t$, not $t$. Each of the $26t$ columns then has 26 times fewer letters, which makes frequency analysis on the columns much harder.</li>
+      </ul>
+    </div>
+
+    <h2>3. Another way to find the period</h2>
+    <p>The modification is public; only the key is secret. So for each guess $\tilde t = 1, 2, 3, \dots$ the attacker can <b>undo the block counter</b> and test whether an ordinary Vigenère cipher with period $\tilde t$ remains:</p>
+    $$c'_x := c_x - \lfloor x / \tilde t \rfloor \bmod 26.$$
+    <p>If $\tilde t = t$, then $c'_x = m_x + k_{x \bmod t}$. This is a normal Vigenère ciphertext with period $t$, and the index-of-coincidence test from the script recognises it. Split $c'$ into the columns $C_i = \{c'_i, c'_{i+t}, c'_{i+2t}, \dots\}$ and compute the letter frequencies $q_0, \dots, q_{25}$ of each column:</p>
+    $$S = \sum_{i=0}^{25} q_i^2 \approx \begin{cases} 0.065 & \text{if } \tilde t = t \text{ (each column is an English text shifted by } k_i) \\ 0.038 & \text{otherwise (letters look uniformly random)} \end{cases}$$
+    <p>Choose the smallest $\tilde t$ for which the average $S$ is close to $0.065$. After that, solve each column $C_i$ as a shift cipher, as in the script, to get $k_i$.</p>
+    <p class="note">Put another way: inside column $i$, consecutive letters are shifted by $k_i, k_i + 1, k_i + 2, \dots$. Subtracting $0, 1, 2, \dots$ from the column's letters makes the shift constant again. That is exactly what $c'_x$ does.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

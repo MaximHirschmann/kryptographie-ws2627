@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 81</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="81">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>An interactive encryption protocol $\Pi'$: sender and receiver first run a key-exchange protocol $\Pi$ to get a shared key $k$; then the sender sends $c \leftarrow \mathsf{Enc}_k(m)$, and the receiver decrypts with $k$.</p>
+    <ol type="a">
+      <li>Define indistinguishable encryptions in the presence of an eavesdropper for this interactive setting (analogous to Definition 3.8).</li>
+      <li>Prove: if $\Pi$ is secure against eavesdroppers and $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ has indistinguishable encryptions for an eavesdropper, then $\Pi'$ satisfies your definition.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 9.1 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <p>We assume, as usual, that the key-exchange outputs $n$-bit keys and that $\mathsf{Gen}(1^n)$ outputs a uniform $n$-bit key.</p>
+
+    <h2>(a) Definition</h2>
+    <p>The experiment $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi'}(n)$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>$\mathcal{A}(1^n)$ outputs $m_0, m_1$ with $|m_0| = |m_1|$.</td></tr>
+      <tr><td>2.</td><td>The honest parties run $\Pi(1^n)$, giving a transcript $\mathit{trans}$ and a key $k$. Choose $b \leftarrow \{0,1\}$ and compute $c \leftarrow \mathsf{Enc}_k(m_b)$.</td></tr>
+      <tr><td>3.</td><td>$\mathcal{A}$ gets $(\mathit{trans}, c)$, i.e. everything sent over the channel, and outputs $b'$. The output is $1$ iff $b' = b$.</td></tr>
+    </table></div>
+    <p>$\Pi'$ has <b>indistinguishable encryptions in the presence of an eavesdropper</b> if for every PPT $\mathcal{A}$: $\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi'}(n) = 1] \le \frac12 + \mathsf{negl}(n)$.</p>
+
+    <h2>(b) Proof by a hybrid argument</h2>
+    <p>Define $\mathsf{Hyb}$: like the experiment above, but $c \leftarrow \mathsf{Enc}_{k'}(m_b)$ for a <b>fresh uniform</b> key $k'$, independent of $\mathit{trans}$. Write $p_{\mathsf{real}} = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi'} = 1]$ and $p_{\mathsf{hyb}} = \Pr[\mathsf{Hyb} = 1]$.</p>
+
+    <h3>Step 1: $|p_{\mathsf{real}} - p_{\mathsf{hyb}}| \le \mathsf{negl}(n)$ by the security of $\Pi$</h3>
+    <p>In $\mathsf{KE}^{\mathsf{eav}}_{\mathcal{B},\Pi}$, $\mathcal{B}$ gets $(\mathit{trans}, \hat k)$, where $\hat k$ is the real key (if $\beta = 1$) or a uniform key (if $\beta = 0$), and must guess $\beta$. Build $\mathcal{B}$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Receive $(\mathit{trans}, \hat k)$. Run $\mathcal{A}$ to get $m_0, m_1$.</td></tr>
+      <tr><td>2.</td><td>Choose $b \leftarrow \{0,1\}$, compute $c \leftarrow \mathsf{Enc}_{\hat k}(m_b)$ and give $(\mathit{trans}, c)$ to $\mathcal{A}$.</td></tr>
+      <tr><td>3.</td><td>Output $\beta' = 1$ iff $\mathcal{A}$ outputs $b' = b$.</td></tr>
+    </table></div>
+    <p>If $\beta = 1$, $\mathcal{A}$ is in the real experiment; if $\beta = 0$, in $\mathsf{Hyb}$. So</p>
+    $$\Pr[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{B},\Pi} = 1] = \tfrac12 p_{\mathsf{real}} + \tfrac12 (1 - p_{\mathsf{hyb}}) = \tfrac12 + \tfrac12(p_{\mathsf{real}} - p_{\mathsf{hyb}}).$$
+    <p>By security of $\Pi$ this is at most $\frac12 + \mathsf{negl}(n)$, so $p_{\mathsf{real}} - p_{\mathsf{hyb}} \le \mathsf{negl}(n)$. (We only need this direction.)</p>
+
+    <h3>Step 2: $p_{\mathsf{hyb}} \le \frac12 + \mathsf{negl}(n)$ by the security of the encryption scheme</h3>
+    <p>Build $\mathcal{A}'$ against $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ in $\mathsf{PrivK}^{\mathsf{eav}}$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Run $\Pi(1^n)$ by simulating both honest parties; keep $\mathit{trans}$ and throw away its key.</td></tr>
+      <tr><td>2.</td><td>Run $\mathcal{A}$ to get $m_0, m_1$, output them, and receive $c \leftarrow \mathsf{Enc}_{k'}(m_b)$ for the challenger's independent key $k'$.</td></tr>
+      <tr><td>3.</td><td>Give $(\mathit{trans}, c)$ to $\mathcal{A}$ and output its $b'$.</td></tr>
+    </table></div>
+    <p>This is exactly $\mathsf{Hyb}$, so $p_{\mathsf{hyb}} = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi_{\mathsf{enc}}} = 1] \le \frac12 + \mathsf{negl}(n)$.</p>
+
+    <h3>Combine</h3>
+    $$p_{\mathsf{real}} \le p_{\mathsf{hyb}} + \mathsf{negl}(n) \le \tfrac12 + \mathsf{negl}(n) + \mathsf{negl}(n). \quad \blacksquare$$
+
+    <div class="box result"><span class="label">Result.</span> An eavesdropper's view $(\mathit{trans}, \mathsf{Enc}_k(m_b))$ is indistinguishable from $(\mathit{trans}, \mathsf{Enc}_{k'}(m_b))$ with an independent key (by key-exchange security), and in that world the transcript is useless (by encryption security). Key exchange followed by private-key encryption is a secure "public-key-like" encryption against passive attackers. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">This is only for <i>eavesdroppers</i>. An active attacker breaks the composition with a man-in-the-middle attack (<a href="82.html">Question 82</a>).</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

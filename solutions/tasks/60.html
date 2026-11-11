@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 60</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="60">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $G$ be a pseudorandom generator and let $\hat G(s)$ be the first $n$ bits of $G(s)$, where $|s| = n$. Prove that the keyed function $F_k(x) = \hat G(k) \oplus x$ is <b>not</b> a pseudorandom function.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 3.10 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Idea</h2>
+    <p>For a fixed key, $F_k$ XORs every input with the <b>same</b> string $\hat G(k)$. So $F_k(x) \oplus F_k(x') = x \oplus x'$ for all inputs, a structure that a random function almost never has. The pseudorandomness of $G$ does not help: the problem is the linearity in $x$.</p>
+
+    <h2>Distinguisher</h2>
+    <div class="algo"><table>
+      <tr><td>$D^{O}(1^n)$:</td><td></td></tr>
+      <tr><td>1.</td><td>Query $y_1 := O(0^n)$ and $y_2 := O(1^n)$.</td></tr>
+      <tr><td>2.</td><td>Output $1$ iff $y_1 \oplus y_2 = 1^n$.</td></tr>
+    </table></div>
+
+    <h2>Analysis</h2>
+    <p><b>Oracle $F_k$.</b> $y_1 \oplus y_2 = (\hat G(k) \oplus 0^n) \oplus (\hat G(k) \oplus 1^n) = 1^n$, so</p>
+    $$\Pr[D^{F_k(\cdot)}(1^n) = 1] = 1.$$
+    <p><b>Oracle $f \leftarrow \mathsf{Func}_n$.</b> $f(0^n)$ and $f(1^n)$ are independent and uniform, so $y_1 \oplus y_2$ is uniform and</p>
+    $$\Pr[D^{f(\cdot)}(1^n) = 1] = 2^{-n}.$$
+    <p>The difference is $1 - 2^{-n}$, which is not negligible. $D$ makes two queries and runs in polynomial time. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> $F$ is not pseudorandom: two queries $0^n, 1^n$ reveal the relation $F_k(x) \oplus F_k(x') = x \oplus x'$. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">The same construction is fine as a <i>one-time</i> pad ($c = \hat G(k) \oplus m$ for a single message). The difference is that a PRF must look random on <b>many</b> inputs under the same key, like a fresh pad for every input.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

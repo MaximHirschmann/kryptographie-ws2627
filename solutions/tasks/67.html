@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 67</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="67">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Show that these two modifications of CBC-MAC are not secure, even as fixed-length MACs:</p>
+    <ol type="a">
+      <li>A fresh random $t_0 \leftarrow \{0,1\}^n$ is used instead of $0^n$, and the tag is $\langle t_0, t_\ell \rangle$.</li>
+      <li>All intermediate values $t_1, \dots, t_\ell$ are output, not only $t_\ell$.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 4.9 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <p>Throughout, messages have a fixed number $\ell$ of $n$-bit blocks, $t_i = F_k(t_{i-1} \oplus m_i)$.</p>
+
+    <h2>(a) Random IV</h2>
+    <p>The first PRF input is $t_0 \oplus m_1$. The verifier takes $t_0$ from the tag, so the forger can change $t_0$ and $m_1$ together without changing that input.</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Query any message $m = m_1 \| m_2 \cdots m_\ell$ and get $\langle t_0, t \rangle$.</td></tr>
+      <tr><td>2.</td><td>Pick any $\Delta \ne 0^n$ and output $m^* = (m_1 \oplus \Delta) \| m_2 \cdots m_\ell$ with tag $\langle t_0 \oplus \Delta, t \rangle$.</td></tr>
+    </table></div>
+    <p>Check: $(t_0 \oplus \Delta) \oplus (m_1 \oplus \Delta) = t_0 \oplus m_1$, so all chain values and the final $t$ are unchanged. $m^* \ne m$ because $\Delta \ne 0^n$. Valid with probability $1$, already for $\ell = 1$. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(b) Output all blocks</h2>
+    <p>Now every intermediate value $t_i = F_k(\cdot)$ is visible. In particular, the first output value of any query is $F_k$ of its first block. So the adversary can evaluate $F_k$ at points of its choice and build the chain itself. Let $\ell \ge 2$.</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Query $m = x \| y \| m_3 \cdots m_\ell$ and get $t_1 = F_k(x)$ (and more).</td></tr>
+      <tr><td>2.</td><td>Choose $y^* \ne y$. Query $m' = (t_1 \oplus y^*) \| m_3 \| \cdots \| m_\ell \| z$ for any $z$, and get $(s_1, \dots, s_\ell)$.</td></tr>
+      <tr><td>3.</td><td>Output $m^* = x \| y^* \| m_3 \cdots m_\ell$ with tag $(t_1, s_1, s_2, \dots, s_{\ell-1})$.</td></tr>
+    </table></div>
+    <p>Check: the chain of $m^*$ is $F_k(x) = t_1$, then $F_k(t_1 \oplus y^*) = s_1$, and from there on it processes $m_3, \dots, m_\ell$ starting from chain value $s_1$, exactly like the chain of $m'$. So its values are $s_2, \dots, s_{\ell-1}$. $m^* \ne m$ because $y^* \ne y$, and $m^* \ne m'$ because $m'$ is shifted by one block (if by chance $m^* = m'$, pick another $y^*$). Valid with probability $1$ after two queries. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">For $\ell = 1$, variant (b) is just $\mathsf{Mac}_k(m) = F_k(m)$ and therefore secure. The attack needs at least two blocks.</p>
+
+    <div class="box result"><span class="label">Result.</span> (a) A random IV that is sent along lets the forger shift $t_0$ and $m_1$ by the same $\Delta$. (b) Revealing intermediate values turns the MAC into an $F_k$-oracle, so the forger can compute the chain for a new message. CBC-MAC is only secure with a fixed IV $0^n$ and only the last value as the tag. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

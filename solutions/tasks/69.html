@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 69</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="69">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Recall the Merkle–Damgård transform for a collision-resistant compression function $h^s : \{0,1\}^{2n} \to \{0,1\}^n$: pad $x$ with zeros to $B$ blocks $x_1, \dots, x_B$ of $n$ bits, append the length block $x_{B+1} := L = |x|$, set $z_0 := 0^n$ and $z_i := h^s(z_{i-1} \| x_i)$, and output $z_{B+1}$. For each modification, decide whether the result is collision resistant. Prove it, or give an attack.</p>
+    <ol type="a">
+      <li>No length block: output $z_B$.</li>
+      <li>Output $z_B \| L$ instead of $z_{B+1} = h^s(z_B \| L)$.</li>
+      <li>Choose $z_0 := IV \leftarrow \{0,1\}^n$ at random and output $IV \| z_{B+1}$.</li>
+      <li>No IV: start with $z_1 := x_1$, compute $z_i := h^s(z_{i-1} \| x_i)$ for $i = 2, \dots, B+1$ and output $z_{B+1}$.</li>
+      <li>Start with $z_0 := L$, compute $z_i := h^s(z_{i-1} \| x_i)$ for $i = 1, \dots, B$ and output $z_B$.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 4.15 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Tool: walking back along two chains</h2>
+    <p>Suppose two chains with the <b>same number of blocks</b> end in the same value. Compare the inputs $(z_{i-1} \| x_i)$ and $(z'_{i-1} \| x'_i)$ from the last block backwards. Let $i$ be the last position where they differ. Its outputs are equal (either it is the last block, or the next inputs, which contain $z_i$ and $z'_i$, are equal). So $h^s(z_{i-1}\|x_i) = h^s(z'_{i-1}\|x'_i)$ is a <b>collision in $h^s$</b>. If no position differs, then all blocks and the starting values are equal. This is the core of the Merkle–Damgård proof, and we call it the <i>backward argument</i>.</p>
+
+    <h2>(a) No length block: not collision resistant</h2>
+    <p>Zero-padding is ambiguous without the length. Take any $x$ whose length is not a multiple of $n$ and let $x' := x \| 0$. Both pad to the same blocks $x_1, \dots, x_B$, so $H^s(x) = H^s(x')$ but $x \ne x'$. This is a collision with no computation at all.</p>
+
+    <h2>(b) Output $z_B \| L$: collision resistant</h2>
+    <p>Let $H^s(x) = H^s(x')$ with $x \ne x'$. Then $L = L'$ (the second half of the output) and $z_B = z'_B$. Equal lengths give the same number of blocks $B$. Since $x \ne x'$ with equal lengths, some block differs. The backward argument (from $z_B = z'_B$ back to the common $z_0 = 0^n$) therefore finds a collision in $h^s$. So a collision for $H$ gives a collision for $h$, and $H$ is collision resistant (with a $2n$-bit output). <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(c) Random IV, sent along: collision resistant</h2>
+    <p>The output contains $IV$, so equal outputs mean equal $IV$s. (Even if the adversary chooses the IVs, a collision $(IV, x), (IV', x')$ must have $IV = IV'$.) For a fixed IV the construction is ordinary Merkle–Damgård with starting value $IV$, whose proof works for <i>any</i> fixed starting value:</p>
+    <ul>
+      <li>If $L \ne L'$: the last inputs $(z_B \| L)$ and $(z'_{B'} \| L')$ differ but have the same hash, which is a collision in $h^s$.</li>
+      <li>If $L = L'$: same $B$; some block differs since $x \ne x'$, and the backward argument finds a collision.</li>
+    </ul>
+    <p>So it is collision resistant. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(d) No IV, start from $x_1$: collision resistant</h2>
+    <p>Again, if $L \ne L'$, the final inputs $(z_B \| L) \ne (z'_{B'} \| L')$ collide under $h^s$. If $L = L'$, then $B = B'$ and the backward argument runs from $z_{B+1}$ down to $i = 2$. If no collision is found, all inputs for $i \ge 2$ are equal: $x_i = x'_i$ for $i \ge 2$ and $z_1 = z'_1$, i.e. $x_1 = x'_1$. Then the padded messages are equal, and with $L = L'$ also $x = x'$, a contradiction. So it is collision resistant. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The fixed IV in Merkle–Damgård only saves one block; with the length block at the end it is not needed for collision resistance.</p>
+
+    <h2>(e) Length as IV, no final length block: not collision resistant in general</h2>
+    <p><b>Where the proof breaks.</b> For messages with different lengths, the chains have different numbers of blocks and different starting values $L \ne L'$. Walking back from the end, the longer chain can reach an intermediate value equal to the shorter chain's starting value $L'$ without any collision. That would just be a <i>pre-image</i> of the specific value $L'$, which collision resistance of $h$ does not rule out.</p>
+    <p><b>Counterexample.</b> Let $h_0 : \{0,1\}^{2n} \to \{0,1\}^{n-1}$ be collision resistant and define</p>
+    $$h^s(u) = \begin{cases} \langle n \rangle & \text{if } u = \langle 2n \rangle \| 0^n,\\ 1 \| h_0^s(u) & \text{otherwise,} \end{cases}$$
+    <p>where $\langle v \rangle$ is the $n$-bit encoding of the number $v$; it starts with $0$ since $v \lt 2^{n-1}$. $h$ is collision resistant: special and normal outputs differ in the first bit, there is only one special input, and a collision between normal inputs is a collision of $h_0$.</p>
+    <p>Now take $x = 0^n \| y$ (length $2n$) and $x' = y$ (length $n$) for any $y \in \{0,1\}^n$:</p>
+    $$x:\ z_0 = \langle 2n \rangle,\ z_1 = h^s(\langle 2n\rangle \| 0^n) = \langle n \rangle,\ z_2 = h^s(\langle n \rangle \| y).$$
+    $$x':\ z'_0 = \langle n \rangle,\ z'_1 = h^s(\langle n \rangle \| y).$$
+    <p>Both outputs are $h^s(\langle n \rangle \| y)$, but $x \ne x'$. A collision. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> (a) No: zero-padding $x$ vs. $x\|0$. (b) Yes. (c) Yes. (d) Yes. (e) No in general: messages of different lengths start at different values, so a collision only needs an $h$-pre-image of a length value, and collision resistance does not prevent that. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

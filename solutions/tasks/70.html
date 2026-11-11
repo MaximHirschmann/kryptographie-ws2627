@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 70</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="70">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>In DES, the two halves are swapped after the last Feistel round: if round 16 ends with $(L_{16}, R_{16})$, the cipher outputs $(R_{16}, L_{16})$. Show that, because of this swap, $\mathsf{DES}_k^{-1}$ is computed by exactly the same procedure as $\mathsf{DES}_k$, only with the sub-keys in reverse order.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 5.8 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Setting</h2>
+    <p>Encryption with sub-keys $k_1, \dots, k_{16}$ and mangler $f$ (initial and final permutation for now ignored):</p>
+    $$L_i = R_{i-1}, \qquad R_i = L_{i-1} \oplus f(k_i, R_{i-1}) \quad (i = 1, \dots, 16), \qquad \text{output } (R_{16}, L_{16}).$$
+    <p><b>Claim.</b> Running the <b>same</b> procedure on input $(R_{16}, L_{16})$ with sub-keys $k_{16}, k_{15}, \dots, k_1$ outputs $(L_0, R_0)$.</p>
+
+    <h2>Proof by induction</h2>
+    <p>Call the values of the second run $(L'_j, R'_j)$, with $(L'_0, R'_0) = (R_{16}, L_{16})$; round $j$ uses $k_{17-j}$.</p>
+    <div class="box claim"><span class="label">Invariant.</span> $(L'_j, R'_j) = (R_{16-j},\, L_{16-j})$ for $j = 0, \dots, 16$.</div>
+    <p><b>$j = 0$:</b> by definition.</p>
+    <p><b>$j \to j+1$:</b> let $i = 16 - j$, so by assumption $(L'_j, R'_j) = (R_i, L_i)$, and round $j+1$ uses $k_i$.</p>
+    $$L'_{j+1} = R'_j = L_i = R_{i-1},$$
+    $$R'_{j+1} = L'_j \oplus f(k_i, R'_j) = R_i \oplus f(k_i, L_i) = \big(L_{i-1} \oplus f(k_i, R_{i-1})\big) \oplus f(k_i, R_{i-1}) = L_{i-1},$$
+    <p>using $L_i = R_{i-1}$ and the definition of $R_i$. So $(L'_{j+1}, R'_{j+1}) = (R_{i-1}, L_{i-1}) = (R_{16-(j+1)}, L_{16-(j+1)})$. ✓</p>
+    <p>For $j = 16$: $(L'_{16}, R'_{16}) = (R_0, L_0)$. The final swap outputs $(L_0, R_0)$, the original input. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>Initial and final permutation</h2>
+    <p>DES computes $(L_0, R_0) = IP(x)$ and outputs $y = IP^{-1}(R_{16} \| L_{16})$. Running DES on $y$ starts with $IP(y) = (R_{16}, L_{16})$, runs the rounds with reversed keys to get $(L_0, R_0)$ after the swap, and ends with $IP^{-1}(L_0 \| R_0) = x$. So the permutations do not change the statement.</p>
+
+    <div class="box result"><span class="label">Result.</span> Thanks to the final swap, $\mathsf{DES}^{-1}_k$ equals $\mathsf{DES}$ with the sub-key order $k_{16}, \dots, k_1$. One circuit can do both encryption and decryption, and $f$ never has to be inverted. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">This is used in <a href="71.html">Question 71</a>: if all sub-keys are equal, reversing their order changes nothing, so $\mathsf{DES}_k^{-1} = \mathsf{DES}_k$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

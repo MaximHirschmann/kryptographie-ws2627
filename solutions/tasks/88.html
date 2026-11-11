@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 88</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="88">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $\Pi$ be a CCA-secure public-key encryption scheme and $\Pi'$ a CCA-secure private-key encryption scheme. Is the hybrid scheme of Construction 10.12 (encrypt a fresh key $k$ with $\Pi$, the message with $\Pi'$ under $k$) CCA-secure? Prove your answer.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 10.15 (restated). Compare <a href="49.html">Question 49</a> (the CPA version) and <a href="54.html">Question 54</a>.</p>
+  </div>
+
+  <div class="solution">
+    <h2>The scheme</h2>
+    <div class="algo"><table>
+      <tr><td>Enc<sup>hy</sup></td><td>$k \leftarrow \{0,1\}^n$; $c_1 \leftarrow \mathsf{Enc}_{pk}(k)$; $c_2 \leftarrow \mathsf{Enc}'_k(m)$; output $\langle c_1, c_2 \rangle$</td></tr>
+      <tr><td>Dec<sup>hy</sup></td><td>$k := \mathsf{Dec}_{sk}(c_1)$ (output $\bot$ if $\bot$); output $\mathsf{Dec}'_k(c_2)$</td></tr>
+    </table></div>
+
+    <div class="box claim"><span class="label">Claim.</span> Yes. If $\Pi$ is CCA-secure and $\Pi'$ is CCA-secure (even for a single encryption under each key), then $\Pi^{\mathsf{hy}}$ is CCA-secure.</div>
+
+    <h2>Proof with two game hops</h2>
+    <p>Fix a PPT adversary $\mathcal{A}$ and a challenge bit $b$. Let $(c_1^*, c_2^*)$ be the challenge, created with the key $k^*$.</p>
+    <p><b>Game 0 (real experiment).</b> $c_1^* \leftarrow \mathsf{Enc}_{pk}(k^*)$, $c_2^* \leftarrow \mathsf{Enc}'_{k^*}(m_b)$. A decryption query $(c_1, c_2) \ne (c_1^*, c_2^*)$ is answered as follows: if $c_1 \ne c_1^*$, use $\mathsf{Dec}_{sk}(c_1)$; if $c_1 = c_1^*$, use $k^*$ directly to decrypt $c_2$. By correctness $\mathsf{Dec}_{sk}(c_1^*) = k^*$, so this is the real decryption oracle.</p>
+    <p><b>Game 1.</b> Like Game 0, but $c_1^* \leftarrow \mathsf{Enc}_{pk}(0^n)$. Queries with $c_1 = c_1^*$ are still answered with $k^*$.</p>
+
+    <h3>Game 0 ≈ Game 1 (CCA security of $\Pi$)</h3>
+    <p>Reduction $\mathcal{B}$ against $\Pi$:</p>
+    <ul>
+      <li>Get $pk$ and a decryption oracle $\mathsf{Dec}_{sk}(\cdot)$. Choose $k^* \leftarrow \{0,1\}^n$. Answer $\mathcal{A}$'s decryption queries: if $c_1 \ne c_1^*$ (or before the challenge), get $k = \mathsf{Dec}_{sk}(c_1)$ from the oracle and decrypt $c_2$ with it; if $c_1 = c_1^*$, use $k^*$.</li>
+      <li>When $\mathcal{A}$ outputs $m_0, m_1$: output $(k^*, 0^n)$ as $\mathcal{B}$'s own challenge pair and receive $c_1^*$; set $c_2^* \leftarrow \mathsf{Enc}'_{k^*}(m_b)$.</li>
+      <li>Output $1$ iff $\mathcal{A}$ outputs $b$.</li>
+    </ul>
+    <p>$\mathcal{B}$ never asks for $c_1^*$ itself. If $c_1^*$ encrypts $k^*$, $\mathcal{A}$ is in Game 0; if it encrypts $0^n$, in Game 1. So $|\Pr[G_0] - \Pr[G_1]| \le \mathsf{negl}(n)$.</p>
+
+    <h3>Game 1 is hard to win (CCA security of $\Pi'$)</h3>
+    <p>In Game 1, $c_1^*$ no longer contains $k^*$. Reduction $\mathcal{C}$ against $\Pi'$ (whose challenger holds $k^*$):</p>
+    <ul>
+      <li>Generate $(pk, sk)$ and $c_1^* \leftarrow \mathsf{Enc}_{pk}(0^n)$ itself.</li>
+      <li>Decryption query $(c_1, c_2)$: if $c_1 \ne c_1^*$, decrypt completely with $sk$; if $c_1 = c_1^*$, then $c_2 \ne c_2^*$ (otherwise the query is the challenge), so ask the $\Pi'$ decryption oracle for $\mathsf{Dec}'_{k^*}(c_2)$, which is allowed.</li>
+      <li>Forward $m_0, m_1$ as $\mathcal{C}$'s challenge, receive $c_2^*$, give $\langle c_1^*, c_2^* \rangle$ to $\mathcal{A}$, and output $\mathcal{A}$'s guess.</li>
+    </ul>
+    <p>This simulates Game 1 exactly, so $\Pr[G_1] \le \frac12 + \mathsf{negl}(n)$.</p>
+
+    <h3>Conclusion</h3>
+    $$\Pr[\mathsf{PubK}^{\mathsf{cca}}_{\mathcal{A},\Pi^{\mathsf{hy}}} = 1] = \Pr[G_0] \le \Pr[G_1] + \mathsf{negl}(n) \le \tfrac12 + \mathsf{negl}(n). \quad \blacksquare$$
+
+    <div class="box result"><span class="label">Result.</span> Yes, the hybrid of a CCA-secure public-key scheme and a CCA-secure private-key scheme is CCA-secure (the "KEM/DEM" composition). Every decryption query either changes $c_1$ (answered by $\Pi$'s oracle) or keeps $c_1^*$ and changes $c_2$ (answered by $\Pi'$'s oracle). <span class="qed">$\blacksquare$</span></div>
+    <p class="note">Both parts must be CCA-secure. If $\Pi'$ is only CPA-secure (e.g. counter mode), the attacker keeps $c_1^*$, flips a bit of $c_2^*$ and asks for decryption, which recovers $m_b$ with one bit flipped.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

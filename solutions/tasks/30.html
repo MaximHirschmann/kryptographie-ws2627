@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 30</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="30">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Say $\Pi = (\mathsf{Gen}, \mathsf{Mac}, \mathsf{Vrfy})$ is a secure MAC, and for $k \in \{0,1\}^n$ the tag-generation algorithm $\mathsf{Mac}_k$ always outputs tags of length $t(n)$. Prove that $t$ must be super-logarithmic.</p>
+    <p><b>Hint</b>: Show $t(n) = \mathcal{O}(\log n) \Rightarrow \Pi$ is not a secure MAC.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box claim"><span class="label">Claim.</span> If $t(n) \le c \log n$ for some constant $c$ and all large $n$, then $\Pi$ is not existentially unforgeable.</div>
+
+    <h2>Attack: guess the tag</h2>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{A}$</td><td>Make no oracle queries. Pick any message $m$, e.g. $m = 0^n$, choose $t \leftarrow \{0,1\}^{t(n)}$ uniformly, and output $(m, t)$.</td></tr>
+    </table></div>
+    <p>$m$ was never queried, so $(m, t)$ counts as a forgery if it verifies.</p>
+
+    <h2>Success probability</h2>
+    <p>By correctness, the real tag $\mathsf{Mac}_k(m)$ always verifies. It is one of the $2^{t(n)}$ strings of length $t(n)$. Even if $\mathsf{Mac}$ is randomised, summing over the possible tags $\tau$:</p>
+    $$\Pr[\mathsf{Vrfy}_k(m, t) = 1] \ \ge\ \sum_{\tau} \Pr[\mathsf{Mac}_k(m) = \tau] \cdot \Pr[t = \tau] = 2^{-t(n)} \ge 2^{-c \log n} = \frac{1}{n^c}.$$
+    <p>So $\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n) = 1] \ge n^{-c}$, which is not negligible (<a href="17.html">Question 17</a>, 4b). Hence $\Pi$ is not secure. <span class="qed">$\blacksquare$</span></p>
+    <p>By contraposition, a secure MAC needs $t(n) = \omega(\log n)$: for every constant $c$, $t(n) \gt c \log n$ for all large $n$. Otherwise $2^{-t(n)}$ is at least an inverse polynomial.</p>
+    <p class="note">In practice this is why tags are at least 64–128 bits long. A 16-bit tag can be guessed with probability $2^{-16}$ per try.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

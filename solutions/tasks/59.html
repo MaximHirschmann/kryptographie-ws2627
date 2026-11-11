@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 59</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="59">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $\Pi = (\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ be a scheme with indistinguishable encryptions in the presence of an eavesdropper (Definition 3.8), where $\mathsf{Enc}_k$ for $k \in \{0,1\}^n$ only accepts messages of length at most $\ell(n)$ for a polynomial $\ell$. Construct a scheme that satisfies Definition 3.8 even if the adversary in $\mathsf{PrivK}^{\mathsf{eav}}$ may output two messages of <b>different</b> lengths.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 3.4 (restated). This is the positive counterpart of <a href="26.html">Question 26</a>.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Idea</h2>
+    <p><a href="26.html">Question 26</a> shows that hiding the length is impossible for messages of <i>unbounded</i> length. Here the message length is bounded by a polynomial, so we can pad every message to the <b>same</b> length before encrypting. Then all ciphertexts encrypt equally long strings and the length leaks nothing.</p>
+
+    <h2>Construction</h2>
+    <p>The new message space is all strings of length at most $\ell(n) - 1$. Padding has to be reversible, so append a $1$ and then zeros:</p>
+    $$\mathsf{pad}(m) = m \,\|\, 1 \,\|\, 0^{\ell(n) - |m| - 1}, \qquad |\mathsf{pad}(m)| = \ell(n).$$
+    <div class="algo"><table>
+      <tr><td>Gen'</td><td>$k \leftarrow \mathsf{Gen}(1^n)$</td></tr>
+      <tr><td>Enc'</td><td>$\mathsf{Enc}'_k(m) = \mathsf{Enc}_k(\mathsf{pad}(m))$ for $|m| \le \ell(n) - 1$</td></tr>
+      <tr><td>Dec'</td><td>$\hat m := \mathsf{Dec}_k(c)$; remove all trailing zeros and then the last $1$; output the rest</td></tr>
+    </table></div>
+    <p><b>Correctness.</b> $\mathsf{pad}(m)$ ends with $1\,0^j$, so the last $1$ marks exactly where $m$ ends.</p>
+
+    <h2>Security proof</h2>
+    <div class="box claim"><span class="label">Claim.</span> If $\Pi$ satisfies Definition 3.8, then $\Pi'$ satisfies Definition 3.8 even for adversaries that output messages of different lengths.</div>
+    <p>Let $\mathcal{A}'$ be any PPT adversary against $\Pi'$ (messages of arbitrary lengths up to $\ell(n)-1$). Build $\mathcal{A}$ against $\Pi$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Run $\mathcal{A}'(1^n)$ and get $m_0, m_1$.</td></tr>
+      <tr><td>2.</td><td>Output $\mathsf{pad}(m_0), \mathsf{pad}(m_1)$. Both have length exactly $\ell(n)$, so this is a legal pair for $\Pi$.</td></tr>
+      <tr><td>3.</td><td>Receive $c \leftarrow \mathsf{Enc}_k(\mathsf{pad}(m_b))$, give $c$ to $\mathcal{A}'$, and output whatever $\mathcal{A}'$ outputs.</td></tr>
+    </table></div>
+    <p>$c$ is distributed exactly like $\mathsf{Enc}'_k(m_b)$, so $\mathcal{A}'$'s view is the same as in $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}$ and</p>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n) = 1] = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
+    <p>$\mathcal{A}$ runs in polynomial time because padding takes $O(\ell(n))$ steps. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> Pad every message to the fixed length $\ell(n)$ (with $1\,0^*$ so it can be removed) and encrypt with $\Pi$. Since all padded messages have the same length, the restriction to equal-length messages disappears. This costs one bit of message length. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">The price is efficiency: a 1-bit message produces a ciphertext as long as one for an $\ell(n)$-bit message. This is unavoidable if lengths must be hidden.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

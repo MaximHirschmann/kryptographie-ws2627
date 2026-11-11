@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 47</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="47">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Consider the following public-key encryption scheme. The public key is $(\mathbb{G}, q, g, h)$ and the private key is $x$, generated exactly as in the ElGamal encryption scheme. In order to encrypt a bit $b$, the sender does the following:</p>
+    <ol>
+      <li>If $b = 0$ then choose a random $y \leftarrow \mathbb{Z}_q$ and compute $c_1 = g^y$ and $c_2 = h^y$. The ciphertext is $\langle c_1, c_2 \rangle$.</li>
+      <li>If $b = 1$ then choose independent random $y, z \leftarrow \mathbb{Z}_q$, compute $c_1 = g^y$ and $c_2 = g^z$, and set the ciphertext equal to $\langle c_1, c_2 \rangle$.</li>
+    </ol>
+    <p>Show that it is possible to decrypt <b>efficiently</b> given knowledge of $x$. Prove that this encryption scheme is CPA-secure if the decisional Diffie-Hellman problem is hard relative to $\mathcal{G}$.</p>
+    <p><i>Hint: Given an adversary $\mathcal{A}$ attacking the encryption scheme $\Pi$, construct an algorithm $\mathcal{A}'$ that solves the DDH problem by using $\mathcal{A}$ as a subroutine. Then, consider the experiment $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n)$.</i></p>
+  </div>
+
+  <div class="solution">
+    <p>Key generation as in ElGamal: $(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$, $x \leftarrow \mathbb{Z}_q$, $h := g^x$.</p>
+
+    <h2>Decryption</h2>
+    <div class="algo"><table>
+      <tr><td>Dec</td><td>input $x$, $\langle c_1, c_2 \rangle$: output $0$ if $c_1^{\,x} = c_2$, otherwise output $1$.</td></tr>
+    </table></div>
+    <ul>
+      <li>$b = 0$: $c_1^{\,x} = g^{xy} = h^y = c_2$, so the output is $0$. Always correct.</li>
+      <li>$b = 1$: $c_1^{\,x} = g^{xy}$ and $c_2 = g^z$. They are equal only if $z = xy$, which has probability $\frac1q$. So the output is $1$ except with negligible probability $\frac1q \le 2^{-(n-1)}$.</li>
+    </ul>
+    <p><b>Efficient:</b> one exponentiation (square-and-multiply, $\mathcal{O}(n)$ group operations) and one comparison.</p>
+
+    <h2>CPA security from DDH</h2>
+    <p><b>DDH:</b> given $(\mathbb{G}, q, g, h_1, h_2, h_3)$ with $h_1 = g^{x}$, $h_2 = g^{y}$, decide whether $h_3 = g^{xy}$ ("DH tuple") or $h_3 = g^{z}$ for uniform $z$ ("random tuple"). DDH is hard if every PPT $\mathcal{A}'$ satisfies $\big|\Pr[\mathcal{A}'(\text{DH tuple}) = 1] - \Pr[\mathcal{A}'(\text{random tuple}) = 1]\big| \le \mathsf{negl}(n)$.</p>
+    <p>For public-key encryption, eavesdropper security already implies CPA security, because the adversary can encrypt by itself with $pk$ (<a href="50.html">Question 50</a>). So it suffices to consider $\mathsf{PubK}^{\mathsf{eav}}$. The only two messages are the bits $0$ and $1$. If $\mathcal{A}$ outputs $m_0 = m_1$ it wins with probability exactly $\frac12$, so assume $m_0 = 0$, $m_1 = 1$.</p>
+
+    <p><b>Key observation:</b></p>
+    <ul>
+      <li>An encryption of $0$ is $\langle g^y, g^{xy} \rangle$: together with $pk$, this is a <b>DH tuple</b> $(g^x, g^y, g^{xy})$.</li>
+      <li>An encryption of $1$ is $\langle g^y, g^z \rangle$: a <b>random tuple</b> $(g^x, g^y, g^z)$.</li>
+    </ul>
+
+    <h3>The distinguisher $\mathcal{A}'$</h3>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{A}'(\mathbb{G}, q, g, h_1, h_2, h_3)$</td><td>
+        <span class="line">$pk := (\mathbb{G}, q, g, h_1)$; run $\mathcal{A}(pk)$, which outputs $m_0 = 0, m_1 = 1$</span>
+        <span class="line">give $\mathcal{A}$ the challenge ciphertext $\langle h_2, h_3 \rangle$; receive $b'$</span>
+        <span class="line">output $1$ if $b' = 0$ (i.e. "DH tuple"), otherwise $0$</span>
+      </td></tr>
+    </table></div>
+    <p>The public key is distributed exactly as in the real scheme, because $h_1 = g^x$ with uniform $x$. If the input is a DH tuple, $\mathcal{A}$ sees a real encryption of $0$. If it is a random tuple, $\mathcal{A}$ sees a real encryption of $1$. Therefore</p>
+    $$
+    \begin{aligned}
+    \Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1]
+    &= \tfrac12 \Pr[b' = 0 \mid \mathsf{Enc}(0)] + \tfrac12 \Pr[b' = 1 \mid \mathsf{Enc}(1)] \\
+    &= \tfrac12 \Pr[\mathcal{A}'(\text{DH}) = 1] + \tfrac12 \big(1 - \Pr[\mathcal{A}'(\text{rand}) = 1]\big) \\
+    &= \tfrac12 + \tfrac12 \big(\Pr[\mathcal{A}'(\text{DH}) = 1] - \Pr[\mathcal{A}'(\text{rand}) = 1]\big) \\
+    &\le \tfrac12 + \tfrac12\, \mathsf{negl}(n).
+    \end{aligned}
+    $$
+    <p>$\mathcal{A}'$ is PPT whenever $\mathcal{A}$ is. So if DDH is hard, $\Pi$ is EAV-secure, and hence CPA-secure. <span class="qed">$\blacksquare$</span></p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

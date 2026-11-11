@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 80</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="80">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove formally: if the DDH problem is hard relative to $\mathcal{G}$, then the CDH problem is hard relative to $\mathcal{G}$.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 7.16 (restated). Compare <a href="42.html">Question 42</a> (CDH ⇒ DL).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Definitions</h2>
+    <p>$\mathcal{G}(1^n)$ outputs a cyclic group $\mathbb{G}$ of order $q$ (with $\|q\| = n$) and a generator $g$.</p>
+    <p><b>CDH is hard</b> if for every PPT $\mathcal{A}$:</p>
+    $$\Pr\big[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y) = g^{xy}\big] \le \mathsf{negl}(n), \quad x, y \leftarrow \mathbb{Z}_q.$$
+    <p><b>DDH is hard</b> if for every PPT $D$:</p>
+    $$\Big|\Pr[D(\mathbb{G}, q, g, g^x, g^y, g^{xy}) = 1] - \Pr[D(\mathbb{G}, q, g, g^x, g^y, g^z) = 1]\Big| \le \mathsf{negl}(n), \quad x, y, z \leftarrow \mathbb{Z}_q.$$
+
+    <h2>Proof (contrapositive)</h2>
+    <p>Assume CDH is <b>not</b> hard: some PPT $\mathcal{A}$ computes $g^{xy}$ with non-negligible probability $\varepsilon(n)$. Build a DDH distinguisher:</p>
+    <div class="algo"><table>
+      <tr><td>$D(\mathbb{G}, q, g, h_1, h_2, h_3)$:</td><td></td></tr>
+      <tr><td>1.</td><td>Run $h := \mathcal{A}(\mathbb{G}, q, g, h_1, h_2)$.</td></tr>
+      <tr><td>2.</td><td>Output $1$ iff $h = h_3$.</td></tr>
+    </table></div>
+    <p><b>Real triple</b> ($h_3 = g^{xy}$): $\mathcal{A}$'s input is distributed exactly as in the CDH experiment, so</p>
+    $$\Pr[D = 1] = \Pr[\mathcal{A} \text{ outputs } g^{xy}] = \varepsilon(n).$$
+    <p><b>Random triple</b> ($h_3 = g^z$): $z$ is independent of $\mathcal{A}$'s input $(g^x, g^y)$, so $h_3$ is a uniform group element independent of $\mathcal{A}$'s output $h$:</p>
+    $$\Pr[D = 1] = \Pr[h = g^z] = \frac{1}{q}.$$
+    <p>The advantage is</p>
+    $$\varepsilon(n) - \frac1q \;\ge\; \varepsilon(n) - 2^{-(n-1)},$$
+    <p>which is non-negligible because $\varepsilon$ is non-negligible and $2^{-(n-1)}$ is negligible. $D$ runs in polynomial time (one call to $\mathcal{A}$ and one comparison). So DDH is not hard either. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> DDH hard ⇒ CDH hard: whoever can compute $g^{xy}$ can check whether a given third element equals it. Together with <a href="42.html">Question 42</a>: DDH hard ⇒ CDH hard ⇒ DL hard. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">The converse is false in general: in $\mathbb{Z}_p^*$, DDH is easy (the Legendre symbol reveals whether $g^{xy}$ is a square), although CDH is believed to be hard there. That is why ElGamal uses prime-order subgroups.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

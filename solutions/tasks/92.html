@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 92</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="92">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p><b>Encoded RSA</b> signatures: keys as in textbook RSA; a public encoding function $\mathsf{enc}$ is fixed, and $\sigma = [\mathsf{enc}(m)^d \bmod N]$.</p>
+    <ol type="a">
+      <li>How is a signature verified?</li>
+      <li>Why can a good choice of $\mathsf{enc}$ prevent the no-message attack on textbook RSA?</li>
+      <li>Show that encoded RSA is insecure for $\mathsf{enc}(m) = 0 \| m \| 0^{\ell/10}$, where $\ell = \|N\|$, $|m| = 9\ell/10 - 1$ and $m \ne 0\cdots0$.</li>
+      <li>Show that it is insecure for $\mathsf{enc}(m) = 0 \| m \| 0 \| m$, where $|m| = (\|N\| - 1)/2$ (roughly) and $m \ne 0\cdots0$.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 12.4 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) Verification</h2>
+    $$\mathsf{Vrfy}_{(N,e)}(m, \sigma) = 1 \iff \sigma^e \equiv \mathsf{enc}(m) \pmod N.$$
+
+    <h2>(b) No-message attack</h2>
+    <p>Against textbook RSA, the forger picks any $\sigma$ and outputs the message $m := \sigma^e \bmod N$. With an encoding, the forger needs $\sigma^e \bmod N$ to be a valid encoding $\mathsf{enc}(m)$ of some message. If the image of $\mathsf{enc}$ is a <b>sparse</b> set (e.g. it has a fixed structure such as many zero bits or redundancy), a random $\sigma^e$ lands in it only with negligible probability. For example, if $\mathsf{enc}$ forces 100 fixed bits, the chance is about $2^{-100}$.</p>
+
+    <h2>Key observation for (c) and (d)</h2>
+    <p>In both cases $\mathsf{enc}$ is <b>multiplication by a constant</b> (as integers):</p>
+    $$\text{(c)}\ \ \mathsf{enc}(m) = m \cdot 2^{\ell/10}, \qquad \text{(d)}\ \ \mathsf{enc}(m) = m \cdot (2^{|m|+1} + 1),$$
+    <p>because appending zeros multiplies by a power of two, and $m \| 0 \| m = m \cdot 2^{|m|+1} + m$. Call the constant $C$, so $\mathsf{enc}(m) = C \cdot m$. Then for messages with $m_1 m_2 = m_3 m_4$ (as integers):</p>
+    $$\mathsf{enc}(m_1)\,\mathsf{enc}(m_2) = C^2 m_1 m_2 = C^2 m_3 m_4 = \mathsf{enc}(m_3)\,\mathsf{enc}(m_4),$$
+    <p>and since $x \mapsto x^d$ is multiplicative, the same relation holds for the signatures.</p>
+
+    <h2>(c) and (d): the forgery</h2>
+    <p>Use $2 \cdot 2 = 1 \cdot 4$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Ask for the signatures on $m = 1$ and $m = 2$ (written with the required number of bits; both are non-zero): $\sigma_1 = (C)^d$, $\sigma_2 = (2C)^d$.</td></tr>
+      <tr><td>2.</td><td>Output the message $4$ with $\sigma^* := \sigma_2^2 \cdot \sigma_1^{-1} \bmod N$.</td></tr>
+    </table></div>
+    <p>Check:</p>
+    $$(\sigma^*)^e = \frac{\left((2C)^d\right)^{2e}}{(C^d)^e} = \frac{(2C)^2}{C} = 4C = \mathsf{enc}(4) \pmod N.$$
+    <p>The message $4$ was never queried and $\mathsf{enc}(4)$ is a legal encoding (the integer $4$ easily fits into $|m|$ bits), so this is a valid forgery after two queries. ($\sigma_1$ is invertible modulo $N$ except with negligible probability; otherwise it reveals a factor of $N$.) <span class="qed">$\blacksquare$</span></p>
+    <p class="note">More generally, any messages with $m_1 m_2 = m_3 m_4$ work: three signatures give the fourth. Since the forger chooses the messages, it can always arrange this.</p>
+
+    <div class="box result"><span class="label">Result.</span> (a) Check $\sigma^e = \mathsf{enc}(m)$. (b) A sparse image of $\mathsf{enc}$ defeats "pick $\sigma$ first". (c, d) Both encodings are linear ($\mathsf{enc}(m) = Cm$), so RSA's multiplicativity carries over: $\sigma(4) = \sigma(2)^2/\sigma(1)$. Redundancy alone is not enough. The encoding must also destroy the algebraic structure, which a cryptographic hash in hashed RSA (heuristically) does. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 75</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="75">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Use DES as a fixed-length hash function $h : \{0,1\}^{112} \to \{0,1\}^{64}$ by $h(x_1 \| x_2) = \mathsf{DES}_{x_1}(\mathsf{DES}_{x_2}(0^{64}))$ with $|x_1| = |x_2| = 56$.</p>
+    <ol type="a">
+      <li>Write down an explicit collision.</li>
+      <li>Show how to find a pre-image of a given $y$ in roughly $2^{56}$ time.</li>
+      <li>Give a smarter pre-image attack that runs in roughly $2^{32}$ time and succeeds with high probability.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 5.15 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) Explicit collision via weak keys</h2>
+    <p>For a weak key $w$ (<a href="71.html">Question 71</a>), $\mathsf{DES}_w(\mathsf{DES}_w(z)) = z$. Hence</p>
+    $$h(w \| w) = \mathsf{DES}_w(\mathsf{DES}_w(0^{64})) = 0^{64}$$
+    <p>for each of the four weak keys. Any two of them collide, e.g.</p>
+    $$h(0^{56} \| 0^{56}) = h(1^{56} \| 1^{56}) = 0^{64}.$$
+
+    <h2>(b) Pre-image in about $2^{56}$: meet in the middle</h2>
+    <p>We need $\mathsf{DES}_{x_2}(0^{64}) = \mathsf{DES}^{-1}_{x_1}(y)$. Both sides can be computed independently:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>For every $x_2 \in \{0,1\}^{56}$: store $v = \mathsf{DES}_{x_2}(0^{64})$ in a table indexed by $v$.</td></tr>
+      <tr><td>2.</td><td>For every $x_1 \in \{0,1\}^{56}$: compute $u = \mathsf{DES}^{-1}_{x_1}(y)$; if $u$ is in the table under some $x_2$, output $x_1 \| x_2$.</td></tr>
+    </table></div>
+    <p>There are $2^{112}$ pairs, and a pair matches with probability about $2^{-64}$, so about $2^{48}$ pre-images exist and the attack finds one. Time about $2 \cdot 2^{56}$, memory $2^{56}$.</p>
+    <p class="note">A naive search over all $2^{112}$ inputs would be far slower. The meet-in-the-middle split is what makes $2^{56}$ possible.</p>
+
+    <h2>(c) Pre-image in about $2^{32}$: birthday-style matching</h2>
+    <p>We do not need to try <i>all</i> keys on each side, only enough to make a match likely.</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Choose $2^{32}$ random $x_2$, compute $v = \mathsf{DES}_{x_2}(0^{64})$, and store them in a table.</td></tr>
+      <tr><td>2.</td><td>Choose $2^{32}$ random $x_1$, compute $u = \mathsf{DES}^{-1}_{x_1}(y)$, and look each up in the table.</td></tr>
+    </table></div>
+    <p>Model the $u$'s and $v$'s as independent uniform 64-bit strings. There are $2^{32} \cdot 2^{32} = 2^{64}$ pairs $(u, v)$, each equal with probability $2^{-64}$, so the expected number of matches is $1$, and the probability of at least one match is about $1 - e^{-1} \approx 0.63$. With $2^{33}$ values on each side the expected number is $4$ and the success probability is about $1 - e^{-4} \approx 0.98$.</p>
+    <p><b>Cost.</b> About $2^{33}$–$2^{34}$ DES evaluations and $2^{32}$–$2^{33}$ memory: "roughly $2^{32}$".</p>
+
+    <div class="box result"><span class="label">Result.</span> (a) Weak keys give $h(w\|w) = 0^{64}$, so e.g. $0^{112}$ and $1^{112}$ collide. (b) A meet-in-the-middle attack finds pre-images in about $2^{56}$. (c) Matching about $2^{32}$ random values on each side succeeds with constant probability, because the 64-bit middle value is short. A 64-bit output is too short for a hash function. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">Generic collision attacks are even cheaper. By the birthday bound, about $2^{32}$ random inputs to $h$ already contain a collision, without using weak keys. Pre-image resistance with $n$-bit outputs can be at most about $2^{n}$; here the structure lowers it to $2^{n/2}$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

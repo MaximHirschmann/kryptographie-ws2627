@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 38</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="38">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>What is the output of an $r$-round Feistel network when the input is $(L_0, R_0)$ in each of the following two cases:</p>
+    <ol>
+      <li>Each round function outputs all 0s, regardless of the input.</li>
+      <li>Each round function is the identity function.</li>
+    </ol>
+  </div>
+
+  <div class="solution">
+    <p>One Feistel round with round function $f_i$:</p>
+    $$L_i = R_{i-1}, \qquad R_i = L_{i-1} \oplus f_i(R_{i-1}).$$
+
+    <h2>1. $f_i \equiv 0$</h2>
+    <p>Each round is $L_i = R_{i-1}$, $R_i = L_{i-1}$, so it just <b>swaps the halves</b>:</p>
+    $$(L_r, R_r) = \begin{cases} (L_0, R_0) & r \text{ even} \\ (R_0, L_0) & r \text{ odd} \end{cases}$$
+
+    <h2>2. $f_i = \mathrm{id}$</h2>
+    <p>Now $R_i = L_{i-1} \oplus R_{i-1}$. The first rounds are:</p>
+    <table class="data">
+      <tr><th>Round $i$</th><th>$L_i$</th><th>$R_i$</th></tr>
+      <tr><td>0</td><td>$L_0$</td><td>$R_0$</td></tr>
+      <tr><td>1</td><td>$R_0$</td><td>$L_0 \oplus R_0$</td></tr>
+      <tr><td>2</td><td>$L_0 \oplus R_0$</td><td>$R_0 \oplus L_0 \oplus R_0 = L_0$</td></tr>
+      <tr><td>3</td><td>$L_0$</td><td>$(L_0 \oplus R_0) \oplus L_0 = R_0$</td></tr>
+    </table>
+    <p>After 3 rounds the input comes back, so the pattern repeats with period 3:</p>
+    $$(L_r, R_r) = \begin{cases} (L_0,\ R_0) & r \equiv 0 \pmod 3 \\ (R_0,\ L_0 \oplus R_0) & r \equiv 1 \pmod 3 \\ (L_0 \oplus R_0,\ L_0) & r \equiv 2 \pmod 3 \end{cases}$$
+    <p class="note">In both cases the output is a fixed linear function of the input that does not involve a key, so there is no security at all. A Feistel network is only as strong as its round functions. Some descriptions, e.g. DES, omit the swap in the last round. Then the halves of the final result are exchanged.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 71</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="71">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Using <a href="70.html">Question 70</a>:</p>
+    <ol type="a">
+      <li>Show that for $k = 0^{56}$, $\mathsf{DES}_k(\mathsf{DES}_k(x)) = x$ for all $x$. Why is such a key a security risk?</li>
+      <li>Find three other keys with this property (the <i>weak keys</i> of DES).</li>
+      <li>Do these four weak keys make DES seriously vulnerable?</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 5.9 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) The key $0^{56}$</h2>
+    <p><b>Key schedule.</b> The 56-bit key is split by $PC\text{-}1$ into two 28-bit registers $C_0, D_0$. In each round both are rotated left by 1 or 2 positions, and $PC\text{-}2$ selects 48 bits of $C_i \| D_i$ as sub-key $k_i$.</p>
+    <p>For $k = 0^{56}$: $C_0 = D_0 = 0^{28}$, rotating zeros gives zeros, so every $C_i, D_i$ is zero and every sub-key is $k_i = 0^{48}$.</p>
+    <p>By <a href="70.html">Question 70</a>, $\mathsf{DES}_k^{-1}$ is DES with sub-keys in reverse order. Here all sub-keys are equal, so the reversed sequence is the same sequence: $\mathsf{DES}_k^{-1} = \mathsf{DES}_k$, i.e.</p>
+    $$\mathsf{DES}_k(\mathsf{DES}_k(x)) = x \quad \text{for all } x.$$
+    <p><b>Why it is dangerous.</b></p>
+    <ul>
+      <li><b>Encryption decrypts:</b> anyone who can get encryptions (a chosen-plaintext setting, e.g. a device that encrypts on request) can decrypt any ciphertext $c$ by asking for the encryption of $c$.</li>
+      <li><b>Double encryption is the identity:</b> encrypting twice, e.g. in a protocol or a careless "double DES", sends the plaintext in the clear.</li>
+      <li><b>Easy to recognize:</b> $\mathsf{DES}_k$ is an involution, so it is trivially distinguishable from a random permutation, for which $\pi(\pi(x)) = x$ almost never holds.</li>
+    </ul>
+
+    <h2>(b) Three more weak keys</h2>
+    <p>The argument only needed that <b>both registers are constant</b>, i.e. all-zero or all-one, since rotation leaves them unchanged. That gives four combinations:</p>
+    <table class="data">
+      <tr><th>$C_0$</th><th>$D_0$</th><th>Key with parity bits (hex)</th></tr>
+      <tr><td>$0^{28}$</td><td>$0^{28}$</td><td><code>01 01 01 01 01 01 01 01</code></td></tr>
+      <tr><td>$1^{28}$</td><td>$1^{28}$</td><td><code>FE FE FE FE FE FE FE FE</code></td></tr>
+      <tr><td colspan="2">one all-zero, the other all-one</td><td><code>1F 1F 1F 1F 0E 0E 0E 0E</code> and <code>E0 E0 E0 E0 F1 F1 F1 F1</code></td></tr>
+    </table>
+    <p>(In the 64-bit form every 8th bit is a parity bit, which is why the bytes are not simply <code>00</code>/<code>FF</code>. $PC\text{-}1$ scatters the key bits, so the two mixed keys are not the obvious "half zeros, half ones" strings.)</p>
+    <p>In each case all 16 sub-keys are equal, so the same argument gives $\mathsf{DES}_k \circ \mathsf{DES}_k = \mathrm{id}$.</p>
+
+    <h2>(c) Is this a serious vulnerability?</h2>
+    <p><b>No.</b> A uniformly random key is weak with probability $4/2^{56} = 2^{-54}$, which is negligible. Implementations can also simply reject these four keys when generating a key. They matter only when keys are not chosen at random, e.g. if an attacker can choose or influence the key, or when DES is used as a building block whose key is derived from data, as in <a href="75.html">Question 75</a>.</p>
+
+    <div class="box result"><span class="label">Result.</span> Keys whose two key-schedule registers are constant give 16 identical sub-keys, so $\mathsf{DES}_k$ is its own inverse. There are exactly four such keys. They are dangerous when used, but a random key hits one with probability $2^{-54}$. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">There are also 6 pairs of <i>semi-weak keys</i> with $\mathsf{DES}_{k_1} = \mathsf{DES}_{k_2}^{-1}$, where the registers have alternating patterns like $0101\ldots$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

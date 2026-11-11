@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 43</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="43">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Determine whether or not the following problem is hard. Let $p$ be prime, and fix $x \in \mathbb{Z}^*_{p-1}$. Given $p$, $x$, and $y := [g^x \bmod p]$ (where $g$ is a random value between $1$ and $p - 1$), find $g$; that is, compute $[y^{1/x} \bmod p]$. If you claim the problem is hard, show a reduction to one of the cryptographic hardness assumptions introduced in class. If you claim the problem is easy, present an algorithm, justify its correctness, and analyze its complexity.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box result"><span class="label">Answer.</span> The problem is <b>easy</b>. Since $x$ is invertible modulo $p - 1 = |\mathbb{Z}_p^*|$, taking $x$-th roots is just exponentiation with $x^{-1} \bmod (p-1)$. It works like RSA decryption when $\varphi$ is known: here $\varphi(p) = p - 1$ is public.</div>
+
+    <h2>Algorithm</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Compute $d := x^{-1} \bmod (p - 1)$ with the extended Euclidean algorithm. It exists because $x \in \mathbb{Z}^*_{p-1}$, i.e. $\gcd(x, p-1) = 1$.</td></tr>
+      <tr><td>2.</td><td>Output $[y^d \bmod p]$, computed by square-and-multiply.</td></tr>
+    </table></div>
+
+    <h2>Correctness</h2>
+    <p>$xd \equiv 1 \pmod{p-1}$, so $xd = 1 + j(p - 1)$ for some integer $j$. Since $1 \le g \le p - 1$, $g \in \mathbb{Z}_p^*$, and Fermat's little theorem (07_number_theory, Corollary 1.22) gives $g^{p-1} \equiv 1 \pmod p$:</p>
+    $$y^d = g^{xd} = g^{1 + j(p-1)} = g \cdot \big(g^{p-1}\big)^j \equiv g \pmod p.$$
+
+    <p class="note">This is the remark after Example 1.28 in 07_number_theory: if $(x, \varphi(n)) = 1$ there is $y$ with $xy \equiv 1 \pmod{\varphi(n)}$, and then $a^{xy} \equiv a \pmod n$. For a prime modulus, $\varphi(p) = p - 1$ is public.</p>
+
+    <h2>Complexity</h2>
+    <p>Let $n = \|p\|$ be the bit length.</p>
+    <ul>
+      <li>Extended Euclid: $\mathcal{O}(n)$ division steps on $n$-bit numbers, so $\mathcal{O}(n^3)$ bit operations (naively; $\mathcal{O}(n^2)$ with care).</li>
+      <li>Modular exponentiation: at most $2n$ modular multiplications of $n$-bit numbers, so $\mathcal{O}(n^3)$ bit operations.</li>
+    </ul>
+    <p>In total $\mathcal{O}(n^3)$, which is polynomial in the input length. So the problem is easy. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">Contrast with RSA: there, the $e$-th root modulo $N$ is hard because the group order $\varphi(N)$ is secret, and computing it is as hard as factoring (<a href="41.html">Question 41</a>). Modulo a prime $p$ the group order $p - 1$ is public.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

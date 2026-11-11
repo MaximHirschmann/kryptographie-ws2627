@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 52</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="52">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Show that any 2-round key-exchange protocol (that is, where each party sends a single message) satisfying the key exchange definition from class can be converted into a public-key encryption scheme that is CPA-secure.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Structure of a 2-round protocol</h2>
+    <p>Alice chooses randomness $\rho_A$ and sends $\mathsf{msg}_1 = \mathsf{A}_1(1^n; \rho_A)$. Bob chooses $\rho_B$, sends $\mathsf{msg}_2 = \mathsf{B}(1^n, \mathsf{msg}_1; \rho_B)$ and outputs $k_B$. Alice computes $k_A = \mathsf{A}_2(\rho_A, \mathsf{msg}_2)$. By correctness $k_A = k_B =: k \in \{0,1\}^n$. Since Alice's message does not depend on Bob, it can be <b>published in advance</b>; it becomes the public key.</p>
+
+    <h2>Construction</h2>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>choose $\rho_A$; &nbsp; $pk := \mathsf{msg}_1 = \mathsf{A}_1(1^n; \rho_A)$; &nbsp; $sk := \rho_A$</td></tr>
+      <tr><td>Enc</td><td>input $pk$, $m \in \{0,1\}^n$: run Bob on $\mathsf{msg}_1 = pk$, obtaining $(\mathsf{msg}_2, k)$; output $\langle \mathsf{msg}_2,\ k \oplus m \rangle$</td></tr>
+      <tr><td>Dec</td><td>input $sk = \rho_A$, $\langle c_1, c_2 \rangle$: $k := \mathsf{A}_2(\rho_A, c_1)$; output $c_2 \oplus k$</td></tr>
+    </table></div>
+    <p><b>Correctness:</b> Alice and Bob compute the same key, so $c_2 \oplus k = m$. (Diffie–Hellman turns into ElGamal this way.)</p>
+
+    <h2>CPA security</h2>
+    <p>For public-key schemes EAV security implies CPA security (<a href="50.html">Question 50</a>), so consider $\mathsf{PubK}^{\mathsf{eav}}$. What the adversary sees, $pk = \mathsf{msg}_1$ and $c = \langle \mathsf{msg}_2, k \oplus m_b \rangle$, is a <b>transcript plus the key used as a one-time pad</b>.</p>
+    <p>Let $\mathcal{A}$ be PPT. Build $\mathcal{A}'$ for the lecture's $\mathsf{KE}^{\mathsf{eav}}$ (<a href="46.html">Question 46</a>; $k_1 = k$ is the real key, $k_0$ is uniform):</p>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{A}'(\mathsf{trans} = (\mathsf{msg}_1, \mathsf{msg}_2), k_b)$</td><td>
+        <span class="line">run $\mathcal{A}(pk := \mathsf{msg}_1)$, which outputs $m_0, m_1$</span>
+        <span class="line">choose $\beta \leftarrow \{0,1\}$; give $\mathcal{A}$ the ciphertext $\langle \mathsf{msg}_2,\ k_b \oplus m_\beta \rangle$; receive $\beta'$</span>
+        <span class="line">output $1$ ("real key") if $\beta' = \beta$, otherwise $0$</span>
+      </td></tr>
+    </table></div>
+    <ul>
+      <li><b>$b = 1$, real key $k_1 = k$:</b> $\mathcal{A}$ sees exactly $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi}$, so $\Pr[\beta' = \beta] = \Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] =: P$.</li>
+      <li><b>$b = 0$, uniform $k_0$:</b> $k_0 \oplus m_\beta$ is a one-time pad, uniform and independent of $\beta$, so $\Pr[\beta' = \beta] = \frac12$, and $\mathcal{A}'$ correctly outputs $0$ with probability $\frac12$.</li>
+    </ul>
+    $$\Pr[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A}',\Pi_{KE}} = 1] = \tfrac12 P + \tfrac12 \cdot \tfrac12 \quad\Longrightarrow\quad P = 2\Pr[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A}',\Pi_{KE}} = 1] - \tfrac12 \le 2\big(\tfrac12 + \mathsf{negl}(n)\big) - \tfrac12 = \tfrac12 + 2\,\mathsf{negl}(n).$$
+    <p>So the scheme is EAV-secure and therefore CPA-secure. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">Messages longer than $n$ bits: use the key $k$ in a private-key scheme instead of the one-time pad, i.e. hybrid encryption (<a href="49.html">Question 49</a>). The construction needs exactly <b>2 rounds</b>: Alice's message must not depend on anything the sender does, so that it can serve as a fixed public key.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

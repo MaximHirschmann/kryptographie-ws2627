@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 32</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="32">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Before HMAC was invented, it was quite common to define a MAC by $\mathsf{Mac}_k(m) = H^s(k \| m)$ where $H$ is a collision-resistant hash function. Show that this is not a secure MAC when $H$ is constructed via the Merkle-Damgård transform.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Merkle–Damgård</h2>
+    <p>Let $h^s : \{0,1\}^{2n} \to \{0,1\}^n$ be a compression function. To hash $x$ of length $L$: pad $x$ with zeros to a multiple of $n$, split it into blocks $x_1, \dots, x_B$, and append the length block $x_{B+1} := L$. Then</p>
+    $$z_0 := IV, \qquad z_i := h^s(z_{i-1} \,\|\, x_i) \ \ (i = 1, \dots, B+1), \qquad H^s(x) := z_{B+1}.$$
+    <p>The output $z_{B+1}$ is the <b>full internal state</b>. Anyone who knows it can keep hashing more blocks <i>without knowing $x$</i>.</p>
+
+    <h2>Length-extension attack</h2>
+    <p>Let $|k| = n$, which is public.</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Query the MAC oracle on any message $m$ and receive $t = H^s(k \| m) = z_{B+1}$.</td></tr>
+      <tr><td>2.</td><td>Let $x = k \| m$ with $L = |x|$, and $\text{pad}$ the zeros that fill up the last block. Define the new message
+      $$m^* := m \,\|\, \text{pad} \,\|\, \langle L \rangle \,\|\, y$$
+      for any block $y$. Here $\langle L \rangle$ is the length block written out.</td></tr>
+      <tr><td>3.</td><td>Compute the tag without the key:
+      $$t^* := h^s\big(h^s(t \,\|\, y) \,\big\|\, \langle L^* \rangle\big), \qquad L^* := |k \| m^*| = n + |m^*|.$$</td></tr>
+      <tr><td>4.</td><td>Output the forgery $(m^*, t^*)$.</td></tr>
+    </table></div>
+
+    <h2>Why it is valid</h2>
+    <p>Hashing $k \| m^*$ goes through the blocks $x_1, \dots, x_B$, then $\langle L \rangle$, then $y$, then the final length block $\langle L^* \rangle$. After the first $B + 1$ blocks the state is exactly $t$. The remaining two steps are what the attacker computed. So $\mathsf{Mac}_k(m^*) = t^*$. Since $m^* \ne m$ was never queried, this is a valid forgery with probability $1$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">Collision resistance does not help here, because no collision is used. The problem is that the tag reveals the internal state. HMAC prevents this with the outer hash: $H^s\big((k \oplus opad) \,\|\, H^s((k \oplus ipad) \| m)\big)$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

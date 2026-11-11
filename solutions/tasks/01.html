@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 1</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="1">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Provide a formal definition of the $\mathsf{Gen}$, $\mathsf{Enc}$, and $\mathsf{Dec}$ algorithms for both the mono-alphabetic substitution and Vigenère ciphers. Remark: a permutation is typically denoted $\pi$.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Setup</h2>
+    <p class="note">Notation as in the lecture (script <a href="../script.html#sec-monoalphabetic">§2.2</a> and Mitschrift): $\ell$ denotes the <b>number of permutations</b>, i.e. the size of the key space, not the size of the alphabet.</p>
+    <p>Let $\Sigma = \{0, \dots, 25\}$ be the alphabet ($\texttt{a} = 0, \dots, \texttt{z} = 25$). A plaintext is a word $m = m_0 m_1 \cdots m_{|m|-1} \in \Sigma^*$ and is encrypted letter by letter. As in the script, $c = c_0 c_1 \cdots c_{|c|-1}$ is the ciphertext.</p>
+
+    <h2>Mono-alphabetic substitution cipher</h2>
+    <p>Let $\{\pi_0, \dots, \pi_{\ell - 1}\}$ be the set of all permutations $\pi : \Sigma \to \Sigma$, so $\ell = |\Sigma|! = 26!$. The key is the index of a permutation:</p>
+    $$\mathcal{K} = \{0, \dots, \ell - 1\}, \qquad \ell = 26! \approx 2^{88}.$$
+
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>
+        <span class="line">$k \leftarrow \{0, \dots, \ell - 1\}$ uniformly</span>
+        <span class="line">output $k$</span>
+      </td></tr>
+      <tr><td>Enc</td><td>
+        <span class="line">input $k \in \mathcal{K}$, $m \in \Sigma^*$</span>
+        <span class="line">for $i = 0$ to $|m| - 1$ do</span>
+        <span class="line ind">$c_i := \pi_k(m_i)$</span>
+        <span class="line">output $c = c_0 \cdots c_{|m|-1}$</span>
+      </td></tr>
+      <tr><td>Dec</td><td>
+        <span class="line">input $k \in \mathcal{K}$, $c \in \Sigma^*$</span>
+        <span class="line">for $i = 0$ to $|c| - 1$ do</span>
+        <span class="line ind">$m_i := \pi_k^{-1}(c_i)$</span>
+        <span class="line">output $m = m_0 \cdots m_{|c|-1}$</span>
+      </td></tr>
+    </table></div>
+
+    <p><b>Correctness:</b> $\mathsf{Dec}_k(\mathsf{Enc}_k(m))_i = \pi_k^{-1}(\pi_k(m_i)) = \mathrm{id}(m_i) = m_i$ for every position $i$.</p>
+    <p class="note">Careful with $\ell$: it is $26!$, not $26$. If $\ell$ were the alphabet size, $\{0, \dots, \ell - 1\}$ would only index 26 permutations, e.g. only the shifts.</p>
+
+    <h2>Vigenère cipher</h2>
+    <p>As in the script, the Vigenère cipher applies $n$ shift ciphers in turn, where $n$ is the key length. The shift by $k$ is the permutation $x \mapsto x + k \bmod 26$, so the $i$-th letter is encrypted with the key letter $k_{i \bmod n}$.</p>
+    $$\mathcal{K} = \Sigma^n = \{0, \dots, 25\}^n.$$
+
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>
+        <span class="line">for $i = 0$ to $n - 1$ do</span>
+        <span class="line ind">$k_i \leftarrow \{0, \dots, 25\}$ uniformly &nbsp;<span style="color:var(--muted)">(= $\mathsf{Gen}$ of the shift cipher)</span></span>
+        <span class="line">output $k = (k_0, \dots, k_{n-1})$</span>
+      </td></tr>
+      <tr><td>Enc</td><td>
+        <span class="line">input $k = (k_0, \dots, k_{n-1}) \in \mathcal{K}$, $m \in \Sigma^*$</span>
+        <span class="line">for $i = 0$ to $|m| - 1$ do</span>
+        <span class="line ind">$c_i := m_i + k_{i \bmod n} \bmod 26$</span>
+        <span class="line">output $c = c_0 \cdots c_{|m|-1}$</span>
+      </td></tr>
+      <tr><td>Dec</td><td>
+        <span class="line">input $k = (k_0, \dots, k_{n-1}) \in \mathcal{K}$, $c \in \Sigma^*$</span>
+        <span class="line">for $i = 0$ to $|c| - 1$ do</span>
+        <span class="line ind">$m_i := c_i - k_{i \bmod n} \bmod 26$</span>
+        <span class="line">output $m = m_0 \cdots m_{|c|-1}$</span>
+      </td></tr>
+    </table></div>
+
+    <p><b>Correctness:</b> $\mathsf{Dec}_k(\mathsf{Enc}_k(m))_i = (m_i + k_{i \bmod n}) - k_{i \bmod n} = m_i \bmod 26$ for every position $i$.</p>
+
+    <p class="note">If each $k_i$ were a whole permutation from the mono-alphabetic $\mathsf{Gen}$ (so $c_i := \pi_{k_{i \bmod n}}(m_i)$), we would get a general polyalphabetic substitution cipher. Vigenère is the special case where every $\pi_{k_i}$ is a shift.</p>
+
+    <h3>Example (from the script)</h3>
+    $$
+    \begin{array}{ll}
+    \text{plaintext}  & \texttt{tellhimaboutme} \\
+    \text{keyword}    & \texttt{cafecafecafeca} \\
+    \text{ciphertext} & \texttt{WFRQKJSFEPAYPF}
+    \end{array}
+    $$
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

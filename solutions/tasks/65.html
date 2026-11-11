@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 65</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="65">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Strengthen the MAC security definition so that the adversary gets oracle access to both $\mathsf{Mac}_k(\cdot)$ and $\mathsf{Vrfy}_k(\cdot, \cdot)$.</p>
+    <ol type="a">
+      <li>Give the formal definition and explain which real-world attacks the $\mathsf{Vrfy}$ oracle models.</li>
+      <li>Show: if $\Pi$ has unique tags, then $\Pi$ satisfies your definition whenever it satisfies the usual definition (Definition 4.2).</li>
+      <li>Show: without unique tags, $\Pi$ may satisfy Definition 4.2 but not your definition.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 4.5 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) Definition</h2>
+    <p>The experiment $\mathsf{Mac\text{-}forge}^{\mathsf{vrfy}}_{\mathcal{A},\Pi}(n)$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>$k \leftarrow \mathsf{Gen}(1^n)$.</td></tr>
+      <tr><td>2.</td><td>$\mathcal{A}(1^n)$ gets oracles $\mathsf{Mac}_k(\cdot)$ and $\mathsf{Vrfy}_k(\cdot,\cdot)$. Let $\mathcal{Q}$ be the set of messages it asked $\mathsf{Mac}_k$ for.</td></tr>
+      <tr><td>3.</td><td>$\mathcal{A}$ outputs $(m, t)$. The output is $1$ iff $\mathsf{Vrfy}_k(m, t) = 1$ and $m \notin \mathcal{Q}$.</td></tr>
+    </table></div>
+    <p>$\Pi$ is <b>secure with verification queries</b> if for every PPT $\mathcal{A}$, $\Pr[\mathsf{Mac\text{-}forge}^{\mathsf{vrfy}}_{\mathcal{A},\Pi}(n) = 1] \le \mathsf{negl}(n)$.</p>
+    <p><b>What it models.</b> In practice an attacker can send forged messages to the receiver and observe whether they are accepted: the receiver acts on the message, answers it, returns an error code, takes measurably longer, or closes the connection. Each such reaction answers one verification query.</p>
+
+    <h2>(b) Unique tags make the $\mathsf{Vrfy}$ oracle useless</h2>
+    <p><b>Unique tags:</b> $\mathsf{Mac}_k$ is deterministic and $\mathsf{Vrfy}_k(m, t) = 1 \iff t = \mathsf{Mac}_k(m)$.</p>
+    <p>Let $\mathcal{A}'$ be a PPT adversary in the new experiment making at most $q_v$ verification queries. Build $\mathcal{A}$ for Definition 4.2 (only a $\mathsf{Mac}$ oracle):</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Choose $j \leftarrow \{1, \dots, q_v + 1\}$.</td></tr>
+      <tr><td>2.</td><td>Run $\mathcal{A}'$ and forward its $\mathsf{Mac}$ queries to the own oracle.</td></tr>
+      <tr><td>3.</td><td>For a verification query $(m, t)$ with $m \in \mathcal{Q}$: the unique valid tag $\mathsf{Mac}_k(m)$ is already known, so answer $1$ iff $t$ equals it (always correct).</td></tr>
+      <tr><td>4.</td><td>For a verification query $(m, t)$ with $m \notin \mathcal{Q}$ (a "fresh" query): if it is the $j$-th fresh query, stop and output $(m, t)$; otherwise answer $0$.</td></tr>
+      <tr><td>5.</td><td>If $\mathcal{A}'$ finishes, output its final $(m, t)$ (this is "query number $q_v + 1$").</td></tr>
+    </table></div>
+    <p>The simulation is perfect up to the first fresh verification query whose correct answer is $1$, because that query is itself a forgery. Let $i^*$ be the position of the first valid fresh query, or $q_v + 1$ if $\mathcal{A}'$ only succeeds with its final output. If $\mathcal{A}'$ succeeds or makes a valid fresh query, then $i^*$ exists, and with probability $\frac{1}{q_v+1}$ we have $j = i^*$. In that case $\mathcal{A}$ outputs a valid forgery on a message it never asked to be MACed. Therefore</p>
+    $$\Pr[\mathsf{Mac\text{-}forge}^{\mathsf{vrfy}}_{\mathcal{A}',\Pi} = 1] \le (q_v + 1) \cdot \Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi} = 1] \le (q_v + 1) \cdot \mathsf{negl}(n),$$
+    <p>which is negligible since $q_v$ is polynomial. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(c) Without unique tags: a counterexample</h2>
+    <p>Let $\Pi = (\mathsf{Gen}, \mathsf{Mac}, \mathsf{Vrfy})$ be any secure MAC with $n$-bit keys (e.g. $\mathsf{Mac}_k(m) = F_k(m)$). Define $\Pi'$ with the same keys. The new tags are triples $(t, i, \beta)$ with $i \in \{0, \dots, n\}$ and $\beta \in \{0,1\}$:</p>
+    <div class="algo"><table>
+      <tr><td>Mac'</td><td>$\mathsf{Mac}'_k(m) = (\mathsf{Mac}_k(m), 0, 0)$</td></tr>
+      <tr><td>Vrfy'</td><td>$\mathsf{Vrfy}'_k(m, (t, i, \beta)) = 1$ iff $\mathsf{Vrfy}_k(m, t) = 1$ <b>and</b> ($i = 0$ or $k_i = \beta$)</td></tr>
+    </table></div>
+    <p>Tags are not unique: $(t, 0, 0)$ and $(t, i, k_i)$ are all valid.</p>
+    <p><b>$\Pi'$ satisfies Definition 4.2.</b> A forgery $(m^*, (t^*, i, \beta))$ for a fresh $m^*$ requires $\mathsf{Vrfy}_k(m^*, t^*) = 1$, which is a forgery against $\Pi$. A reduction simulates $\mathsf{Mac}'$ by appending $(0, 0)$ to its own tags. So any forger for $\Pi'$ gives a forger for $\Pi$ with the same success probability.</p>
+    <p><b>$\Pi'$ is broken with a $\mathsf{Vrfy}$ oracle.</b></p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Query $\mathsf{Mac}'_k(m)$ for some $m$ and get $(t, 0, 0)$.</td></tr>
+      <tr><td>2.</td><td>For $i = 1, \dots, n$: query $\mathsf{Vrfy}'_k(m, (t, i, 0))$. The answer is $1$ iff $k_i = 0$, so it reveals bit $k_i$.</td></tr>
+      <tr><td>3.</td><td>With the full key $k$, compute $(\mathsf{Mac}_k(m^*), 0, 0)$ for a new $m^* \ne m$ and output it.</td></tr>
+    </table></div>
+    <p>This uses $1 + n$ queries and succeeds with probability $1$. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> With unique tags, a verification oracle gives nothing that the $\mathsf{Mac}$ oracle doesn't already give, except the chance to test forgeries, which is covered by guessing $j$. Without unique tags, "which tags are accepted" can leak secret information, as $\Pi'$ shows. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

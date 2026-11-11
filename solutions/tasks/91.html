@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 91</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="91">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Textbook Rabin signatures work like textbook RSA signatures, but with the Rabin function $x \mapsto x^2 \bmod N$: the signer, who knows the factorization $N = pq$, signs a quadratic residue $m$ by outputting a square root $\sigma$ of $m$ modulo $N$; verification checks $\sigma^2 \equiv m \pmod N$. Show that an adaptive chosen-message attack recovers the private key.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 12.3 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Fact: square roots reveal the factorization</h2>
+    <p>Every quadratic residue $m \in \mathbb{Z}_N^*$ has exactly four square roots $\pm x, \pm x'$ (two modulo $p$ times two modulo $q$, combined by CRT). If $x^2 \equiv \sigma^2 \pmod N$ but $\sigma \not\equiv \pm x$, then $N \mid (x - \sigma)(x + \sigma)$ but divides neither factor, so</p>
+    $$\gcd(x - \sigma, N) \in \{p, q\}.$$
+
+    <h2>Attack</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Choose $x \leftarrow \mathbb{Z}_N^*$ and ask for a signature on $m := x^2 \bmod N$ (a quadratic residue by construction).</td></tr>
+      <tr><td>2.</td><td>Receive $\sigma$ with $\sigma^2 \equiv m$. If $\sigma \not\equiv \pm x$: output $p = \gcd(x - \sigma, N)$ and $q = N/p$.</td></tr>
+      <tr><td>3.</td><td>Otherwise repeat with a new $x$.</td></tr>
+    </table></div>
+
+    <h2>Analysis</h2>
+    <p>The signer only sees $m$, and $m$ has four square roots that are equally likely to be our $x$. However the signer picks its root (deterministically or at random), it is <b>independent of which of the four roots we chose</b>. Hence</p>
+    $$\Pr[\sigma \in \{x, -x\}] = \tfrac{2}{4} = \tfrac12.$$
+    <p>So each query factors $N$ with probability $\frac12$, and the expected number of queries is $2$. With $p, q$ the attacker knows the private key and can sign anything. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> Ask for the signature of $x^2$ for a random $x$. With probability $\frac12$ the returned root is not $\pm x$, and $\gcd(x - \sigma, N)$ factors $N$. Textbook Rabin signatures are totally broken by chosen-message attacks. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">This is the flip side of Rabin's provable security: computing square roots modulo $N$ is <i>equivalent</i> to factoring. A signer that computes square roots for you is therefore a factoring oracle. Secure variants hash the message first (with randomness), so the attacker cannot choose the number being square-rooted.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

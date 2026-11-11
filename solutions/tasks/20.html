@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 20</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="20">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $F$ be a pseudorandom function, and $G$ a pseudorandom generator with expansion factor $\ell(n) = n + 1$. For each of the following encryption schemes, state whether the scheme has indistinguishable encryptions in the presence of an eavesdropper and whether it is CPA-secure, and justify your answer very briefly. In each case, the shared key is a random $k \in \{0,1\}^n$.</p>
+    <ol>
+      <li>To encrypt $m \in \{0,1\}^{2n+2}$ parse $m$ as $m_1 \| m_2$ with $|m_1| = |m_2|$ and send $\langle G(k) \oplus m_1, G(k+1) \oplus m_2 \rangle$.</li>
+      <li>To encrypt $m \in \{0,1\}^{n+1}$ choose a random $r \leftarrow \{0,1\}^n$ and send $\langle r, G(r) \oplus m \rangle$.</li>
+      <li>To encrypt $m \in \{0,1\}^n$ send $m \oplus F_k(0^n)$.</li>
+      <li>To encrypt $m \in \{0,1\}^{2n}$ parse $m$ as $m_1 \| m_2$ with $|m_1| = |m_2|$, then choose $r \leftarrow \{0,1\}^n$ at random, and send $\langle r, m_1 \oplus F_k(r), m_2 \oplus F_k(r+1) \rangle$.</li>
+    </ol>
+  </div>
+
+  <div class="solution">
+    <table class="data">
+      <tr><th>Scheme</th><th>EAV-secure</th><th>CPA-secure</th></tr>
+      <tr><td>1. $\langle G(k) \oplus m_1, G(k+1) \oplus m_2 \rangle$</td><td>no (not in general)</td><td>no</td></tr>
+      <tr><td>2. $\langle r, G(r) \oplus m \rangle$</td><td>no</td><td>no</td></tr>
+      <tr><td>3. $m \oplus F_k(0^n)$</td><td><b>yes</b></td><td>no</td></tr>
+      <tr><td>4. $\langle r, m_1 \oplus F_k(r), m_2 \oplus F_k(r+1) \rangle$</td><td><b>yes</b></td><td><b>yes</b></td></tr>
+    </table>
+    <p class="note">General facts used: CPA security implies EAV security, and a <b>deterministic</b> scheme is never CPA-secure. The attacker asks the oracle for the encryption of $m_0$ and compares it with the challenge.</p>
+
+    <h2>1. Not EAV-secure in general, not CPA-secure</h2>
+    <p>It is deterministic, so it is not CPA-secure. The PRG guarantee only covers <i>one</i> output on a uniform seed. It says nothing about $G(k)$ and $G(k+1)$ together, because the seeds $k$ and $k + 1$ are related.</p>
+    <p><b>Counterexample.</b> Let $G'$ be a PRG from $n - 1$ to $n + 1$ bits, and let $G(s) := G'(s_1 \cdots s_{n-1})$, which ignores the last seed bit. $G$ is still a PRG. If the last bit of $k$ is $0$, then $k$ and $k + 1$ differ only in that bit, so $G(k) = G(k+1)$ and the two ciphertext halves satisfy $c_1 \oplus c_2 = m_1 \oplus m_2$.</p>
+    <p>Attack: choose $u \leftarrow \{0,1\}^{n+1}$ uniformly and output the messages $m^0 = 0^{n+1} \| 0^{n+1}$ and $m^1 = 0^{n+1} \| u$. Given $\langle c_1, c_2 \rangle$, output $0$ iff $c_1 = c_2$.</p>
+    <ul>
+      <li>$b = 0$: $c_1 = c_2$ whenever $G(k) = G(k+1)$, so with probability at least $\frac12$.</li>
+      <li>$b = 1$: $c_1 \oplus c_2 = G(k) \oplus G(k+1) \oplus u$ with $u$ uniform and independent, so $c_1 = c_2$ only with probability $2^{-(n+1)}$.</li>
+    </ul>
+    $$\Pr[\mathsf{win}] \ge \tfrac12 \cdot \tfrac12 + \tfrac12 \big(1 - 2^{-(n+1)}\big) = \tfrac34 - 2^{-(n+2)}.$$
+    <p>So the advantage is non-negligible.</p>
+
+    <h2>2. Neither</h2>
+    <p>$r$ is sent in the clear and $G$ is public, and the key $k$ is not even used. Anyone computes $G(r)$ and recovers $m = (G(r) \oplus m) \oplus G(r)$.</p>
+
+    <h2>3. EAV-secure, not CPA-secure</h2>
+    <p><b>EAV:</b> this is a one-time pad with the pad $F_k(0^n)$. Since $F$ is a PRF, $F_k(0^n)$ is indistinguishable from a uniform string. So for a single message the scheme is as good as the one-time pad, up to a negligible difference: reduce to the PRF with a distinguisher that queries $0^n$ once.</p>
+    <p><b>Not CPA:</b> the scheme is deterministic and always uses the same pad. Ask for $\mathsf{Enc}(0^n) = F_k(0^n)$ and decrypt the challenge with it.</p>
+
+    <h2>4. EAV- and CPA-secure</h2>
+    <p>This is <b>randomised counter mode</b> with two blocks: the pads are $F_k(r)$ and $F_k(r+1)$ for a fresh random $r$. Replace $F_k$ by a random function. The challenge pads are then uniform and independent of everything else unless one of the two inputs $r^*, r^* + 1$ was already used in an oracle query. With $q$ queries, that happens with probability at most $\frac{4q}{2^n}$, which is negligible. So the challenge is a one-time pad except with negligible probability, and the reduction to the PRF works as in <a href="19.html">Question 19</a>.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

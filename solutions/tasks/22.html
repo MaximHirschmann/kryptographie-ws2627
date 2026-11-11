@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 22</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="22">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Present formulas for decryption of the ECB, CBC, OFB, and CTR modes of encryption. For which modes can decryption be parallelized?</p>
+    <p>Write the $i$-th plaintext block as $m_i$, the $i$-th ciphertext block as $c_i$, and write $F_k$ and $F_k^{-1}$ as the encryption and decryption function given key $k$.</p>
+    <p><i>Hint: The presentation may be simplified by writing the $IV$ as $c_0$ or as a helper variable $b_0$ where appropriate.</i></p>
+  </div>
+
+  <div class="solution">
+    <table class="data">
+      <tr><th>Mode</th><th>Encryption</th><th>Decryption</th><th>Parallel decryption?</th></tr>
+      <tr><td><b>ECB</b></td><td>$c_i = F_k(m_i)$</td><td>$m_i = F_k^{-1}(c_i)$</td><td><b>yes</b></td></tr>
+      <tr><td><b>CBC</b></td><td>$c_0 = IV$, $c_i = F_k(c_{i-1} \oplus m_i)$</td><td>$m_i = F_k^{-1}(c_i) \oplus c_{i-1}$</td><td><b>yes</b></td></tr>
+      <tr><td><b>OFB</b></td><td>$b_0 = IV$, $b_i = F_k(b_{i-1})$, $c_i = m_i \oplus b_i$</td><td>$b_0 = c_0 = IV$, $b_i = F_k(b_{i-1})$, $m_i = c_i \oplus b_i$</td><td><b>no</b> (but the $b_i$ can be precomputed)</td></tr>
+      <tr><td><b>CTR</b></td><td>$c_0 = ctr$, $c_i = m_i \oplus F_k(ctr + i)$</td><td>$m_i = c_i \oplus F_k(c_0 + i)$</td><td><b>yes</b></td></tr>
+    </table>
+
+    <h2>Explanation</h2>
+    <ul>
+      <li><b>ECB:</b> each block is processed independently.</li>
+      <li><b>CBC:</b> <i>encryption</i> is sequential, because $c_i$ depends on $c_{i-1}$. For <i>decryption</i>, all $c_{i-1}$ are already known from the ciphertext, so every $m_i = F_k^{-1}(c_i) \oplus c_{i-1}$ can be computed independently.</li>
+      <li><b>OFB:</b> the key stream $b_i = F_k^{(i)}(IV)$ is a chain, and $b_i$ needs $b_{i-1}$. So it cannot be parallelised. However, the stream does not depend on the ciphertext, so it can be computed in advance, before the ciphertext arrives.</li>
+      <li><b>CTR:</b> every pad $F_k(ctr + i)$ depends only on $ctr$ and $i$. Fully parallel, and blocks can be decrypted in any order (random access).</li>
+    </ul>
+    <p class="note">ECB and CBC need $F_k^{-1}$, so $F$ must be a permutation (block cipher). OFB and CTR only ever evaluate $F_k$ in the forward direction, so a pseudorandom <i>function</i> is enough.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

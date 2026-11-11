@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 11</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="11">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>When using the one-time pad (Vernam's cipher) with the key $k = 0^\ell$, it follows that $\mathsf{Enc}_k(m) = k \oplus m = m$ and the message is effectively sent in the clear! It has therefore been suggested to improve the one-time pad by only encrypting with a key $k \ne 0^\ell$ (i.e., to have $\mathsf{Gen}$ choose $k$ uniformly at random from the set of non-zero keys of length $\ell$). Is this an improvement? In particular, is it still perfectly secret? Prove your answer. If your answer is positive, explain why the one-time pad is not described in this way. If your answer is negative, reconcile this with the fact that encrypting with $0^\ell$ doesn't change the plaintext.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box result"><span class="label">Answer.</span> <b>No.</b> The modified scheme is <b>not</b> perfectly secret. Removing the zero key makes the scheme worse: the attacker learns that $m \ne c$.</div>
+
+    <h2>Proof</h2>
+    <p>Now $\mathcal{K} = \{0,1\}^\ell \setminus \{0^\ell\}$ and $\mathcal{M} = \mathcal{C} = \{0,1\}^\ell$.</p>
+
+    <h3>Short proof</h3>
+    <p>$|\mathcal{K}| = 2^\ell - 1 \lt 2^\ell = |\mathcal{M}|$. By the script's <a href="../script.html#thm-key-length">Theorem 6</a>, a perfectly secret scheme needs $|\mathcal{K}| \ge |\mathcal{M}|$. So the scheme cannot be perfectly secret.</p>
+
+    <h3>Direct proof (script <a href="../script.html#def-ps-3">Definition 5</a>)</h3>
+    <p>Fix a ciphertext $c$ and look at two messages: $m_0 := c$ and some $m_1 \ne c$.</p>
+    $$\Pr[C = c \mid M = m_0] = \Pr[K = m_0 \oplus c] = \Pr[K = 0^\ell] = 0,$$
+    $$\Pr[C = c \mid M = m_1] = \Pr[K = m_1 \oplus c] = \frac{1}{2^\ell - 1} \gt 0 \qquad (\text{since } m_1 \oplus c \ne 0^\ell).$$
+    <p>The two values differ, so <a href="../script.html#def-ps-3">Definition 5</a> is violated and the scheme is not perfectly secret. <span class="qed">$\blacksquare$</span></p>
+
+    <p>In terms of Definition 2.1: with the uniform distribution over $\mathcal{M}$,</p>
+    $$\Pr[M = c \mid C = c] = 0 \ne \frac{1}{2^\ell} = \Pr[M = c].$$
+    <p>Seeing $c$ rules out the message $m = c$.</p>
+
+    <h3>Extreme case $\ell = 1$</h3>
+    <p>The only key left is $k = 1$, so $\mathsf{Enc}(m) = m \oplus 1$. The attacker simply flips the bit and reads the message.</p>
+
+    <h2>Reconciling with "the key $0^\ell$ sends the message in the clear"</h2>
+    <ul>
+      <li>Perfect secrecy is a property of the <b>distribution</b> of ciphertexts, not of a single key. The attacker sees $c$ but does not know which key was used. With the original one-time pad, the ciphertext $c = m$ is exactly as likely as any other ciphertext, and every message is still possible. Nothing tells the attacker that this $c$ "is" the plaintext.</li>
+      <li>Every key is "bad" for some message: any key $k$ maps the message $m = k \oplus c$ to $c$. Key $0^\ell$ is no worse than any other key.</li>
+      <li>Removing $0^\ell$ creates a real leak: the attacker learns with certainty that $m \ne c$. For example, if the message is one of two values $m_0, m_1$ and $c = m_0$, the attacker knows that $m = m_1$.</li>
+    </ul>
+    <p class="note">The worry about sending "in the clear" is about how the ciphertext looks, not about what the attacker can deduce. If the zero key is a concern in practice (for example, if keys are not sampled properly), the fix is to generate keys correctly, not to change the key space.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

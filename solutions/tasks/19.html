@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 19</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="19">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $F$ be a pseudorandom permutation, and define a fixed-length encryption scheme $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ as follows: On input $m \in \{0,1\}^{n/2}$ and key $k \in \{0,1\}^n$, algorithm $\mathsf{Enc}$ chooses a random string $r \leftarrow \{0,1\}^{n/2}$ of length $n/2$ and computes $c := F_k(r \| m)$.</p>
+    <ol>
+      <li>Give formulas for encryption and decryption.</li>
+      <li>Prove that this scheme is CPA-secure for messages of length $n/2$.</li>
+    </ol>
+  </div>
+
+  <div class="solution">
+    <h2>1. Formulas</h2>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>$k \leftarrow \{0,1\}^n$ uniformly</td></tr>
+      <tr><td>Enc</td><td>input $k$, $m \in \{0,1\}^{n/2}$: &nbsp; $r \leftarrow \{0,1\}^{n/2}$; &nbsp; output $c := F_k(r \,\|\, m)$</td></tr>
+      <tr><td>Dec</td><td>input $k$, $c \in \{0,1\}^n$: &nbsp; compute $x := F_k^{-1}(c)$; &nbsp; output the last $n/2$ bits of $x$</td></tr>
+    </table></div>
+    <p><b>Correctness:</b> $F_k^{-1}(F_k(r \| m)) = r \| m$, and its last $n/2$ bits are $m$. Decryption needs $F_k^{-1}$, which exists and is efficient because $F$ is a (strong) pseudorandom <i>permutation</i>.</p>
+
+    <h2>2. CPA security</h2>
+    <p>By <a href="18.html">Question 18</a>, $F$ is also a pseudorandom function. Let $\mathcal{A}$ be a PPT adversary that makes at most $q(n)$ encryption queries.</p>
+
+    <h3>Step 1: The idealised scheme $\tilde\Pi$</h3>
+    <p>$\tilde\Pi$ is the same scheme with $F_k$ replaced by a truly random function $f : \{0,1\}^n \to \{0,1\}^n$. In the CPA game for $\tilde\Pi$, the challenge is $c^* = f(r^* \| m_b)$ with a fresh $r^*$. Let $\mathsf{Repeat}$ be the event that $r^*$ equals one of the values $r_1, \dots, r_q$ used for the oracle answers.</p>
+    <ul>
+      <li>If $\mathsf{Repeat}$ does not occur, the input $r^* \| m_b$ was never given to $f$ before. So $c^*$ is uniform and independent of everything $\mathcal{A}$ has seen, including $b$. $\mathcal{A}$ wins with probability exactly $\frac12$.</li>
+      <li>$\Pr[\mathsf{Repeat}] \le \frac{q(n)}{2^{n/2}}$ (union bound over the $q$ values).</li>
+    </ul>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi}(n) = 1] \le \tfrac12 + \frac{q(n)}{2^{n/2}}.$$
+
+    <h3>Step 2: Reduction to the PRF</h3>
+    <p>Build a distinguisher $D^{\mathcal{O}}$ with oracle $\mathcal{O}$, which is either $F_k$ or $f$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Run $\mathcal{A}(1^n)$. Answer each encryption query $m$ with $\mathcal{O}(r \| m)$ for a fresh $r \leftarrow \{0,1\}^{n/2}$.</td></tr>
+      <tr><td>2.</td><td>When $\mathcal{A}$ outputs $m_0, m_1$: choose $b \leftarrow \{0,1\}$, $r^* \leftarrow \{0,1\}^{n/2}$, and give $c^* := \mathcal{O}(r^* \| m_b)$.</td></tr>
+      <tr><td>3.</td><td>Keep answering queries as in step 1. When $\mathcal{A}$ outputs $b'$, output $1$ iff $b' = b$.</td></tr>
+    </table></div>
+    <p>$D$ simulates the CPA game perfectly: for $\Pi$ if $\mathcal{O} = F_k$, and for $\tilde\Pi$ if $\mathcal{O} = f$. Therefore</p>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] = \Pr[D^{F_k} = 1] \le \Pr[D^{f} = 1] + \mathsf{negl}(n) = \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi} = 1] + \mathsf{negl}(n).$$
+    <p>Combining with Step 1:</p>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] \le \tfrac12 + \frac{q(n)}{2^{n/2}} + \mathsf{negl}(n) = \tfrac12 + \mathsf{negl}'(n). \qquad \blacksquare$$
+    <p class="note">The random half $r$ is essential. Without it, encryption would be deterministic, and no deterministic scheme can be CPA-secure (repeated messages give repeated ciphertexts). $r$ needs $n/2$ bits so that a repetition among polynomially many encryptions is negligible.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

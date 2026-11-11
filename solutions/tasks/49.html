@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 49</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="49">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Recall Construction 10.12 of a hybrid encryption scheme. Let $\Pi = (\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ be a public-key encryption system, and let $\Pi' = (\mathsf{Gen}', \mathsf{Enc}', \mathsf{Dec}')$ be a private-key encryption scheme. Construct $\Pi^{hy}$ as follows:</p>
+    <ul>
+      <li>$\mathsf{Gen}^{hy}$: on input $1^n$ run $\mathsf{Gen}(1^n)$ and use the public and private keys $(pk, sk)$ that are output.</li>
+      <li>$\mathsf{Enc}^{hy}$: on input $pk$ and $m \in \{0,1\}^*$: choose a random $k \leftarrow \{0,1\}^n$; compute $c_1 \leftarrow \mathsf{Enc}_{pk}(k)$ and $c_2 \leftarrow \mathsf{Enc}'_k(m)$; output $\langle c_1, c_2 \rangle$.</li>
+      <li>$\mathsf{Dec}^{hy}$: on input $sk$ and $\langle c_1, c_2 \rangle$: compute $k := \mathsf{Dec}_{sk}(c_1)$; output $m := \mathsf{Dec}'_k(c_2)$.</li>
+    </ul>
+    <p>Theorem 10.13 says that if $\Pi$ is CPA-secure and $\Pi'$ has indistinguishable encryptions in the presence of an eavesdropper, then $\Pi^{hy}$ is CPA-secure. The proof proceeds in three stages:</p>
+    $$
+    \begin{array}{ccc}
+    \langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle & \overset{\text{"transitivity"}}{\longleftrightarrow} & \langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_1) \rangle \\
+    \updownarrow \text{ case 1, } \mathcal{A}_1 \text{ (security of } \Pi) & & \updownarrow \text{ case 2, } \mathcal{A}_2 \text{ (security of } \Pi) \\
+    \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle & \underset{\text{case 3, } \mathcal{A}' \text{ (security of } \Pi')}{\longleftrightarrow} & \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_1) \rangle
+    \end{array}
+    $$
+    <p>The proof fixes an arbitrary PPT adversary $\mathcal{A}^{hy}$ in $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}^{hy},\Pi^{hy}}(n)$. <b>Give a formal reduction of cases 1 and 3 by completing the schemas</b> (boxes numbered 1–10: outer box = the reduction, inner box = $\mathcal{A}^{hy}$, boxes on the left = the challenger of the reduction's own experiment).</p>
+  </div>
+
+  <div class="solution">
+    <p class="note">How to read the schemas. The left column is the reduction's <b>own challenger</b>: $\mathsf{PubK}^{\mathsf{eav}}$ for $\Pi$ in case 1, $\mathsf{PrivK}^{\mathsf{eav}}$ for $\Pi'$ in case 3. The middle is the reduction itself; boxes 2 and 7 are its internal computations. The right column is $\mathcal{A}^{hy}$, which the reduction runs as a subroutine. Steps are in the order 1 to 10.</p>
+
+    <h2>Case 1: $\mathcal{A}_1$ attacks $\Pi$ in $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}_1,\Pi}(n)$</h2>
+    <p>Goal: show $\langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle \approx \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle$. $\mathcal{A}_1$ uses its <b>challenge</b> to encrypt either the real key $k$ or $0^n$.</p>
+    <table class="data">
+      <tr><th>#</th><th>Where</th><th>Content</th></tr>
+      <tr><td>1</td><td>Challenger $\to \mathcal{A}_1$</td><td>Challenger runs $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ and gives $pk$ to $\mathcal{A}_1$.</td></tr>
+      <tr><td>2</td><td>$\mathcal{A}_1$ (internal)</td><td>Choose $k \leftarrow \{0,1\}^n$ uniformly.</td></tr>
+      <tr><td>3</td><td>$\mathcal{A}_1 \to$ challenger</td><td>Output the two messages $k_0 := k$ and $k_1 := 0^n$ (same length $n$).</td></tr>
+      <tr><td>4</td><td>Challenger $\to \mathcal{A}_1$</td><td>Challenger picks $b \leftarrow \{0,1\}$ and sends $c_1 \leftarrow \mathsf{Enc}_{pk}(k_b)$, i.e. $\mathsf{Enc}_{pk}(k)$ or $\mathsf{Enc}_{pk}(0^n)$.</td></tr>
+      <tr><td>5</td><td>$\mathcal{A}_1 \to \mathcal{A}^{hy}$</td><td>Run $\mathcal{A}^{hy}(pk)$.</td></tr>
+      <tr><td>6</td><td>$\mathcal{A}^{hy} \to \mathcal{A}_1$</td><td>$\mathcal{A}^{hy}$ outputs two messages $m_0, m_1$.</td></tr>
+      <tr><td>7</td><td>$\mathcal{A}_1$ (internal)</td><td>Compute $c_2 \leftarrow \mathsf{Enc}'_k(m_0)$, always with $m_0$.</td></tr>
+      <tr><td>8</td><td>$\mathcal{A}_1 \to \mathcal{A}^{hy}$</td><td>Give the challenge ciphertext $\langle c_1, c_2 \rangle$.</td></tr>
+      <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}_1$</td><td>$\mathcal{A}^{hy}$ outputs a bit $b''$.</td></tr>
+      <tr><td>10</td><td>$\mathcal{A}_1 \to$ challenger</td><td>Output $b' := b''$.</td></tr>
+    </table>
+    <p><b>Analysis.</b> If $b = 0$, $\mathcal{A}^{hy}$ sees exactly $\langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle$, a real $\Pi^{hy}$-encryption of $m_0$. If $b = 1$, it sees $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle$. Hence</p>
+    $$
+    \begin{aligned}
+    \Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}_1,\Pi}(n) = 1]
+    &= \tfrac12 \Pr\big[\mathcal{A}^{hy}(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) = 0\big] \\
+    &\quad + \tfrac12 \Pr\big[\mathcal{A}^{hy}(pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0)) = 1\big] \\
+    &= \tfrac12 + \tfrac12 \big(p_{\text{top}} - p_{\text{bottom}}\big) \ \le\ \tfrac12 + \mathsf{negl}(n),
+    \end{aligned}
+    $$
+    <p>where $p_{\text{top}}$ and $p_{\text{bottom}}$ are the probabilities that $\mathcal{A}^{hy}$ outputs $0$ on the top-left and bottom-left tuple. So $p_{\text{top}} - p_{\text{bottom}} \le 2\,\mathsf{negl}(n)$. The variant of $\mathcal{A}_1$ that flips $\mathcal{A}^{hy}$'s output gives the same bound for $p_{\text{bottom}} - p_{\text{top}}$. Case 2 is identical, with $m_1$ instead of $m_0$ in step 7.</p>
+
+    <h2>Case 3: $\mathcal{A}'$ attacks $\Pi'$ in $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n)$</h2>
+    <p>Goal: show $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle \approx \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_1) \rangle$. Now the private key $k$ is <b>hidden inside the challenger</b>. $\mathcal{A}'$ does not need it, because the public-key part only encrypts $0^n$.</p>
+    <table class="data">
+      <tr><th>#</th><th>Where</th><th>Content</th></tr>
+      <tr><td>1</td><td>Challenger $\to \mathcal{A}'$</td><td>Challenger runs $k \leftarrow \mathsf{Gen}'(1^n)$ (kept secret) and starts $\mathcal{A}'(1^n)$.</td></tr>
+      <tr><td>2</td><td>$\mathcal{A}'$ (internal)</td><td>Run $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ itself.</td></tr>
+      <tr><td>3</td><td>$\mathcal{A}' \to \mathcal{A}^{hy}$</td><td>Run $\mathcal{A}^{hy}(pk)$.</td></tr>
+      <tr><td>4</td><td>$\mathcal{A}^{hy} \to \mathcal{A}'$</td><td>$\mathcal{A}^{hy}$ outputs $m_0, m_1$.</td></tr>
+      <tr><td>5</td><td>$\mathcal{A}' \to$ challenger</td><td>Output the same pair $m_0, m_1$.</td></tr>
+      <tr><td>6</td><td>Challenger $\to \mathcal{A}'$</td><td>Challenger picks $b \leftarrow \{0,1\}$ and sends $c_2 \leftarrow \mathsf{Enc}'_k(m_b)$.</td></tr>
+      <tr><td>7</td><td>$\mathcal{A}'$ (internal)</td><td>Compute $c_1 \leftarrow \mathsf{Enc}_{pk}(0^n)$.</td></tr>
+      <tr><td>8</td><td>$\mathcal{A}' \to \mathcal{A}^{hy}$</td><td>Give the challenge ciphertext $\langle c_1, c_2 \rangle$.</td></tr>
+      <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}'$</td><td>$\mathcal{A}^{hy}$ outputs a bit $b''$.</td></tr>
+      <tr><td>10</td><td>$\mathcal{A}' \to$ challenger</td><td>Output $b' := b''$.</td></tr>
+    </table>
+    <p><b>Analysis.</b> $\mathcal{A}^{hy}$ sees exactly $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_b) \rangle$ with $\mathcal{A}'$'s challenge bit $b$, so $\mathcal{A}'$ wins exactly when $\mathcal{A}^{hy}$ guesses $b$:</p>
+    $$\Pr\big[\mathcal{A}^{hy} \text{ guesses } b \text{ in the bottom row}\big] = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
+
+    <h2>Putting it together</h2>
+    <p>In $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}^{hy},\Pi^{hy}}$, $\mathcal{A}^{hy}$ sees the top-left tuple if $b = 0$ and the top-right tuple if $b = 1$. Going top-left $\to$ bottom-left (case 1) $\to$ bottom-right (case 3) $\to$ top-right (case 2) changes the probability that $\mathcal{A}^{hy}$ outputs $0$ by at most $\mathsf{negl}_1 + \mathsf{negl}_3 + \mathsf{negl}_2$. This is the "transitivity", and gives</p>
+    $$\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}^{hy},\Pi^{hy}}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
+    <p>For public-key schemes, EAV security implies CPA security (<a href="50.html">Question 50</a>), so $\Pi^{hy}$ is CPA-secure. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">Why the detour via $0^n$? The scheme $\Pi'$ only needs EAV security for a key that is uniform and <i>independent</i> of everything the adversary sees. In the top row, $\mathsf{Enc}_{pk}(k)$ depends on $k$. After replacing it by $\mathsf{Enc}_{pk}(0^n)$, the key $k$ is used only once, inside $\mathsf{Enc}'$, exactly as in $\mathsf{PrivK}^{\mathsf{eav}}$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

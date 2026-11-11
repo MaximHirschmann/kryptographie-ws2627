@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 79</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="79">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $N = pq$ for distinct primes $p, q$. Show that from $N$ and an integer $d$ with $3d \equiv 1 \pmod{\phi(N)}$ one can compute $p$ and $q$ in polynomial time. (This is the RSA private exponent for $e = 3$.)</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 7.14 (restated). Hint: obtain a short list of candidates for $\phi(N)$, then use <a href="41.html">Question 41</a>.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Step 1: few candidates for $\phi(N)$</h2>
+    <p>$3d \equiv 1 \pmod{\phi(N)}$ means $3d - 1 = t \cdot \phi(N)$ for an integer $t \ge 1$ (since $3d - 1 \gt 0$).</p>
+    <p>As an RSA exponent, $d$ is reduced: $0 \lt d \lt \phi(N)$. Then</p>
+    $$t = \frac{3d - 1}{\phi(N)} \lt \frac{3\phi(N)}{\phi(N)} = 3, \qquad \text{so } t \in \{1, 2\}.$$
+    <p>The candidates are $\phi(N) \in \{\,3d - 1,\ (3d-1)/2\,\}$ (the second only if $3d - 1$ is even).</p>
+    <p class="note">If we only know $0 \lt d \lt N$: since $p, q \ge 2$ are distinct, $\phi(N)/N = (1 - \frac1p)(1 - \frac1q) \ge \frac12 \cdot \frac23 = \frac13$. Then $t \lt 3N/\phi(N) \le 9$, so at most 8 candidates $t \in \{1, \dots, 8\}$. Still constant.</p>
+
+    <h2>Step 2: factor with each candidate (as in Question 41)</h2>
+    <p>For a candidate value $\varphi$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>$S := N - \varphi + 1$. If $\varphi = \phi(N)$, then $S = p + q$, because $\phi(N) = N - p - q + 1$.</td></tr>
+      <tr><td>2.</td><td>$p$ and $q$ are the roots of $X^2 - SX + N = 0$. Compute $\Delta := S^2 - 4N$ and check that $\Delta \ge 0$ is a perfect square (integer square root by binary search or Newton's method).</td></tr>
+      <tr><td>3.</td><td>Set $p' = (S + \sqrt\Delta)/2$, $q' = (S - \sqrt\Delta)/2$. If $p' q' = N$ and $1 \lt q' \lt p'$, output $(p', q')$.</td></tr>
+    </table></div>
+    <p><b>Correctness.</b> For the right candidate, $X^2 - (p+q)X + pq = (X - p)(X - q)$, so the roots are $p$ and $q$. A wrong candidate either fails a check, or still produces integers with $p'q' = N$ and $1 \lt q' \lt p'$; since $N = pq$ has only one such factorization, that output is correct too.</p>
+    <p><b>Running time.</b> At most 2 (or 8) candidates, each needing a constant number of arithmetic operations on $O(\log N)$-bit numbers plus an integer square root. That is polynomial in $\log N$.</p>
+
+    <div class="box result"><span class="label">Result.</span> $3d - 1$ is a small multiple of $\phi(N)$, so $\phi(N)$ is one of a constant number of candidates. From $\phi(N)$ and $N$, the factors are the roots of $X^2 - (N - \phi(N) + 1)X + N$. Knowing the private exponent $d$ is as good as knowing the factorization. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">This generalizes to every $e$: $ed - 1$ is a multiple of $\phi(N)$, and a randomized algorithm factors $N$ from any multiple of $\phi(N)$. So one must never reuse a modulus $N$ with different key pairs.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

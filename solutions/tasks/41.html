@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 41</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="41">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $N = pq$ the product of two distinct primes. Give a polynomial algorithm which takes as input $N$ and $\varphi(N)$ and computes $p$ and $q$.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Idea</h2>
+    <p>$\varphi(N)$ and $N$ give the <b>sum</b> and the <b>product</b> of $p$ and $q$. Two numbers with a known sum and product are the roots of a quadratic equation. By 07_number_theory, Lemma 2.1:</p>
+    $$\varphi(N) = (p-1)(q-1) = pq - p - q + 1 = N - (p + q) + 1 \quad\Longrightarrow\quad S := p + q = N - \varphi(N) + 1.$$
+    <p>With $pq = N$, the numbers $p$ and $q$ are the roots of</p>
+    $$X^2 - S X + N = (X - p)(X - q) = 0.$$
+
+    <h2>Algorithm</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>$S := N - \varphi(N) + 1$</td></tr>
+      <tr><td>2.</td><td>$D := S^2 - 4N$ &nbsp;<span style="color:var(--muted)">($= (p - q)^2$, a perfect square)</span></td></tr>
+      <tr><td>3.</td><td>$d := \sqrt{D}$ (integer square root)</td></tr>
+      <tr><td>4.</td><td>output $p := \frac{S + d}{2}$, $q := \frac{S - d}{2}$</td></tr>
+    </table></div>
+    <p><b>Correctness:</b> $S^2 - 4N = (p + q)^2 - 4pq = (p - q)^2$, so $d = |p - q|$, and $\frac{S \pm d}{2}$ gives $p$ and $q$.</p>
+    <p><b>Running time:</b> with $\|N\| = \log N$ bits, steps 1, 2 and 4 are additions and multiplications of $\mathcal{O}(\log N)$-bit numbers. The integer square root in step 3 can be computed by binary search, or Newton's method, in $\mathcal{O}(\log N)$ iterations, each a multiplication. In total this is polynomial in $\log N$, e.g. $\mathcal{O}(\log^3 N)$ bit operations.</p>
+
+    <h2>Example</h2>
+    <p>$N = 77$, $\varphi(N) = 60$: $S = 77 - 60 + 1 = 18$, $D = 324 - 308 = 16$, $d = 4$, so $p = 11$, $q = 7$.</p>
+    <p class="note">Consequence: for RSA, computing $\varphi(N)$ is exactly as hard as factoring $N$. Knowing $\varphi(N)$ is enough to factor.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

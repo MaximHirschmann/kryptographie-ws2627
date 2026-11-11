@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modern Cryptography — Lecture Script</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/script.css">
+</head>
+<body class="script">
+<div class="paper">
+<a class="back" href="index.html">← Exercise solutions</a>
+
+<div class="titleblock">
+  <h1>Modern Cryptography</h1>
+  <div class="author">Lecture script, extended to all topics of the Mitschriften</div>
+  <div class="date">Study version for exam preparation</div>
+  <p class="note">Follows the order and notation of the lecture (classical vs. modern cryptography script, Mitschriften WS 2020/21 and 2025/26, number-theory handout). The text is a fresh write-up, not a copy of the lecture notes or the textbook; for the book's own presentation see Katz &amp; Lindell, <i>Introduction to Modern Cryptography</i>, 1st ed. Every section, definition and theorem has a permanent link (¶) for use in the exercise solutions.</p>
+</div>
+
+<nav class="toc">
+<h2>Contents</h2>
+<ol id="toc-list"></ol>
+</nav>
+
+<section class="chapter" id="sec-intro">
+<h2>Introduction</h2>
+<p>Older dictionaries describe cryptography as the <i>art</i> of writing or breaking codes. That describes the history well, but not the subject as it is studied today:</p>
+<ul>
+  <li>it is no longer only about secret communication: integrity, authentication, key exchange, signatures and many protocols belong to it as well;</li>
+  <li>it is no longer an art: since the 1970s/80s it rests on precise definitions, explicit assumptions and proofs.</li>
+</ul>
+<p>A working definition for this course: <b>cryptography is the scientific study of techniques for protecting digital information, transactions and distributed computations against adversaries.</b> Its users have changed as well: once mainly the military and governments, today everyone who logs in, pays online or installs a software update.</p>
+<p>We start with historical ciphers. They show where the field comes from, and their failures motivate the rigorous approach used in the rest of the course.</p>
+
+<section class="sub" id="sec-syntax">
+<h3>The Syntax of Private-Key Encryption</h3>
+<div class="env def" id="def-private-key-scheme" data-title="Private-key encryption scheme">
+<p>A private-key encryption scheme is a triple of algorithms $\Pi = (\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ together with a message space $\mathcal{M}$ with $|\mathcal{M}| \gt 1$:</p>
+<div class="alg"><table>
+<tr><td>$\mathsf{Gen}$</td><td>outputs a key $k \in \mathcal{K}$ (probabilistic)</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>$\mathcal{K} \times \mathcal{M} \to \mathcal{C}$, $(k, m) \mapsto c$ (possibly probabilistic)</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>$\mathcal{K} \times \mathcal{C} \to \mathcal{M}$, $(k, c) \mapsto m$ (deterministic)</td></tr>
+</table></div>
+<p>such that <b>correctness</b> holds: $\mathsf{Dec}_k(\mathsf{Enc}_k(m)) = m$ for every key $k$ that $\mathsf{Gen}$ can output and every $m \in \mathcal{M}$, with probability $1$.</p>
+</div>
+<p>Here $\mathcal{K}$ is the key space (all keys that $\mathsf{Gen}$ outputs with positive probability) and $\mathcal{C}$ the set of all ciphertexts that can occur:</p>
+$$\mathcal{C} = \{\, c \mid c = \mathsf{Enc}_k(m;r) \text{ for some } (k, m, r) \in \mathcal{K} \times \mathcal{M} \times \mathcal{R} \,\},$$
+<p>where $\mathcal{R}$ is the set of random tapes of $\mathsf{Enc}$. Notation:</p>
+<ul>
+  <li>$c := \mathsf{Enc}_k(m)$ when $\mathsf{Enc}$ is deterministic, $c \leftarrow \mathsf{Enc}_k(m)$ when it may be probabilistic; $x \leftarrow S$ means "choose $x$ uniformly from the set $S$".</li>
+  <li>Three distributions are involved: the one on $\mathcal{K}$ is fixed by $\mathsf{Gen}$; the one on $\mathcal{M}$ is arbitrary (it describes what the parties are likely to send); the one on $\mathcal{C}$ follows from the other two and $\mathsf{Enc}$.</li>
+  <li><b>Key and message are independent.</b> The key is chosen before, and without looking at, the message.</li>
+  <li>Why $|\mathcal{M}| \gt 1$? With only one possible message there is nothing to hide; the receiver knows the message in advance.</li>
+</ul>
+<p>Formally, algorithms are (probabilistic) Turing machines; a probabilistic machine has an additional tape filled with uniformly random bits.</p>
+</section>
+
+<section class="sub" id="sec-kerckhoffs">
+<h3>Keys and Kerckhoffs' Principle</h3>
+<div class="env prin" id="prin-kerckhoffs" data-title="Kerckhoffs">
+<p>The security of an encryption scheme must not depend on keeping the scheme secret. It must remain secure if everything except the key is known to the adversary.</p>
+</div>
+<p>Why the key, and not the algorithm, should carry the secrecy:</p>
+<ol>
+  <li>A short key is much easier to keep secret than an algorithm, which can leak through insiders, documentation or reverse engineering.</li>
+  <li>A short key is easier to distribute.</li>
+  <li>If a key is compromised, generating a new one is cheap; replacing an algorithm is expensive. Keys should be refreshed regularly anyway.</li>
+  <li>When many pairs of users communicate, they can all use the same algorithm with different keys.</li>
+</ol>
+<p>Today the principle is read even more strongly: <b>algorithms should be public.</b> Public designs are analysed by many experts and are therefore more trustworthy; flaws are better found by researchers than only by attackers; and public designs make standards possible. "Security by obscurity" has failed many times.</p>
+</section>
+
+<section class="sub" id="sec-attack-models">
+<h3>Attack Models</h3>
+<p>What the adversary has (besides knowledge of the scheme) and what it obtains, in increasing order of power:</p>
+<table class="plain">
+<tr><th>Attack</th><th>The adversary has / obtains</th></tr>
+<tr><td>1. Ciphertext-only</td><td>ciphertexts $c_1, \dots, c_t$</td></tr>
+<tr><td>2. Known-plaintext</td><td>pairs $(m_1, c_1), \dots, (m_t, c_t)$ under the same key, plus a target ciphertext</td></tr>
+<tr><td>3. Chosen-plaintext</td><td>encryptions $c_i$ of messages $m_i$ <i>of its choice</i></td></tr>
+<tr><td>4. Chosen-ciphertext</td><td>additionally, decryptions $m_i$ of ciphertexts $c_i$ of its choice (except the target)</td></tr>
+</table>
+<p>Known-plaintext attacks are realistic because many messages are predictable (greetings, file headers, messages published later). Chosen-plaintext and chosen-ciphertext attacks model adversaries who can influence what is encrypted or observe how the receiver reacts to manipulated ciphertexts.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-classical">
+<h2>Classical Encryption Schemes</h2>
+<p>We look at a few historical ciphers and show that they are easy to break. Along the way we extract principles that every secure scheme must respect. Plaintext letters are identified with numbers: $a = 0, b = 1, \dots, z = 25$; a message is a string over $\{0, \dots, 25\}$ and is encrypted letter by letter.</p>
+
+<section class="sub" id="sec-shift">
+<h3>Shift Cipher</h3>
+<div class="alg"><table>
+<tr><td>$\mathsf{Gen}$</td><td>$k \leftarrow \{0, \dots, 25\}$; output $k$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $k$, $m = m_1 \cdots m_\ell$: $c_i := (m_i + k) \bmod 26$; output $c = c_1 \cdots c_\ell$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $k$, $c$: $m_i := (c_i - k) \bmod 26$; output $m$</td></tr>
+</table></div>
+<p>Correctness: $((m_i + k) - k) \bmod 26 = m_i$. <b>Caesar's cipher</b> is the special case with the fixed shift $k = 3$; it has no key at all and is broken as soon as the method is known.</p>
+<p><b>Brute force.</b> The shift cipher has only 26 keys. Decrypting with all of them and picking the candidate that makes sense breaks it immediately.</p>
+<div class="env prin" id="prin-key-space" data-title="Sufficient key space">
+<p>The key space must be so large that trying all keys (exhaustive search) is infeasible. Today this means at least about $2^{80}$, in practice $2^{128}$ keys or more.</p>
+</div>
+<p><b>Automating the attack.</b> "Pick the candidate that makes sense" is hard for a computer. Statistics work better. Let $p_i$ be the frequency of letter $i$ in English text and $q_i$ the relative frequency of letter $i$ in the ciphertext. For each candidate shift $j$ compute</p>
+$$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
+<p>For the correct key $j = k$, $q_{i+k} \approx p_i$, so $I_k \approx \sum_i p_i^2 \approx 0.065$ (for English). For a wrong $j$ the two distributions are not aligned and $I_j$ is closer to the value for uniformly distributed letters, $\sum_i (1/26)^2 \approx 0.038$. The attack outputs the $j$ for which $|I_j - 0.065|$ is smallest.</p>
+</section>
+
+<section class="sub" id="sec-monoalphabetic">
+<h3>Mono-alphabetic Substitution Cipher</h3>
+<p>The key is now an arbitrary permutation $\pi$ of the alphabet.</p>
+<div class="alg"><table>
+<tr><td>$\mathsf{Gen}$</td><td>choose a uniformly random permutation $\pi$ of $\{0, \dots, 25\}$; output $k = \pi$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>$c_i := \pi(m_i)$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>$m_i := \pi^{-1}(c_i)$</td></tr>
+</table></div>
+<p>Correctness: $\pi^{-1}(\pi(m_i)) = m_i$. The key space has $26! \approx 2^{88}$ elements, so brute force is out of the question. Nevertheless the cipher is weak: each plaintext letter is always mapped to the <i>same</i> ciphertext letter, so letter frequencies survive. The most frequent ciphertext letter is probably $\pi(\texttt{e})$, and so on; frequent bigrams ($\texttt{th}$, $\texttt{he}$) and words fix the rest. A few hundred letters of English text usually suffice.</p>
+<p><b>Lesson:</b> a large key space is <b>necessary but not sufficient</b> for security.</p>
+<p class="small">Frequency analysis assumes "typical" text. Texts written to avoid certain letters (there are novels without a single <i>e</i>) show that classical cryptanalysis relies on assumptions about the message distribution, which is exactly what modern definitions make explicit.</p>
+</section>
+
+<section class="sub" id="sec-polyalphabetic">
+<h3>Poly-alphabetic Substitution and the Vigenère Cipher</h3>
+<p>Frequency analysis works because one plaintext letter always yields the same ciphertext letter. Two ways around this:</p>
+<ul>
+  <li><b>Homophones:</b> frequent letters get several ciphertext symbols (e.g. $\texttt{e} \mapsto$ one of 12 symbols), chosen at random, so that all symbols occur about equally often. This makes the key and its use more cumbersome.</li>
+  <li><b>Poly-alphabetic ciphers:</b> the mapping changes with the position in the text.</li>
+</ul>
+<p>The <b>Vigenère cipher</b> applies $t$ shift ciphers in turn. The key is a word $k = k_0 k_1 \cdots k_{t-1}$; the letter at position $i$ is shifted by $k_{i \bmod t}$:</p>
+<div class="alg"><table>
+<tr><td>$\mathsf{Gen}$</td><td>for $j = 0, \dots, t-1$: $k_j \leftarrow \{0, \dots, 25\}$; output $k = (k_0, \dots, k_{t-1})$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>for $i = 0, \dots, |m|-1$: $c_i := (m_i + k_{i \bmod t}) \bmod 26$; output $c$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>for $i = 0, \dots, |c|-1$: $m_i := (c_i - k_{i \bmod t}) \bmod 26$; output $m$</td></tr>
+</table></div>
+<p>Example with key <code>cafe</code> = $(2, 0, 5, 4)$:</p>
+<table class="plain">
+<tr><td>plaintext</td><td><code>tellhimaboutme</code></td></tr>
+<tr><td>key (repeated)</td><td><code>cafecafecafeca</code></td></tr>
+<tr><td>ciphertext</td><td><code>VEQPJIREDOZXOE</code></td></tr>
+</table>
+<p>The two <code>l</code> become <code>Q</code> and <code>P</code>, and <code>E</code> arises from both <code>e</code> and <code>a</code>: the frequencies are smoothed out.</p>
+
+<p><b>Attack with known period $t$.</b> For $j = 0, \dots, t-1$ let $C_j = c_j c_{j+t} c_{j+2t} \cdots$ be the $j$-th <i>stream</i>. All letters of $C_j$ were shifted by the same $k_j$, so each stream is a shift cipher with English letter statistics: compute $I_0, \dots, I_{25}$ for each stream and recover $k_j$. This takes $26 \cdot t$ steps instead of $26^t$.</p>
+<p><b>Finding the period.</b></p>
+<ul>
+  <li><b>Kasiski's method</b> (19th century): a frequent word that appears twice at the same position modulo $t$ produces the same ciphertext both times. Repeated ciphertext fragments of length 3 or more are therefore found at distances that are multiples of $t$; the greatest common divisor of these distances is $t$ or a multiple of it.</li>
+  <li><b>Index of coincidence:</b> for $\tau = 1, 2, \dots$ take the stream $c_0, c_\tau, c_{2\tau}, \dots$ with letter frequencies $q_0, \dots, q_{25}$ and compute
+  $$S_\tau = \sum_{i=0}^{25} q_i^2.$$
+  If $\tau$ is a multiple of $t$, the stream is a single shift of English text and $S_\tau \approx \sum_i p_i^2 \approx 0.065$ (a shift only permutes the frequencies). Otherwise the letters come from different shifts and $S_\tau \approx 0.038$. The smallest $\tau$ with $S_\tau \approx 0.065$ is the period.</li>
+</ul>
+<p>Longer keys require more ciphertext for these statistics to work, but every fixed period can be broken.</p>
+</section>
+
+<section class="sub" id="sec-known-plaintext">
+<h3>Ciphertext-only versus Stronger Attacks</h3>
+<p>All attacks above were ciphertext-only. With known or chosen plaintext, all three ciphers fall immediately:</p>
+<ul>
+  <li><b>Shift:</b> one known pair $(m_1, c_1)$ gives $k = c_1 - m_1 \bmod 26$.</li>
+  <li><b>Substitution:</b> every known letter reveals one value of $\pi$; 25 different plaintext letters reveal $\pi$ completely. With chosen plaintext, encrypt <code>abc…z</code>.</li>
+  <li><b>Vigenère:</b> $t$ consecutive known letters give $k_j = c_j - m_j$; with chosen plaintext, encrypt <code>aaa…</code> to read off the repeated key.</li>
+</ul>
+</section>
+</section>
+
+<section class="chapter" id="sec-principles">
+<h2>Principles of Modern Cryptography</h2>
+<p>Classical cryptography designed schemes ad hoc, by intuition; they were then attacked, patched, attacked again, and eventually all of them were broken. Modern cryptography tries to leave this "design–break–patch" cycle through three principles:</p>
+<ol>
+  <li><b>Precise definitions</b> of what security means.</li>
+  <li><b>Precise statements of the (unproven) assumptions</b> on which security relies, as few and as weak as possible.</li>
+  <li><b>Rigorous proofs</b> that a construction satisfies the definition under the stated assumptions.</li>
+</ol>
+
+<section class="sub" id="sec-definitions">
+<h3>Formal Definitions</h3>
+<p>A formal definition of security is needed for</p>
+<ul>
+  <li><b>design:</b> we can only know that we have reached a goal if the goal is fixed beforehand. A definition written afterwards tends to describe whatever the design happens to achieve.</li>
+  <li><b>use:</b> to choose a scheme for an application, we compare the security the application needs with the definition the scheme satisfies. The "most secure" scheme is not always the right one; a weaker definition may suffice and allow a more efficient scheme.</li>
+  <li><b>analysis and comparison:</b> without definitions only efficiency can be compared, which is pointless if the efficient scheme is insecure.</li>
+</ul>
+<p>"Everyone knows what secure means" is not true. Try to define secure encryption:</p>
+<ol>
+  <li><i>No adversary can find the key.</i> Misses the point: the scheme $\mathsf{Enc}_k(m) = m$ hides the key perfectly but not the message.</li>
+  <li><i>No adversary can find the whole plaintext.</i> Better, but a scheme revealing 90% of a message (e.g. most salaries in a database) would still count as secure.</li>
+  <li><i>No adversary can find any single character of the plaintext.</i> Still insufficient: it may reveal whether a salary is above some threshold, without revealing any digit.</li>
+  <li><i>No adversary can learn any meaningful information about the plaintext.</i> Close, but what is "meaningful" depends on the application.</li>
+  <li><i>No adversary can compute any function of the plaintext from the ciphertext</i> (beyond what it knew anyway). This is the right intuition; it does not have to decide what is meaningful.</li>
+</ol>
+<p>A complete definition has two parts: <b>what counts as a break</b> (the security goal) and <b>what the adversary is assumed to be able to do</b> (the threat model): which attack model, passive or active, and how much computing power. We make <b>no assumptions about the adversary's strategy</b>. The general shape is:</p>
+<p style="text-align:center"><i>A scheme is secure if no adversary with the specified power can achieve the specified break.</i></p>
+<p><b>Definitions model the real world.</b> If the model is wrong, a proof is useless in practice. Example: schemes proven secure were implemented on smart cards, and their keys were extracted by measuring the card's power consumption, which the model did not include. The reaction is to adapt the model (include such leakage), the implementation (hardware countermeasures) or the setting (use the scheme where power cannot be measured).</p>
+</section>
+
+<section class="sub" id="sec-assumptions">
+<h3>Precise Assumptions</h3>
+<p>Most constructions cannot be proven secure unconditionally (that would, for instance, require proving $\mathrm{P} \ne \mathrm{NP}$). Proofs therefore rest on assumptions, which must be stated precisely, for three reasons:</p>
+<ol>
+  <li><b>Validation:</b> an assumption can only be tested and gain trust if it is stated precisely.</li>
+  <li><b>Comparison:</b> if assumption $A_2$ implies assumption $A_1$, then $A_1$ is <i>weaker</i>, and a scheme based on $A_1$ is preferable: it stays secure even if $A_2$ turns out to be false.</li>
+  <li><b>Proofs</b> need precise statements to work with.</li>
+</ol>
+<p>Preferred assumptions are well studied (tested for many years) and <i>low-level</i> (e.g. "factoring is hard" rather than "this complicated scheme is secure"), since such assumptions can be reused in many constructions. Often an assumption is abstract (e.g. "a pseudorandom function exists") and can be <i>instantiated</i> with different concrete candidates; if one candidate fails, it can be replaced.</p>
+<p><b>Logic refresher.</b> For statements $P, Q$, the implication $P \Rightarrow Q$ is equivalent to $\neg P \lor Q$. Related statements:</p>
+<table class="plain">
+<tr><td>contrapositive</td><td>$\neg Q \Rightarrow \neg P$</td><td>equivalent to $P \Rightarrow Q$</td></tr>
+<tr><td>converse</td><td>$Q \Rightarrow P$</td><td>not equivalent</td></tr>
+<tr><td>inverse</td><td>$\neg P \Rightarrow \neg Q$</td><td>not equivalent</td></tr>
+</table>
+<p>Security proofs are almost always proofs of the contrapositive: "if the scheme can be broken, then the assumption is false".</p>
+</section>
+
+<section class="sub" id="sec-proofs">
+<h3>Proofs of Security and the Reduction Approach</h3>
+<p>Security cannot be tested the way functionality is tested: a scheme whose output "looks random" may still be completely insecure, and there is an adversary actively searching for weaknesses. Without a proof we only have our intuition, and history shows how unreliable that is.</p>
+<p><b>Reductions.</b> A typical theorem reads: <i>"If assumption $X$ holds, then construction $Y$ is secure according to definition $D$."</i> The proof shows the contrapositive constructively:</p>
+<ol>
+  <li>Assume an efficient adversary $\mathcal{A}$ breaks $Y$ with probability $\varepsilon(n)$.</li>
+  <li>Build an efficient algorithm $\mathcal{A}'$ that runs $\mathcal{A}$ as a subroutine and <b>simulates</b> for it the environment of definition $D$.</li>
+  <li>Show that $\mathcal{A}'$ violates $X$ with a probability related to $\varepsilon(n)$ (e.g. $\varepsilon(n)$, or $\varepsilon(n)/q(n)$ for a polynomial $q$).</li>
+</ol>
+<p>Hence if $X$ holds, $\varepsilon(n)$ must be negligible. We say we <i>reduce</i> the problem in assumption $X$ to breaking $Y$.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-probability">
+<h2>Basic Probability</h2>
+<p>Notation for events $E, E_1, E_2, \dots$ in a finite probability space:</p>
+<ul>
+  <li>$\overline{E}$ is the complement of $E$, and $\Pr[\overline{E}] = 1 - \Pr[E]$.</li>
+  <li>$E_1 \land E_2$: both occur; $\Pr[E_1 \land E_2] \le \Pr[E_1]$.</li>
+  <li>$E_1 \lor E_2$: at least one occurs; $\Pr[E_1 \lor E_2] \ge \Pr[E_1]$.</li>
+  <li>$E_1, E_2$ are <b>independent</b> iff $\Pr[E_1 \land E_2] = \Pr[E_1] \cdot \Pr[E_2]$.</li>
+</ul>
+<div class="env prop" id="prop-union-bound" data-title="Union bound">
+<p>For events $E_1, \dots, E_k$: $\displaystyle \Pr\Big[\bigvee_{i=1}^k E_i\Big] \le \sum_{i=1}^k \Pr[E_i].$</p>
+</div>
+<div class="env prop" id="prop-total-probability" data-title="Law of total probability">
+<p>Let $E_1, \dots, E_k$ partition the probability space (exactly one of them occurs: $\Pr[E_1 \lor \dots \lor E_k] = 1$ and $\Pr[E_i \land E_j] = 0$ for $i \ne j$). Then for every event $F$: $\displaystyle \Pr[F] = \sum_{i=1}^k \Pr[F \land E_i].$ In particular $\Pr[F] = \Pr[F \land E] + \Pr[F \land \overline{E}]$.</p>
+</div>
+<div class="env def" id="def-conditional" data-title="Conditional probability">
+<p>If $\Pr[E_2] \gt 0$: $\displaystyle \Pr[E_1 \mid E_2] = \frac{\Pr[E_1 \land E_2]}{\Pr[E_2]}$. If $\Pr[E_2] = 0$, it is undefined.</p>
+</div>
+<p>Consequently $\Pr[E_1 \land E_2] = \Pr[E_1 \mid E_2] \cdot \Pr[E_2]$, and combining with the law of total probability: $\Pr[F] = \sum_i \Pr[F \mid E_i] \Pr[E_i]$ (sum over the $E_i$ with positive probability). The <b>chain rule</b> for three events: $\Pr[X \land Y \mid Z] = \Pr[X \mid Y \land Z] \cdot \Pr[Y \mid Z]$.</p>
+<div class="env thm" id="thm-bayes" data-title="Bayes">
+<p>If $\Pr[E_1] \gt 0$ and $\Pr[E_2] \gt 0$, then $\displaystyle \Pr[E_1 \mid E_2] = \frac{\Pr[E_2 \mid E_1] \cdot \Pr[E_1]}{\Pr[E_2]}.$</p>
+</div>
+<div class="proof"><p>Both $\Pr[E_1 \mid E_2] \Pr[E_2]$ and $\Pr[E_2 \mid E_1] \Pr[E_1]$ equal $\Pr[E_1 \land E_2]$; divide by $\Pr[E_2]$.</p></div>
+<div class="env lemma" id="lemma-difference" data-title="Difference lemma">
+<p>Let $A, B, F$ be events with $A \land \overline{F} \iff B \land \overline{F}$ (the two experiments behave identically unless $F$ occurs). Then $\big|\Pr[A] - \Pr[B]\big| \le \Pr[F]$.</p>
+</div>
+<div class="proof"><p>$|\Pr[A] - \Pr[B]| = |\Pr[A \land F] + \Pr[A \land \overline{F}] - \Pr[B \land F] - \Pr[B \land \overline{F}]| = |\Pr[A \land F] - \Pr[B \land F]| \le \Pr[F]$, since both terms lie in $[0, \Pr[F]]$.</p></div>
+<p>This lemma is used constantly: "the two games only differ if a <i>bad event</i> happens (a repeated nonce, a collision, a query to a certain point), and that event is unlikely".</p>
+</section>
+
+<section class="chapter" id="sec-perfect">
+<h2>Perfect Secrecy</h2>
+<p>The classical ciphers fall to very little computation. We now go to the other extreme: schemes that are secure even against an adversary with <b>unlimited computing power</b>. Such schemes are called perfectly secret. We use random variables $K$, $M$, $C$ for the key, the message and the resulting ciphertext; $\Pr[K = k]$ is the probability that $\mathsf{Gen}$ outputs $k$, and similarly $\Pr[M = m]$, $\Pr[C = c]$. Recall that $K$ and $M$ are independent.</p>
+
+<section class="sub" id="sec-ps-definitions">
+<h3>Definitions</h3>
+<div class="env def" id="def-ps-1" data-title="Perfectly secret">
+<p>A scheme $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ over $\mathcal{M}$ is perfectly secret if for every probability distribution over $\mathcal{M}$, every $m \in \mathcal{M}$ and every $c \in \mathcal{C}$ with $\Pr[C = c] \gt 0$:</p>
+$$\Pr[M = m \mid C = c] = \Pr[M = m].$$
+</div>
+<p>The a-posteriori probability of each message (after seeing $c$) equals its a-priori probability: the ciphertext tells the adversary nothing new. The condition $\Pr[C = c] \gt 0$ only avoids conditioning on an impossible event. Equivalently: $M$ and $C$ are independent random variables.</p>
+<div class="env def" id="def-ps-2" data-title="Perfectly secret, second form">
+<p>For every distribution over $\mathcal{M}$, every $m \in \mathcal{M}$ with $\Pr[M = m] \gt 0$ and every $c \in \mathcal{C}$: $\quad \Pr[C = c \mid M = m] = \Pr[C = c].$</p>
+</div>
+<div class="env thm" id="thm-ps-1-2">
+<p><a class="xref" href="#def-ps-1"></a> and <a class="xref" href="#def-ps-2"></a> are equivalent.</p>
+</div>
+<div class="proof" data-title="Def. 2 ⇒ Def. 1"><p>Fix a distribution, $m$ with $\Pr[M = m] \gt 0$ and $c$ with $\Pr[C = c] \gt 0$. Multiply $\Pr[C = c \mid M = m] = \Pr[C = c]$ by $\Pr[M = m] / \Pr[C = c]$:</p>
+$$\frac{\Pr[C = c \mid M = m] \cdot \Pr[M = m]}{\Pr[C = c]} = \Pr[M = m].$$
+<p>By Bayes' theorem the left side is $\Pr[M = m \mid C = c]$. If $\Pr[M = m] = 0$, then $\Pr[M = m \mid C = c] = 0 = \Pr[M = m]$ trivially.</p></div>
+<div class="proof" data-title="Def. 1 ⇒ Def. 2"><p>Fix $m$ with $\Pr[M = m] \gt 0$ and $c$. If $\Pr[C = c] \gt 0$, Bayes and Def. 1 give $\Pr[C = c \mid M = m] = \Pr[M = m \mid C = c] \Pr[C = c] / \Pr[M = m] = \Pr[C = c]$. If $\Pr[C = c] = 0$, then $\Pr[C = c \mid M = m] = \Pr[C = c \land M = m]/\Pr[M = m] = 0 = \Pr[C = c]$.</p></div>
+
+<div class="env def" id="def-ps-3" data-title="Perfect indistinguishability">
+<p>For every $m_0, m_1 \in \mathcal{M}$ and every $c \in \mathcal{C}$: $\quad \Pr[\mathsf{Enc}_K(m_0) = c] = \Pr[\mathsf{Enc}_K(m_1) = c]$,</p>
+<p>where the probability is over $K \leftarrow \mathsf{Gen}$ and the coins of $\mathsf{Enc}$.</p>
+</div>
+<p>The ciphertext distribution $C(m)$ obtained by encrypting $m$ is the same for every message; this form does not mention a distribution on messages at all. Note that for any distribution and any $m$ with $\Pr[M = m] \gt 0$, $\Pr[C = c \mid M = m] = \Pr[\mathsf{Enc}_K(m) = c]$, because $K$ is independent of $M$.</p>
+<div class="env thm" id="thm-ps-3-2">
+<p><a class="xref" href="#def-ps-3"></a> and <a class="xref" href="#def-ps-2"></a> are equivalent.</p>
+</div>
+<div class="proof" data-title="Def. 2 ⇒ Def. 3"><p>Take the uniform distribution over $\mathcal{M}$, so every message has positive probability. For any $m_0, m_1$ and $c$, Def. 2 gives</p>
+$$\Pr[\mathsf{Enc}_K(m_0) = c] = \Pr[C = c \mid M = m_0] = \Pr[C = c] = \Pr[C = c \mid M = m_1] = \Pr[\mathsf{Enc}_K(m_1) = c].$$</div>
+<div class="proof" data-title="Def. 3 ⇒ Def. 2"><p>Fix a distribution and $c$. By Def. 3 the value $p_c := \Pr[\mathsf{Enc}_K(m) = c]$ is the same for all $m$. By the law of total probability (sum over messages with $\Pr[M = m'] \gt 0$):</p>
+$$\Pr[C = c] = \sum_{m'} \Pr[C = c \mid M = m'] \Pr[M = m'] = \sum_{m'} p_c \Pr[M = m'] = p_c \sum_{m'} \Pr[M = m'] = p_c.$$
+<p>So $\Pr[C = c \mid M = m] = p_c = \Pr[C = c]$ for every $m$ with $\Pr[M = m] \gt 0$.</p></div>
+
+<p>The last form describes secrecy through an <b>experiment</b> with an adversary. This style will be used for every security definition from now on.</p>
+<div class="game" id="game-privk-eav">
+<div class="gtitle">The eavesdropping experiment $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}$:</div>
+<ol>
+  <li>$\mathcal{A}$ outputs two messages $m_0, m_1 \in \mathcal{M}$.</li>
+  <li>$k \leftarrow \mathsf{Gen}$, $b \leftarrow \{0,1\}$, $c \leftarrow \mathsf{Enc}_k(m_b)$; $c$ (the <i>challenge ciphertext</i>) is given to $\mathcal{A}$.</li>
+  <li>$\mathcal{A}$ outputs a bit $b'$.</li>
+  <li>The output is $1$ ("$\mathcal{A}$ wins") iff $b' = b$.</li>
+</ol>
+</div>
+<div class="env def" id="def-ps-4" data-title="Perfectly secret, game form">
+<p>$\Pi$ is perfectly secret if for every adversary $\mathcal{A}$ (no bound on its running time): $\quad \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] = \frac12.$</p>
+</div>
+<p>Guessing $b'$ at random always wins with probability $\frac12$; the definition says that nobody can do better. Without loss of generality $\mathcal{A}$ is deterministic: a randomized adversary is an average of deterministic ones, so if some randomized adversary wins with probability $\ne \frac12$, then so does some deterministic one.</p>
+<div class="env thm" id="thm-ps-4-3">
+<p><a class="xref" href="#def-ps-4"></a> and <a class="xref" href="#def-ps-3"></a> are equivalent.</p>
+</div>
+<div class="proof" data-title="Def. 3 ⇒ Def. 4"><p>Fix a deterministic adversary $\mathcal{A}$. It always outputs the same pair $m_0, m_1$, and its final answer is a fixed function of $c$. Let $\mathcal{C}_0$ be the set of ciphertexts on which it answers $0$, and $\mathcal{C}_1 = \mathcal{C} \setminus \mathcal{C}_0$. Then</p>
+$$\Pr[b' = b] = \tfrac12 \Pr[\mathsf{Enc}_K(m_0) \in \mathcal{C}_0] + \tfrac12 \Pr[\mathsf{Enc}_K(m_1) \in \mathcal{C}_1] = \tfrac12 \sum_{c \in \mathcal{C}_0} \Pr[\mathsf{Enc}_K(m_0) = c] + \tfrac12 \sum_{c \in \mathcal{C}_1} \Pr[\mathsf{Enc}_K(m_1) = c].$$
+<p>By Def. 3 we may replace $m_1$ by $m_0$ in the second sum, so the two sums together add up the probabilities of all $c \in \mathcal{C}$ under $\mathsf{Enc}_K(m_0)$, which is $1$: $\Pr[b' = b] = \frac12$.</p></div>
+<div class="proof" data-title="Def. 4 ⇒ Def. 3, by contrapositive"><p>Assume Def. 3 fails: there are $m_0, m_1$ and $\tilde c$ with $p_0 := \Pr[\mathsf{Enc}_K(m_0) = \tilde c] \ne \Pr[\mathsf{Enc}_K(m_1) = \tilde c] =: p_1$. Say $p_0 \gt p_1$ (otherwise swap the roles). Adversary $\mathcal{A}$: output $m_0, m_1$; on challenge $c$, output $0$ if $c = \tilde c$ and a uniform bit otherwise. Then</p>
+$$\Pr[\text{win} \mid b = 0] = p_0 + \tfrac12 (1 - p_0) = \tfrac12 + \tfrac{p_0}{2}, \qquad \Pr[\text{win} \mid b = 1] = (1 - p_1) \cdot \tfrac12 = \tfrac12 - \tfrac{p_1}{2}.$$
+$$\Pr[\text{win}] = \tfrac12\left(\tfrac12 + \tfrac{p_0}{2}\right) + \tfrac12\left(\tfrac12 - \tfrac{p_1}{2}\right) = \tfrac12 + \tfrac{p_0 - p_1}{4} \gt \tfrac12.$$
+<p>So Def. 4 fails as well. (If $p_1 \gt p_0$, the adversary answers $1$ on $\tilde c$ and wins with probability $\frac12 + \frac{p_1 - p_0}{4}$.)</p></div>
+</section>
+
+<section class="sub" id="sec-otp">
+<h3>The One-Time Pad</h3>
+<p>The one-time pad was patented by Vernam in 1917, decades before Shannon defined perfect secrecy and proved that it achieves it. For bit strings $a, b$ of equal length, $a \oplus b$ denotes their bitwise XOR.</p>
+<div class="alg"><table>
+<tr><td colspan="2">Fix $\ell \gt 0$; $\mathcal{M} = \mathcal{K} = \mathcal{C} = \{0,1\}^\ell$.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>$k \leftarrow \{0,1\}^\ell$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>$c := k \oplus m$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>$m := k \oplus c$</td></tr>
+</table></div>
+<p>Correctness: $k \oplus k \oplus m = m$. Intuitively every ciphertext can come from every plaintext (with the key $k = m \oplus c$), and all keys are equally likely.</p>
+<div class="env thm" id="thm-otp">
+<p>The one-time pad is perfectly secret.</p>
+</div>
+<div class="proof"><p>For every $m, c \in \{0,1\}^\ell$: $\Pr[\mathsf{Enc}_K(m) = c] = \Pr[K \oplus m = c] = \Pr[K = m \oplus c] = 2^{-\ell}$, independent of $m$. This is <a class="xref" href="#def-ps-3"></a>.</p></div>
+</section>
+
+<section class="sub" id="sec-ps-limits">
+<h3>Limitations of Perfect Secrecy</h3>
+<p>The one-time pad has two drawbacks: <b>a key may be used only once</b>, and <b>the key is as long as the message</b>.</p>
+<p><b>Reuse.</b> If $c_0 = m_0 \oplus k$ and $c_1 = m_1 \oplus k$, then $c_0 \oplus c_1 = m_0 \oplus m_1$: the key cancels and the adversary learns the XOR of the messages. Concretely, for $\mathcal{M} = \{0,1\}$ with uniform independent $M_0, M_1$, each pair has prior probability $\frac14$, but after seeing $c_0 \oplus c_1$ only two pairs remain, each with probability $\frac12$. For natural-language messages, the XOR of two texts can often be decoded completely.</p>
+<p><b>Key length.</b> This is not a weakness of the one-time pad but of perfect secrecy itself:</p>
+<div class="env thm" id="thm-key-length">
+<p>If $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ is perfectly secret with message space $\mathcal{M}$ and key space $\mathcal{K}$, then $|\mathcal{K}| \ge |\mathcal{M}|$.</p>
+</div>
+<div class="proof" data-title="by contrapositive"><p>Assume $|\mathcal{K}| \lt |\mathcal{M}|$. Take the uniform distribution on $\mathcal{M}$ and a ciphertext $c$ with $\Pr[C = c] \gt 0$. Let $\mathcal{M}(c) = \{\mathsf{Dec}_k(c) \mid k \in \mathcal{K}\}$ be the set of messages $c$ can decrypt to. Since $\mathsf{Dec}$ is deterministic, $|\mathcal{M}(c)| \le |\mathcal{K}| \lt |\mathcal{M}|$, so some $\tilde m \notin \mathcal{M}(c)$ exists. By correctness $\tilde m$ can never be encrypted to $c$, hence $\Pr[M = \tilde m \mid C = c] = 0 \ne \frac{1}{|\mathcal{M}|} = \Pr[M = \tilde m]$.</p></div>
+<p>Claims of "unbreakable encryption with short keys" are therefore always wrong in the information-theoretic sense. (Reusing keys is also inherently impossible, see the reuse argument above.)</p>
+</section>
+
+<section class="sub" id="sec-shannon">
+<h3>Shannon's Theorem</h3>
+<p>For schemes with $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}|$, the most economical case, Shannon characterized perfect secrecy completely. The theorem is a handy tool to prove or disprove perfect secrecy without computing probabilities.</p>
+<div class="env thm" id="thm-shannon" data-title="Shannon">
+<p>Let $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ be a scheme with deterministic $\mathsf{Enc}$ and $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}|$. It is perfectly secret if and only if</p>
+<ol>
+  <li>$\mathsf{Gen}$ chooses every key $k \in \mathcal{K}$ with probability $1/|\mathcal{K}|$, and</li>
+  <li>for every $m \in \mathcal{M}$ and $c \in \mathcal{C}$ there is exactly one key $k \in \mathcal{K}$ with $\mathsf{Enc}_k(m) = c$.</li>
+</ol>
+</div>
+<div class="proof" data-title="perfect secrecy ⇒ item 2"><p><i>At least one key:</i> if for some $m, c$ no key maps $m$ to $c$, then (uniform distribution, $\Pr[C = c] \gt 0$ since every $c \in \mathcal{C}$ occurs) $\Pr[M = m \mid C = c] = 0 \ne \Pr[M = m]$. <i>At most one key:</i> fix $m$. By the first part, every $c \in \mathcal{C}$ is reached from $m$ by some key, so the map $k \mapsto \mathsf{Enc}_k(m)$ from $\mathcal{K}$ onto $\mathcal{C}$ is surjective. Since $|\mathcal{K}| = |\mathcal{C}|$, it is also injective: no two keys map $m$ to the same $c$.</p></div>
+<div class="proof" data-title="perfect secrecy ⇒ item 1"><p>Fix $c$. By item 2, for each $m_i \in \mathcal{M}$ there is exactly one key $k_i$ with $\mathsf{Enc}_{k_i}(m_i) = c$, and the $k_i$ are distinct (otherwise one key would decrypt $c$ to two messages), so they are all $n = |\mathcal{K}|$ keys. Use the uniform distribution on $\mathcal{M}$. By perfect secrecy and Bayes:</p>
+$$\Pr[M = m_i] = \Pr[M = m_i \mid C = c] = \frac{\Pr[C = c \mid M = m_i] \Pr[M = m_i]}{\Pr[C = c]} = \frac{\Pr[K = k_i] \Pr[M = m_i]}{\Pr[C = c]},$$
+<p>hence $\Pr[K = k_i] = \Pr[C = c]$ for every $i$. All keys have the same probability, i.e. $1/|\mathcal{K}|$.</p></div>
+<div class="proof" data-title="items 1 and 2 ⇒ perfect secrecy"><p>For any $m, c$ let $k$ be the unique key with $\mathsf{Enc}_k(m) = c$. Then $\Pr[\mathsf{Enc}_K(m) = c] = \Pr[K = k] = 1/|\mathcal{K}|$, the same for every $m$. This is <a class="xref" href="#def-ps-3"></a>.</p></div>
+<p>Example: the one-time pad satisfies both items ($k = m \oplus c$ is unique, keys are uniform), so it is perfectly secret.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-computational">
+<h2>Computational Security</h2>
+<p>Perfect secrecy needs keys as long as all the data ever encrypted. Kerckhoffs also formulated a weaker requirement: a cipher must be <i>practically</i>, if not mathematically, indecipherable. It suffices that the scheme cannot be broken <b>in reasonable time</b> with <b>reasonable probability</b>. Computational security makes two relaxations:</p>
+<ol>
+  <li>security only holds against <b>efficient</b> adversaries;</li>
+  <li>adversaries may succeed with a <b>very small</b> probability.</li>
+</ol>
+<p>Both are necessary. If $|\mathcal{K}| \lt |\mathcal{M}|$: an adversary that tries all keys succeeds in time $O(|\mathcal{K}|)$, which is why we bound running time; and an adversary that guesses one key and checks it against a known plaintext–ciphertext pair succeeds with probability $1/|\mathcal{K}|$ in constant time, which is why we must allow a small success probability.</p>
+
+<section class="sub" id="sec-concrete">
+<h3>Concrete Security</h3>
+<div class="env def" id="def-concrete" data-title="Concrete security">
+<p>For constants $t$ and $\varepsilon \le 1$: a scheme is $(t, \varepsilon)$-secure if every adversary running for time at most $t$ breaks it with probability at most $\varepsilon$.</p>
+</div>
+<p>A good scheme with $n$-bit keys is expected to be as secure as brute force allows: an adversary running for $t$ steps succeeds with probability about $t / 2^n$. Orders of magnitude:</p>
+<ul>
+  <li>A computer doing $10^9$ operations per second needs $2^{60} / 10^9 \text{ s} \approx 35$ years for $2^{60}$ operations; many parallel machines reduce this. $2^{80}$ is barely within reach today. Common key lengths are 128 and 256 bits.</li>
+  <li>The universe is about $2^{58}$ seconds old.</li>
+  <li>An event that happens about once in a hundred years has probability about $2^{-30}$ per second; an event with probability $2^{-60}$ per second is expected about once in a hundred billion years.</li>
+</ul>
+<p>Concrete statements are what practice needs, but they are hard to make and to interpret: on what hardware? with which (future) algorithms? what about an adversary with twice the time?</p>
+</section>
+
+<section class="sub" id="sec-asymptotic">
+<h3>Asymptotic Security, PPT Algorithms and Negligible Functions</h3>
+<p>The asymptotic approach introduces a <b>security parameter</b> $n$ (think: the key length), known to everybody. Honest parties choose $n$ when they generate keys, e.g. $k \leftarrow \mathsf{Gen}(1^n)$ (the parameter is given in unary so that "polynomial in the input length" means "polynomial in $n$"). Running times and success probabilities become functions of $n$, and</p>
+<ul>
+  <li>"efficient" means <b>probabilistic polynomial time</b>,</li>
+  <li>"small probability" means <b>negligible</b>.</li>
+</ul>
+<div class="env def" id="def-ppt" data-title="Efficient algorithms">
+<p>An algorithm $\mathcal{A}$ runs in polynomial time if there is a polynomial $p$ such that for every input $x \in \{0,1\}^*$ the computation of $\mathcal{A}(x)$ stops after at most $p(|x|)$ steps. It is <b>probabilistic polynomial-time (PPT)</b> if it additionally has access to a tape of uniformly random bits.</p>
+</div>
+<p>A PPT algorithm reads at most $p(|x|)$ random bits. PPT algorithms are <b>closed under composition</b>: a PPT algorithm that calls another PPT algorithm polynomially many times is still PPT. This is exactly what reductions need. The model of computation does not matter: all reasonable models are polynomially equivalent.</p>
+<div class="env def" id="def-negligible" data-title="Negligible function">
+<p>A function $f : \mathbb{N} \to \mathbb{R}_{\ge 0}$ is negligible if for every polynomial $p$ there is an $N$ such that $f(n) \lt \frac{1}{p(n)}$ for all $n \gt N$. Equivalently: for every constant $c$, $f(n) \lt n^{-c}$ for all sufficiently large $n$. We write $\mathsf{negl}$ for an arbitrary negligible function.</p>
+</div>
+<p>Examples: $2^{-n}$, $2^{-\sqrt n}$ and $n^{-\log n}$ are negligible; $n^{-10}$ is not. Negligible functions eventually fall below every inverse polynomial, but at very different speeds.</p>
+<div class="env prop" id="prop-negl-closure">
+<p>Let $\mathsf{negl}_1, \mathsf{negl}_2$ be negligible and $p$ a polynomial. Then $\mathsf{negl}_3(n) = \mathsf{negl}_1(n) + \mathsf{negl}_2(n)$ and $\mathsf{negl}_4(n) = p(n) \cdot \mathsf{negl}_1(n)$ are negligible.</p>
+</div>
+<div class="proof"><p>Let $q$ be a polynomial. For large $n$, $\mathsf{negl}_1(n) \lt \frac{1}{2q(n)}$ and $\mathsf{negl}_2(n) \lt \frac{1}{2q(n)}$, so $\mathsf{negl}_3(n) \lt \frac{1}{q(n)}$. For the product apply the definition to the polynomial $p \cdot q$: for large $n$, $\mathsf{negl}_1(n) \lt \frac{1}{p(n) q(n)}$, so $p(n)\, \mathsf{negl}_1(n) \lt \frac{1}{q(n)}$.</p></div>
+<p>Consequences: an event of negligible probability stays negligible when an experiment is repeated polynomially many times (union bound); and if $\varepsilon$ is <i>not</i> negligible, then neither is $\varepsilon / p$ for a polynomial $p$. Events of negligible probability can be ignored for large enough $n$.</p>
+<div class="env def" id="def-asymptotic" data-title="Asymptotic security">
+<p>A scheme is secure (against a given type of attack) if for every PPT adversary $\mathcal{A}$ carrying out that attack and every polynomial $p$ there is an $N$ such that for all $n \gt N$ the probability that $\mathcal{A}$ succeeds is less than $\frac{1}{p(n)}$. In short: every PPT adversary succeeds with at most negligible probability.</p>
+</div>
+<p>Nothing is promised for small $n$. Example: if an adversary running $n^3$ minutes succeeds with probability $2^{40} \cdot 2^{-n}$, the scheme is asymptotically secure, but for $n \le 40$ it is broken with certainty, for $n = 50$ it is broken in about 3 months with probability about $1/1000$, and only for $n = 500$ (200 years, probability $2^{-460}$) is it really safe. The asymptotic statement lets the honest parties pick $n$ to reach a desired concrete level, and to increase $n$ when computers get faster.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-eav">
+<h2>Private-Key Encryption and Pseudorandomness</h2>
+<p>From now on all schemes and adversaries are parameterized by $n$, and adversaries are PPT. We first adapt the eavesdropping game, then build a scheme whose key is much shorter than the message, using a pseudorandom generator.</p>
+
+<section class="sub" id="sec-ind-eav">
+<h3>Indistinguishable Encryptions for an Eavesdropper</h3>
+<div class="env def" id="def-scheme-asymptotic" data-title="Encryption scheme, asymptotic">
+<p>A private-key encryption scheme is a triple of PPT algorithms $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$: $\mathsf{Gen}(1^n)$ outputs a key $k$ with $|k| \ge n$; $\mathsf{Enc}_k(m)$ for $m \in \{0,1\}^*$ outputs $c$; the deterministic $\mathsf{Dec}_k(c)$ outputs $m$ (or $\bot$). Correctness: $\mathsf{Dec}_k(\mathsf{Enc}_k(m)) = m$ for all $n$, $k$, $m$. If $\mathsf{Enc}_k$ is only defined for $m \in \{0,1\}^{\ell(n)}$, the scheme is fixed-length.</p>
+</div>
+<div class="game" id="game-privk-eav-n">
+<div class="gtitle">$\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$k \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$m_0, m_1 \leftarrow \mathcal{A}(1^n)$ with $|m_0| = |m_1|$.</li>
+  <li>$b \leftarrow \{0,1\}$; $c \leftarrow \mathsf{Enc}_k(m_b)$.</li>
+  <li>$b' \leftarrow \mathcal{A}(c)$.</li>
+  <li>Output $1$ iff $b' = b$.</li>
+</ol>
+</div>
+<div class="env def" id="def-ind-eav" data-title="IND-EAV">
+<p>$\Pi$ has indistinguishable encryptions in the presence of an eavesdropper (is <b>IND-EAV secure</b>) if for every PPT $\mathcal{A}$ there is a negligible $\mathsf{negl}$ with</p>
+$$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
+</div>
+<p>The messages must have equal length because ciphertexts usually reveal the length (see the exercises). The quantity $\varepsilon(n) = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] - \frac12$ is $\mathcal{A}$'s <b>advantage</b>. An equivalent formulation: write $\mathsf{PrivK}^{\mathsf{eav}}(n, b)$ for the game with a <i>fixed</i> bit $b$. Then $\Pi$ is IND-EAV secure iff</p>
+$$\big|\Pr[\mathcal{A} \text{ outputs } 1 \text{ in } \mathsf{PrivK}^{\mathsf{eav}}(n, 0)] - \Pr[\mathcal{A} \text{ outputs } 1 \text{ in } \mathsf{PrivK}^{\mathsf{eav}}(n, 1)]\big| \le \mathsf{negl}(n),$$
+<p>since $\Pr[b' = b] = \frac12 + \frac12\big(\Pr[1 \mid b = 1] - \Pr[1 \mid b = 0]\big)$. This definition implies the intuition of the previous section: one can show that it is equivalent to <i>semantic security</i> (no PPT adversary computes any function of the message from the ciphertext noticeably better than without it).</p>
+</section>
+
+<section class="sub" id="sec-prg">
+<h3>Pseudorandom Generators</h3>
+<p>"Pseudorandom" is a property of a <i>distribution</i>, not of a single string: a distribution on $\ell$-bit strings is pseudorandom if no efficient algorithm can tell a sample from it apart from a uniform $\ell$-bit string.</p>
+<div class="env def" id="def-prg" data-title="Pseudorandom generator">
+<p>Let $\ell$ be a polynomial and $G$ a deterministic polynomial-time algorithm that maps $s \in \{0,1\}^n$ to $G(s) \in \{0,1\}^{\ell(n)}$. $G$ is a pseudorandom generator (PRG) if</p>
+<ol>
+  <li><b>expansion:</b> $\ell(n) \gt n$ for all $n$, and</li>
+  <li><b>pseudorandomness:</b> for every PPT distinguisher $D$ there is a negligible $\mathsf{negl}$ with
+  $$\big|\Pr[D(G(s)) = 1] - \Pr[D(r) = 1]\big| \le \mathsf{negl}(n),$$
+  where $s \leftarrow \{0,1\}^n$ (the seed) and $r \leftarrow \{0,1\}^{\ell(n)}$.</li>
+</ol>
+<p>$\ell$ is the expansion factor.</p>
+</div>
+<p><b>Only efficiency protects a PRG.</b> Let $\ell(n) = 2n$. The unbounded distinguisher $D(w)$: output $1$ iff $w = G(s)$ for some $s \in \{0,1\}^n$ (try all $2^n$ seeds). Then $\Pr[D(G(s)) = 1] = 1$, while at most $2^n$ of the $2^{2n}$ strings are outputs of $G$, so $\Pr[D(r) = 1] \le 2^{-n}$. The difference $1 - 2^{-n}$ is far from negligible. The seed must be long enough that such a search is infeasible.</p>
+<div class="env def" id="def-variable-prg" data-title="Variable output-length PRG">
+<p>A deterministic polynomial-time algorithm $G(s, 1^\ell)$ is a variable output-length PRG if (1) it outputs $\ell$ bits; (2) for $\ell \lt \ell'$, $G(s, 1^\ell)$ is a prefix of $G(s, 1^{\ell'})$; and (3) for every polynomial $\ell(\cdot)$, $G_\ell(s) := G(s, 1^{\ell(|s|)})$ is a PRG with expansion factor $\ell$.</p>
+</div>
+<p>This is the abstract model of a <b>stream cipher</b>: from a short key it produces as many pseudorandom bits as needed.</p>
+</section>
+
+<section class="sub" id="sec-prg-encryption">
+<h3>A Secure Fixed-Length Scheme</h3>
+<p>Idea: replace the long uniform pad of the one-time pad by the pseudorandom pad $G(k)$.</p>
+<div class="alg" id="constr-prg-enc"><table>
+<tr><td colspan="2">Let $G$ be a PRG with expansion factor $\ell$; messages $m \in \{0,1\}^{\ell(n)}$.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>input $1^n$: $k \leftarrow \{0,1\}^n$; output $k$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $k$, $m$: $c := G(k) \oplus m$; output $c$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $k$, $c$: $m := G(k) \oplus c$; output $m$</td></tr>
+</table></div>
+<div class="env thm" id="thm-prg-enc">
+<p>If $G$ is a PRG, then this scheme $\Pi$ is IND-EAV secure.</p>
+</div>
+<div class="proof"><p>Let $\mathcal{A}$ be PPT and $\varepsilon(n) := \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] - \frac12$. Let $\tilde\Pi$ be the one-time pad on $\ell(n)$-bit messages (the pad $w$ is uniform instead of $G(k)$). By perfect secrecy, $\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\tilde\Pi}(n) = 1] = \frac12$.</p>
+<p>Distinguisher $D$ for $G$, input $w \in \{0,1\}^{\ell(n)}$:</p>
+<ol>
+  <li>$m_0, m_1 \leftarrow \mathcal{A}(1^n)$; $b \leftarrow \{0,1\}$.</li>
+  <li>$c := w \oplus m_b$; $b' \leftarrow \mathcal{A}(c)$.</li>
+  <li>Output $1$ iff $b' = b$.</li>
+</ol>
+<p>If $w = G(s)$ for uniform $s$, $\mathcal{A}$'s view is exactly $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n)$, so $\Pr[D(G(s)) = 1] = \frac12 + \varepsilon(n)$. If $w$ is uniform, it is exactly the one-time-pad game, so $\Pr[D(w) = 1] = \frac12$. $D$ is PPT, and since $G$ is a PRG,</p>
+$$\varepsilon(n) = \big|\Pr[D(G(s)) = 1] - \Pr[D(w) = 1]\big| \le \mathsf{negl}(n).$$</div>
+<p>This is the template for all later proofs: <b>replace a component by its ideal version, show that the ideal scheme is secure, and show that an adversary noticing the replacement would yield a distinguisher.</b></p>
+<p><b>Stream ciphers in practice.</b> With a variable output-length PRG long messages can be encrypted. Two modes:</p>
+<ul>
+  <li><b>synchronous:</b> sender and receiver keep their position in one long pad $G(k)$; the $i$-th message uses the next part of it. This requires state.</li>
+  <li><b>asynchronous (unsynchronized):</b> each message gets a fresh public value $IV$ and the pad $G(k, IV)$; the ciphertext is $(IV, G(k, IV) \oplus m)$. This needs a stronger assumption on $G$: $(G(k, IV), IV)$ must look random even for many different $IV$s under the same secret key (<i>augmented pseudorandomness</i>; in fact $G(k, \cdot)$ is then a pseudorandom function, see the next section).</li>
+</ul>
+<p>Classical keystream generators such as RC4 or LFSRs are insecure; the modern view of a stream cipher is a PRG.</p>
+</section>
+
+<section class="sub" id="sec-multiple">
+<h3>Security for Multiple Encryptions</h3>
+<div class="game" id="game-privk-mult">
+<div class="gtitle">$\mathsf{PrivK}^{\mathsf{mult}}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$k \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$\mathcal{A}(1^n)$ outputs two vectors $\vec M_0 = (m_0^1, \dots, m_0^t)$ and $\vec M_1 = (m_1^1, \dots, m_1^t)$ with $|m_0^i| = |m_1^i|$.</li>
+  <li>$b \leftarrow \{0,1\}$; $c^i \leftarrow \mathsf{Enc}_k(m_b^i)$ for $i = 1, \dots, t$; $\vec C := (c^1, \dots, c^t)$.</li>
+  <li>$b' \leftarrow \mathcal{A}(\vec C)$; output $1$ iff $b' = b$.</li>
+</ol>
+</div>
+<div class="env def" id="def-ind-mult" data-title="IND-MULT">
+<p>$\Pi$ has indistinguishable multiple encryptions in the presence of an eavesdropper if $\Pr[\mathsf{PrivK}^{\mathsf{mult}}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$ for every PPT $\mathcal{A}$.</p>
+</div>
+<div class="env thm" id="thm-eav-not-mult">
+<p>There are IND-EAV secure schemes that are not IND-MULT secure; for example the PRG scheme above (and the one-time pad).</p>
+</div>
+<div class="proof"><p>$\mathcal{A}$ outputs $\vec M_0 = (0^\ell, 0^\ell)$ and $\vec M_1 = (0^\ell, 1^\ell)$. On $\vec C = (c^1, c^2)$ it outputs $0$ iff $c^1 = c^2$. Since encryption is deterministic, $c^1 = c^2$ exactly when the two messages are equal, so $\mathcal{A}$ always wins.</p></div>
+<div class="env thm" id="thm-no-deterministic">
+<p>No scheme with deterministic encryption is IND-MULT secure.</p>
+</div>
+<div class="proof"><p>The same adversary works for every deterministic scheme: equal messages give equal ciphertexts, different messages give different ciphertexts (by correctness).</p></div>
+<p>Hence: <b>to encrypt several messages with one key, encryption must be randomized</b> (or stateful).</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-cpa">
+<h2>Chosen-Plaintext Attacks and Pseudorandom Functions</h2>
+
+<section class="sub" id="sec-ind-cpa">
+<h3>Security against Chosen-Plaintext Attacks</h3>
+<p>An <b>oracle</b> is a black box: it answers queries, but the algorithm using it cannot look inside. "$\mathcal{A}^{\mathsf{Enc}_k(\cdot)}$" means $\mathcal{A}$ may submit messages $m$ and receives $c \leftarrow \mathsf{Enc}_k(m)$; it does <b>not</b> learn $k$. The adversary may choose its queries adaptively.</p>
+<div class="game" id="game-privk-cpa">
+<div class="gtitle">$\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$k \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$m_0, m_1 \leftarrow \mathcal{A}^{\mathsf{Enc}_k(\cdot)}(1^n)$ with $|m_0| = |m_1|$.</li>
+  <li>$b \leftarrow \{0,1\}$; $c \leftarrow \mathsf{Enc}_k(m_b)$.</li>
+  <li>$b' \leftarrow \mathcal{A}^{\mathsf{Enc}_k(\cdot)}(c)$.</li>
+  <li>Output $1$ iff $b' = b$.</li>
+</ol>
+</div>
+<div class="env def" id="def-ind-cpa" data-title="IND-CPA">
+<p>$\Pi$ has indistinguishable encryptions under a chosen-plaintext attack (is <b>CPA-secure</b>) if for every PPT $\mathcal{A}$: $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$, where the probability is over all random coins.</p>
+</div>
+<p>CPA security implies security for multiple encryptions (the oracle can produce all other ciphertexts). Again, deterministic schemes cannot be CPA-secure: query $\mathsf{Enc}_k(m_0)$ and compare with the challenge.</p>
+</section>
+
+<section class="sub" id="sec-prf">
+<h3>Pseudorandom Functions</h3>
+<p>Let $\mathsf{Func}_n$ be the set of all functions $f : \{0,1\}^n \to \{0,1\}^n$. A function is described by a table with $2^n$ rows of $n$ bits each, i.e. $n \cdot 2^n$ bits, so $|\mathsf{Func}_n| = 2^{n \cdot 2^n}$. A uniformly random $f \in \mathsf{Func}_n$ can be thought of as answering every new query with a fresh uniform $n$-bit string (and repeating earlier answers for repeated queries).</p>
+<div class="env def" id="def-keyed-function" data-title="Keyed function">
+<p>A keyed function is a two-input function $F : \{0,1\}^* \times \{0,1\}^* \to \{0,1\}^*$; we write $F_k(x) := F(k, x)$. It is efficient if $F$ is computable in polynomial time, and length-preserving if $|k| = |x| = |F_k(x)|$. A length-preserving $F$ gives, for each $n$, a set of at most $2^n$ functions $F_k \in \mathsf{Func}_n$.</p>
+</div>
+<div class="env def" id="def-prf" data-title="Pseudorandom function">
+<p>An efficient, length-preserving keyed function $F$ is a pseudorandom function (PRF) if for every PPT distinguisher $D$ there is a negligible $\mathsf{negl}$ with</p>
+$$\big|\Pr[D^{F_k(\cdot)}(1^n) = 1] - \Pr[D^{f(\cdot)}(1^n) = 1]\big| \le \mathsf{negl}(n),$$
+<p>where $k \leftarrow \{0,1\}^n$ and $f \leftarrow \mathsf{Func}_n$.</p>
+</div>
+<p>The distinguisher gets <b>oracle access</b>; it cannot see $k$ (otherwise distinguishing would be trivial). A random function is chosen from $2^{n 2^n}$ functions, $F_k$ from only $2^n$; nevertheless no efficient algorithm notices the difference. In practice, block ciphers such as AES are assumed to be PRFs (more precisely, PRPs).</p>
+</section>
+
+<section class="sub" id="sec-prf-encryption">
+<h3>CPA-Secure Encryption from a PRF</h3>
+<div class="alg" id="constr-prf-enc"><table>
+<tr><td colspan="2">Let $F$ be a PRF; messages $m \in \{0,1\}^n$.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>input $1^n$: $k \leftarrow \{0,1\}^n$; output $k$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $k$, $m$: $r \leftarrow \{0,1\}^n$; $s := F_k(r) \oplus m$; output $c = \langle r, s \rangle$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $k$, $c = \langle r, s \rangle$: $m := F_k(r) \oplus s$; output $m$</td></tr>
+</table></div>
+<p>Correctness: $F_k(r) \oplus (F_k(r) \oplus m) = m$. Each encryption uses a fresh random point $r$, so the pads $F_k(r)$ look like independent one-time pads.</p>
+<div class="env thm" id="thm-prf-cpa">
+<p>If $F$ is a PRF, the scheme above is CPA-secure for messages of length $n$.</p>
+</div>
+<div class="proof"><p>Fix a PPT adversary $\mathcal{A}$ and let $q(n)$ be a polynomial bound on its number of oracle queries. Let $\tilde\Pi$ be the same scheme but with a uniform $f \leftarrow \mathsf{Func}_n$ in place of $F_k$.</p>
+<div class="env claim" id="claim-prf-ideal"><p>$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi}(n) = 1] \le \frac12 + \frac{q(n)}{2^n}$.</p></div>
+<p><i>Proof of the claim.</i> Let $r_c$ be the random value in the challenge, and $r_1, \dots, r_{q}$ those used to answer oracle queries. Let $\mathsf{Repeat}$ be the event that $r_c = r_i$ for some $i$. Each $r_i$ equals the uniform $r_c$ with probability $2^{-n}$, so by the union bound $\Pr[\mathsf{Repeat}] \le q(n)/2^n$. If $\mathsf{Repeat}$ does not occur, $f(r_c)$ was never revealed and is a uniform string independent of $\mathcal{A}$'s view; the challenge $\langle r_c, f(r_c) \oplus m_b \rangle$ is a one-time-pad encryption and $\Pr[\text{succ} \mid \overline{\mathsf{Repeat}}] = \frac12$. Hence</p>
+$$\Pr[\text{succ}] \le \Pr[\text{succ} \mid \overline{\mathsf{Repeat}}] + \Pr[\mathsf{Repeat}] \le \tfrac12 + \tfrac{q(n)}{2^n}.$$
+<p><i>Reduction.</i> Let $\varepsilon(n) := \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] - \frac12$. Distinguisher $D^{\mathcal{O}}(1^n)$ with oracle $\mathcal{O} \in \{F_k, f\}$:</p>
+<ol>
+  <li>Run $\mathcal{A}(1^n)$; answer each encryption query $m$ by choosing $r \leftarrow \{0,1\}^n$ and returning $\langle r, \mathcal{O}(r) \oplus m \rangle$.</li>
+  <li>When $\mathcal{A}$ outputs $m_0, m_1$: choose $b \leftarrow \{0,1\}$, $r_c \leftarrow \{0,1\}^n$, and give $\langle r_c, \mathcal{O}(r_c) \oplus m_b \rangle$ to $\mathcal{A}$. Continue answering queries as before.</li>
+  <li>When $\mathcal{A}$ outputs $b'$: output $1$ iff $b' = b$.</li>
+</ol>
+<p>With $\mathcal{O} = F_k$, $\mathcal{A}$ sees exactly $\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}$; with $\mathcal{O} = f$, exactly $\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi}$. $D$ is PPT. Since $F$ is a PRF,</p>
+$$\mathsf{negl}(n) \ge \Pr[D^{F_k} = 1] - \Pr[D^{f} = 1] \ge \tfrac12 + \varepsilon(n) - \tfrac12 - \tfrac{q(n)}{2^n},$$
+<p>so $\varepsilon(n) \le \mathsf{negl}(n) + q(n)/2^n$, which is negligible.</p></div>
+<p>The ciphertext is twice as long as the message. Longer messages can be encrypted block by block with fresh $r$ for each block (CPA security for multiple messages follows from the single-message case), but the modes in the next section are more efficient.</p>
+</section>
+
+<section class="sub" id="sec-composition">
+<h3>Example: Combining Two Schemes</h3>
+<p>A typical exam-style construction. Let $\Pi_1, \Pi_2$ be private-key schemes, and we only know that <b>at least one</b> of them is CPA-secure. Encrypt with both, using secret sharing so that each scheme only sees a random-looking share:</p>
+<div class="alg" id="constr-combine"><table>
+<tr><td>$\mathsf{Gen}$</td><td>$k_1 \leftarrow \mathsf{Gen}_1(1^n)$, $k_2 \leftarrow \mathsf{Gen}_2(1^n)$; output $(k_1, k_2)$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $(k_1, k_2)$, $m \in \{0,1\}^n$: $r \leftarrow \{0,1\}^n$; $c_1 \leftarrow \mathsf{Enc}^1_{k_1}(r)$; $c_2 \leftarrow \mathsf{Enc}^2_{k_2}(m \oplus r)$; output $\langle c_1, c_2 \rangle$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>$m := \mathsf{Dec}^1_{k_1}(c_1) \oplus \mathsf{Dec}^2_{k_2}(c_2)$</td></tr>
+</table></div>
+<div class="env thm" id="thm-combine">
+<p>If $\Pi_1$ or $\Pi_2$ is CPA-secure, then the combined scheme $\Pi$ is CPA-secure.</p>
+</div>
+<div class="proof" data-title="case: Π₁ is CPA-secure"><p>Let $\mathcal{A}$ attack $\Pi$ with advantage $\varepsilon(n)$. Build $\mathcal{A}'$ against $\Pi_1$: it chooses $k_2$ itself and $r \leftarrow \{0,1\}^n$, and outputs the challenge pair $(r, 0^n)$ to its own game. It answers $\mathcal{A}$'s encryption queries $m_i$ with fresh $r_i$ as $\langle \mathsf{Enc}^1_{k_1}(r_i), \mathsf{Enc}^2_{k_2}(m_i \oplus r_i) \rangle$, using its own oracle for the first part. When $\mathcal{A}$ outputs $m_0, m_1$, $\mathcal{A}'$ receives $c_1$, picks $b \leftarrow \{0,1\}$, gives $\langle c_1, \mathsf{Enc}^2_{k_2}(m_b \oplus r) \rangle$ to $\mathcal{A}$, and outputs $0$ iff $\mathcal{A}$ guesses $b$ correctly.</p>
+<p>If $c_1$ encrypts $r$ (hidden bit $\hat b = 0$), $\mathcal{A}$ sees exactly $\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}$ and guesses correctly with probability $\frac12 + \varepsilon(n)$. If $c_1$ encrypts $0^n$ ($\hat b = 1$), then $c_1$ contains no information about $r$, so $m_b \oplus r$ is a one-time-pad encryption and $\mathcal{A}$ guesses correctly with probability exactly $\frac12$. Thus $\Pr[\mathcal{A}' \text{ wins}] = \frac12(\frac12 + \varepsilon) + \frac12 \cdot \frac12 = \frac12 + \frac{\varepsilon}{2}$, and CPA security of $\Pi_1$ forces $\varepsilon$ to be negligible. The case "$\Pi_2$ is CPA-secure" is symmetric (encrypt $m_b \oplus r$ resp. a random string under $\Pi_2$).</p></div>
+</section>
+</section>
+
+<section class="chapter" id="sec-modes">
+<h2>Pseudorandom Permutations and Modes of Operation</h2>
+
+<section class="sub" id="sec-prp">
+<h3>Pseudorandom Permutations</h3>
+<p>Let $\mathsf{Perm}_n \subset \mathsf{Func}_n$ be the set of permutations (bijections) of $\{0,1\}^n$; $|\mathsf{Perm}_n| = (2^n)!$. A keyed permutation $F$ has $F_k \in \mathsf{Perm}_n$ for every $k$; it is <b>efficient</b> if both $F_k$ and $F_k^{-1}$ are computable in polynomial time given $k$. A block cipher is a keyed permutation.</p>
+<div class="env def" id="def-prp" data-title="Pseudorandom permutation">
+<p>An efficient keyed permutation $F$ is a pseudorandom permutation (PRP) if for every PPT $D$: $\big|\Pr[D^{F_k(\cdot)}(1^n) = 1] - \Pr[D^{f(\cdot)}(1^n) = 1]\big| \le \mathsf{negl}(n)$, with $k \leftarrow \{0,1\}^n$, $f \leftarrow \mathsf{Perm}_n$.</p>
+</div>
+<div class="env def" id="def-strong-prp" data-title="Strong PRP">
+<p>$F$ is a strong PRP if the same holds when $D$ also gets access to the inverse: $\big|\Pr[D^{F_k(\cdot), F_k^{-1}(\cdot)}(1^n) = 1] - \Pr[D^{f(\cdot), f^{-1}(\cdot)}(1^n) = 1]\big| \le \mathsf{negl}(n)$.</p>
+</div>
+<div class="env prop" id="prop-prp-prf">
+<p>Every PRP is also a PRF.</p>
+</div>
+<div class="proof"><p>A random permutation and a random function can only be told apart through a collision $f(x) = f(x')$ with $x \ne x'$, which a permutation never produces. With $q$ queries a random function produces one with probability at most $\binom{q}{2} 2^{-n} \le q^2/2^{n+1}$ (birthday bound), which is negligible for polynomial $q$. Hence $|\Pr[D^{F_k}=1] - \Pr[D^{f \in \mathsf{Func}}=1]| \le |\Pr[D^{F_k}=1] - \Pr[D^{f \in \mathsf{Perm}}=1]| + q^2/2^{n+1}$, which is negligible.</p></div>
+</section>
+
+<section class="sub" id="sec-modes-of-operation">
+<h3>Modes of Operation</h3>
+<p>A mode of operation encrypts a long message $m = m_1 \cdots m_\ell$ (blocks of $n$ bits) with a PRF/PRP $F$. ($c_0 := IV$ denotes the initial value.)</p>
+<table class="plain">
+<tr><th>Mode</th><th>Encryption</th><th>Decryption</th><th>Properties</th></tr>
+<tr><td>ECB</td><td>$c_i := F_k(m_i)$</td><td>$m_i := F_k^{-1}(c_i)$</td><td>deterministic: equal blocks give equal ciphertext blocks. <b>Not even IND-EAV secure.</b></td></tr>
+<tr><td>CBC</td><td>$c_0 := IV \leftarrow \{0,1\}^n$; $c_i := F_k(c_{i-1} \oplus m_i)$</td><td>$m_i := F_k^{-1}(c_i) \oplus c_{i-1}$</td><td>CPA-secure if $F$ is a PRP. Encryption sequential, decryption parallelizable. Needs a <b>random</b> IV.</td></tr>
+<tr><td>OFB</td><td>$IV \leftarrow \{0,1\}^n$; $r_0 := IV$, $r_i := F_k(r_{i-1})$; $c_i := r_i \oplus m_i$</td><td>$m_i := r_i \oplus c_i$</td><td>CPA-secure if $F$ is a PRF. Stream cipher; pad can be precomputed; $F$ need not be invertible.</td></tr>
+<tr><td>CTR</td><td>$ctr \leftarrow \{0,1\}^n$; $c_i := F_k(ctr + i) \oplus m_i$</td><td>$m_i := F_k(ctr + i) \oplus c_i$</td><td>CPA-secure if $F$ is a PRF. Parallelizable, random access, precomputable.</td></tr>
+</table>
+<p>The ciphertext of CBC, OFB and CTR is $\langle IV, c_1, \dots, c_\ell \rangle$ (one block longer than the message). Using a predictable IV (e.g. incrementing it) breaks CPA security of CBC.</p>
+<div class="env thm" id="thm-ctr">
+<p>If $F$ is a PRF, randomized counter mode is CPA-secure (for messages of any polynomial length).</p>
+</div>
+<div class="proof"><p>Let $\mathcal{A}$ be PPT, $q(n)$ a polynomial bounding both the number of oracle queries and the number of blocks per message. Let $\tilde\Pi$ use a random $f \in \mathsf{Func}_n$ instead of $F_k$. Exactly as in the proof of <a class="xref" href="#thm-prf-cpa"></a>, a distinguisher that runs $\mathcal{A}$ and computes all ciphertexts with its oracle shows $|\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] - \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi} = 1]| \le \mathsf{negl}(n)$. It remains to bound the ideal game.</p>
+<p>Let $ctr^*$ be the counter of the challenge, which uses $f(ctr^* + 1), \dots, f(ctr^* + \ell^*)$, and let $ctr_i$ be the counter of the $i$-th oracle query, using $f(ctr_i + 1), \dots, f(ctr_i + \ell_i)$. Let $\mathsf{Overlap}$ be the event that some $ctr_i + j = ctr^* + j^*$ for $j, j^* \in \{1, \dots, q\}$. Without overlap, all pads of the challenge are values of $f$ at points never used elsewhere, hence uniform and independent of everything $\mathcal{A}$ sees, and the challenge is a one-time-pad encryption: $\Pr[\text{succ} \mid \overline{\mathsf{Overlap}}] = \frac12$.</p>
+<p>The sequences $ctr_i + 1, \dots, ctr_i + \ell_i$ and $ctr^* + 1, \dots, ctr^* + \ell^*$ (both of length at most $q$) overlap only if $ctr^* - q \lt ctr_i \lt ctr^* + q$, i.e. $ctr_i$ falls into a window of $2q - 1$ values. Since $ctr^*$ is uniform, this happens with probability at most $(2q-1)/2^n$ for each $i$, and by the union bound $\Pr[\mathsf{Overlap}] \le q(2q-1)/2^n \le 2q^2/2^n$. Hence $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi} = 1] \le \frac12 + 2q(n)^2/2^n$ and $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] \le \frac12 + 2q(n)^2/2^n + \mathsf{negl}(n)$.</p></div>
+</section>
+</section>
+
+<section class="chapter" id="sec-cca">
+<h2>Chosen-Ciphertext Attacks</h2>
+<p>In a chosen-ciphertext attack the adversary can additionally have ciphertexts of its choice decrypted. This is realistic:</p>
+<ul>
+  <li>an adversary sends modified ciphertexts to the receiver and observes the reaction (an error message, a retransmission request, whether the receiver acts on the message, timing);</li>
+  <li>encryption inside larger protocols may leak decryptions, e.g. e-mail clients that load external content from a URL inside a decrypted HTML message (the "EFAIL" attacks inserted the plaintext into such a URL and had it sent to the attacker's server).</li>
+</ul>
+<div class="game" id="game-privk-cca">
+<div class="gtitle">$\mathsf{PrivK}^{\mathsf{cca}}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$k \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$m_0, m_1 \leftarrow \mathcal{A}^{\mathsf{Enc}_k(\cdot), \mathsf{Dec}_k(\cdot)}(1^n)$ with $|m_0| = |m_1|$.</li>
+  <li>$b \leftarrow \{0,1\}$; $c \leftarrow \mathsf{Enc}_k(m_b)$.</li>
+  <li>$b' \leftarrow \mathcal{A}^{\mathsf{Enc}_k(\cdot), \mathsf{Dec}_k(\cdot)}(c)$; let $\mathcal{Q}$ be the set of all decryption queries.</li>
+  <li>Output $1$ iff $b' = b$ and $c \notin \mathcal{Q}$ ($\mathcal{A}$ may not ask for the decryption of the challenge itself).</li>
+</ol>
+</div>
+<div class="env def" id="def-ind-cca" data-title="IND-CCA">
+<p>$\Pi$ is <b>CCA-secure</b> if for every PPT $\mathcal{A}$: $\Pr[\mathsf{PrivK}^{\mathsf{cca}}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$.</p>
+</div>
+<p><b>None of the schemes so far is CCA-secure.</b> Example: $\mathsf{Enc}_k(m) = \langle r, F_k(r) \oplus m \rangle$. Choose $m_0 = 0^n$, $m_1 = 1^n$, receive $\langle r, s \rangle$, flip the first bit of $s$ to get $s'$, and ask for the decryption of $\langle r, s' \rangle \ne \langle r, s \rangle$. The answer is $m_b$ with the first bit flipped, which reveals $b$; the adversary wins with probability $1$. The same "flip a ciphertext bit, a plaintext bit flips" attack works for CTR, OFB and (on the IV) CBC.</p>
+<p>The underlying problem is <b>malleability</b>: the ciphertext can be changed into a valid ciphertext of a related message. A CCA-secure scheme must be <b>non-malleable</b>: every manipulation either produces an invalid ciphertext or one whose plaintext is unrelated to the original. This requires integrity, which is the subject of the next section; a CCA-secure construction follows in <a class="xref" href="#sec-cca-secure"></a>.</p>
+</section>
+
+<section class="chapter" id="sec-mac">
+<h2>Message Authentication Codes</h2>
+<p>Secure communication over an open channel has several goals: (1) <b>privacy</b> (previous sections), (2) <b>authenticity</b>: did the message really come from the claimed sender? and (3) <b>integrity</b>: was it modified on the way?</p>
+<p><b>Encryption does not provide integrity.</b> For $\mathsf{Enc}_k(m) = G(k) \oplus m$, flipping a bit of the ciphertext flips the same bit of the decrypted message, and the receiver cannot notice. Similar manipulations work for all modes above. Integrity needs a separate tool.</p>
+
+<section class="sub" id="sec-mac-def">
+<h3>Definitions</h3>
+<p>Sender and receiver share a key $k$. The sender computes a <b>tag</b> $t$ for the message $m$ and sends $\langle m, t \rangle$; the receiver checks the tag.</p>
+<div class="env def" id="def-mac" data-title="Message authentication code">
+<p>A MAC is a triple of PPT algorithms $\Pi = (\mathsf{Gen}, \mathsf{Mac}, \mathsf{Vrfy})$:</p>
+<div class="alg"><table>
+<tr><td>$\mathsf{Gen}$</td><td>input $1^n$; output a key $k$ with $|k| \ge n$</td></tr>
+<tr><td>$\mathsf{Mac}$</td><td>input $k$ and $m \in \{0,1\}^*$; output a tag $t \leftarrow \mathsf{Mac}_k(m)$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>input $k, m, t$; output a bit $b$ ($1$ = valid, $0$ = invalid); deterministic</td></tr>
+</table></div>
+<p>Correctness: $\mathsf{Vrfy}_k(m, \mathsf{Mac}_k(m)) = 1$ for all $n$, $k$, $m$. If $\mathsf{Mac}_k$ is only defined for $m \in \{0,1\}^{\ell(n)}$, $\Pi$ is a fixed-length MAC for messages of length $\ell(n)$.</p>
+</div>
+<p>For a deterministic $\mathsf{Mac}$, verification is <b>canonical</b>: $\mathsf{Vrfy}_k(m, t) = 1 \iff t = \mathsf{Mac}_k(m)$. Such a MAC has <b>unique tags</b>.</p>
+<p>Intuitively a MAC is secure if no efficient adversary can produce a valid tag on a <i>new</i> message, even after seeing (or even choosing) many authenticated messages. We give the adversary an oracle $\mathsf{Mac}_k(\cdot)$; $\mathcal{Q}$ is the set of its queries.</p>
+<div class="game" id="game-mac-forge">
+<div class="gtitle">$\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$k \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$(m, t) \leftarrow \mathcal{A}^{\mathsf{Mac}_k(\cdot)}(1^n)$; let $\mathcal{Q}$ be the set of oracle queries.</li>
+  <li>Output $1$ iff $\mathsf{Vrfy}_k(m, t) = 1$ and $m \notin \mathcal{Q}$.</li>
+</ol>
+</div>
+<div class="env def" id="def-mac-secure" data-title="Existential unforgeability">
+<p>$\Pi$ is existentially unforgeable under an adaptive chosen-message attack (or simply <b>secure</b>) if for every PPT $\mathcal{A}$: $\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n) = 1] \le \mathsf{negl}(n)$.</p>
+</div>
+<p>"Existential": forging a tag on <i>any</i> new message counts, even a meaningless one, since what is meaningful depends on the application. <b>Replay attacks</b> (resending an old valid $\langle m, t\rangle$) are not prevented by a MAC; they must be handled by the protocol, e.g. with <b>sequence numbers</b> or <b>time stamps</b> included in the authenticated message.</p>
+</section>
+
+<section class="sub" id="sec-prf-mac">
+<h3>A Fixed-Length MAC from a PRF</h3>
+<div class="alg" id="constr-prf-mac"><table>
+<tr><td colspan="2">Let $F$ be a PRF; messages $m \in \{0,1\}^n$.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>input $1^n$: $k \leftarrow \{0,1\}^n$</td></tr>
+<tr><td>$\mathsf{Mac}$</td><td>input $k$, $m$: output $t := F_k(m)$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>input $k$, $m$, $t$: output $1$ iff $t = F_k(m)$</td></tr>
+</table></div>
+<div class="env thm" id="thm-prf-mac">
+<p>If $F$ is a PRF, this is a secure fixed-length MAC for messages of length $n$.</p>
+</div>
+<div class="proof"><p>Let $\tilde\Pi$ be the same MAC with a random $f \in \mathsf{Func}_n$. In $\mathsf{Mac\text{-}forge}_{\mathcal{A},\tilde\Pi}$, the adversary must output $f(m)$ for some $m$ it never queried; $f(m)$ is uniform and independent of its view, so $\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\tilde\Pi}(n) = 1] \le 2^{-n}$. Let $\varepsilon(n) := \Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n) = 1]$.</p>
+<p>Distinguisher $D^{\mathcal{O}}(1^n)$: run $\mathcal{A}$, answer each query $m_i$ with $\mathcal{O}(m_i)$ and record $\mathcal{Q}$. When $\mathcal{A}$ outputs $(m, t)$: if $m \notin \mathcal{Q}$, query $\mathcal{O}(m)$ and output $1$ iff $t = \mathcal{O}(m)$; otherwise output $0$. With $\mathcal{O} = F_k$, $D$ outputs $1$ exactly when $\mathcal{A}$ wins $\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}$; with $\mathcal{O} = f$, exactly when $\mathcal{A}$ wins against $\tilde\Pi$. So</p>
+$$\mathsf{negl}(n) \ge \big|\Pr[D^{F_k} = 1] - \Pr[D^{f} = 1]\big| \ge \varepsilon(n) - 2^{-n},$$
+<p>and $\varepsilon(n) \le \mathsf{negl}(n) + 2^{-n}$.</p></div>
+</section>
+
+<section class="sub" id="sec-variable-mac">
+<h3>Extension to Variable-Length Messages</h3>
+<p>Let $\Pi' = (\mathsf{Gen}', \mathsf{Mac}', \mathsf{Vrfy}')$ be a secure fixed-length MAC for messages of length $n$. Simple ideas fail (with $m = m_1 \cdots m_d$ split into blocks):</p>
+<ul>
+  <li>$t := \bigoplus_i \mathsf{Mac}'_k(m_i)$: reordering the blocks keeps the tag valid.</li>
+  <li>$t := \mathsf{Mac}'_k(\langle i \rangle \| m_i)_{i}$ (tag each block with its index): blocks can be dropped from the end (truncation) or taken from different messages.</li>
+  <li>adding the length $\ell$ to each block stops truncation, but blocks of two messages of equal length can still be mixed.</li>
+</ul>
+<p>All three problems are solved by including the index, the total length and a per-message random identifier in every block.</p>
+<div class="alg" id="constr-var-mac"><table>
+<tr><td colspan="2">Blocks have length $n/4$; messages have length $\ell \lt 2^{n/4}$; $\langle x \rangle$ is the $n/4$-bit encoding of $x$.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>same as $\mathsf{Gen}'$</td></tr>
+<tr><td>$\mathsf{Mac}$</td><td>input $k$, $m$ of length $\ell$: split $m$ into $d$ blocks $m_1, \dots, m_d$ (pad the last with zeros); choose $r \leftarrow \{0,1\}^{n/4}$; for $i = 1, \dots, d$: $t_i := \mathsf{Mac}'_k(r \,\|\, \langle \ell \rangle \,\|\, \langle i \rangle \,\|\, m_i)$; output $t := \langle r, t_1, \dots, t_d \rangle$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>recompute the blocks with the given $r$; output $1$ iff $\mathsf{Vrfy}'_k(r \| \langle \ell \rangle \| \langle i \rangle \| m_i, t_i) = 1$ for all $i$ and the number of tags is $d$</td></tr>
+</table></div>
+<div class="env thm" id="thm-var-mac">
+<p>If $\Pi'$ is a secure fixed-length MAC for messages of length $n$, then the construction above is a secure MAC for arbitrary-length messages.</p>
+</div>
+<div class="proof"><p>Let $\mathcal{A}$ be PPT with at most $q(n)$ queries. Define two events in $\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}$:</p>
+<ul>
+  <li>$\mathsf{Repeat}$: the oracle uses the same random identifier $r$ for two different queries;</li>
+  <li>$\mathsf{NewBlock}$: the output $(m, t = \langle r, t_1, \dots \rangle)$ contains some block $r \| \langle \ell \rangle \| \langle i \rangle \| m_i$ that was never given to $\mathsf{Mac}'_k$ while answering queries.</li>
+</ul>
+<p>$\Pr[\mathsf{Repeat}] \le q(n)^2 / 2^{n/4}$ (birthday bound), which is negligible. We show that a successful forgery without $\mathsf{Repeat}$ implies $\mathsf{NewBlock}$, i.e. $\Pr[\text{succ} \land \overline{\mathsf{Repeat}} \land \overline{\mathsf{NewBlock}}] = 0$. Consider a forgery on a new message $m$ (length $\ell$, identifier $r$). Cases:</p>
+<ol>
+  <li>$r$ was never used by the oracle: then every block of $m$ starts with $r$ and is new.</li>
+  <li>$r$ was used by the oracle exactly once, for query $m'$ of length $\ell'$. If $\ell \ne \ell'$, all blocks of $m$ carry a different length field and are new. If $\ell = \ell'$, both messages have the same number of blocks, and since $m \ne m'$ they differ in some block $i$; the block $r \| \langle \ell \rangle \| \langle i \rangle \| m_i$ was never authenticated (it differs from the $i$-th block of $m'$, and all other authenticated blocks with this $r$ have a different index).</li>
+  <li>$r$ was used by the oracle several times: impossible without $\mathsf{Repeat}$.</li>
+</ol>
+<p>Now build $\mathcal{A}'$ against $\Pi'$: it runs $\mathcal{A}$ and answers its queries by computing the tags block by block with its own oracle $\mathsf{Mac}'_k(\cdot)$. When $\mathcal{A}$ outputs $(m, t)$, $\mathcal{A}'$ checks whether some block $B_i$ of $m$ was never queried; if so, it outputs $(B_i, t_i)$. If $\mathcal{A}$ succeeds and $\mathsf{NewBlock}$ occurs, $t_i$ is a valid tag on the new block $B_i$, so $\mathcal{A}'$ succeeds. Hence</p>
+$$\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{Repeat}] + \Pr[\text{succ} \land \mathsf{NewBlock}] \le \frac{q^2}{2^{n/4}} + \Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A}',\Pi'} = 1],$$
+<p>which is negligible.</p></div>
+<p>The tag is about four times as long as the message. CBC-MAC is far more efficient.</p>
+</section>
+
+<section class="sub" id="sec-cbc-mac">
+<h3>CBC-MAC</h3>
+<div class="alg" id="constr-cbc-mac"><table>
+<tr><td colspan="2">Let $F$ be a PRF and $\ell$ a fixed polynomial; messages of length $\ell(n) \cdot n$.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>$k \leftarrow \{0,1\}^n$</td></tr>
+<tr><td>$\mathsf{Mac}$</td><td>split $m$ into $\ell = \ell(n)$ blocks $m_1, \dots, m_\ell$; $t_0 := 0^n$; for $i = 1, \dots, \ell$: $t_i := F_k(t_{i-1} \oplus m_i)$; output $t := t_\ell$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>output $1$ iff $t = \mathsf{Mac}_k(m)$</td></tr>
+</table></div>
+<div class="env thm" id="thm-cbc-mac">
+<p>If $F$ is a PRF, CBC-MAC is a secure MAC for messages of the fixed length $\ell(n) \cdot n$. (Proof omitted; it bounds the probability that two different messages lead to the same input of the last $F_k$ call.)</p>
+</div>
+<p><b>CBC encryption vs. CBC-MAC.</b> They look alike, but both differences are essential:</p>
+<ol>
+  <li>CBC encryption uses a <b>random IV</b>, needed for CPA security. CBC-MAC uses the <b>fixed</b> $t_0 = 0^n$. With a random IV sent along, the MAC is insecure: change $IV$ and $m_1$ by the same $\Delta$.</li>
+  <li>CBC encryption outputs <b>all</b> blocks $c_1, \dots, c_\ell$. CBC-MAC outputs <b>only the last</b>. Outputting intermediate values makes the MAC insecure.</li>
+</ol>
+<p><b>Variable-length messages.</b> Basic CBC-MAC is insecure for messages of different lengths: from the tag $t_x = F_k(x)$ of the one-block message $x$, the two-block message $x \| (t_x \oplus x)$ has the same tag. Secure fixes:</p>
+<ul>
+  <li><b>prepend the length:</b> compute CBC-MAC of $\langle |m| \rangle \| m$ (appending the length does <i>not</i> work);</li>
+  <li><b>encrypt the last value with a second key:</b> $t := F_{k_2}(\mathsf{CBC\text{-}MAC}_{k_1}(m))$;</li>
+  <li><b>derive the key from the length:</b> $k_\ell := F_k(\ell)$, then CBC-MAC with $k_\ell$.</li>
+</ul>
+</section>
+</section>
+
+<section class="chapter" id="sec-hash">
+<h2>Collision-Resistant Hash Functions</h2>
+<p>A hash function compresses long inputs to short outputs. Since there are more inputs than outputs, collisions $x \ne x'$ with $H(x) = H(x')$ <i>exist</i>; a collision-resistant function makes them infeasible to <i>find</i>. Uses: hash-and-MAC / hash-and-sign (authenticate a short digest instead of a long message), integrity checks, password storage, building blocks for HMAC.</p>
+
+<section class="sub" id="sec-crhf-def">
+<h3>Definitions</h3>
+<div class="env def" id="def-hash" data-title="Hash function">
+<p>A hash function is a pair of PPT algorithms $\Pi = (\mathsf{Gen}, H)$: $\mathsf{Gen}(1^n)$ outputs a key $s$ (not secret); $H$ takes $s$ and $x \in \{0,1\}^*$ and outputs $H^s(x) \in \{0,1\}^{\ell(n)}$. If $H^s$ is only defined for inputs of length $\ell'(n) \gt \ell(n)$, it is a fixed-length hash function (a compression function).</p>
+</div>
+<div class="game" id="game-hash-coll">
+<div class="gtitle">$\mathsf{Hash\text{-}coll}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$s \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$x, x' \leftarrow \mathcal{A}(s)$.</li>
+  <li>Output $1$ iff $x \ne x'$ and $H^s(x) = H^s(x')$.</li>
+</ol>
+</div>
+<div class="env def" id="def-crhf" data-title="Collision resistance">
+<p>$\Pi$ is collision resistant if for every PPT $\mathcal{A}$: $\Pr[\mathsf{Hash\text{-}coll}_{\mathcal{A},\Pi}(n) = 1] \le \mathsf{negl}(n)$.</p>
+</div>
+<p>The key $s$ is needed for the theory: for a fixed, unkeyed function a collision exists and "the algorithm that outputs it" is efficient. Practical functions (SHA-2, SHA-3) are unkeyed; one assumes nobody <i>knows</i> a collision. Weaker notions, from strongest to weakest:</p>
+<ul>
+  <li><b>second pre-image resistance:</b> given $s$ and a uniform $x$, it is hard to find $x' \ne x$ with $H^s(x') = H^s(x)$;</li>
+  <li><b>pre-image resistance</b> (one-wayness): given $s$ and $y = H^s(x)$ for uniform $x$, it is hard to find any $x'$ with $H^s(x') = y$.</li>
+</ul>
+<p>Collision resistance implies second pre-image resistance, which (for compressing functions) implies pre-image resistance.</p>
+</section>
+
+<section class="sub" id="sec-birthday">
+<h3>Generic Attack: the Birthday Attack</h3>
+<p>For $H : \{0,1\}^* \to \{0,1\}^\ell$:</p>
+<ol>
+  <li>choose $q$ distinct inputs $x_1, \dots, x_q$ at random;</li>
+  <li>compute $y_i := H(x_i)$;</li>
+  <li>if $y_i = y_j$ for some $i \ne j$, output $(x_i, x_j)$.</li>
+</ol>
+<p>Treating the outputs as uniform, a collision among $q$ values in a set of size $N = 2^\ell$ occurs with probability about $1 - e^{-q^2/2N}$: for $q \approx \sqrt N = 2^{\ell/2}$ it is about $\frac12$ (in a group of 23 people, two share a birthday with probability $\gt \frac12$). <b>Consequence:</b> a hash function with $\ell$-bit outputs offers at most $\ell/2$ bits of security against collisions, so outputs must be at least 256 bits for 128-bit security. Finding the collision without storing all values is possible with cycle-finding (Floyd), using constant memory.</p>
+</section>
+
+<section class="sub" id="sec-merkle-damgard">
+<h3>The Merkle–Damgård Transform</h3>
+<p>Build a hash function for arbitrary-length inputs from a compression function $h : \{0,1\}^{2n} \to \{0,1\}^n$.</p>
+<div class="alg" id="constr-md"><table>
+<tr><td colspan="2">Let $(\mathsf{Gen}, h)$ be a fixed-length hash function, $h^s : \{0,1\}^{2n} \to \{0,1\}^n$.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>unchanged</td></tr>
+<tr><td>$H$</td><td>input $s$ and $x$ of length $L \lt 2^n$: let $B := \lceil L/n \rceil$; pad $x$ with zeros to $B$ blocks $x_1, \dots, x_B$ of $n$ bits; set $x_{B+1} := L$ (encoded in $n$ bits); $z_0 := IV = 0^n$; for $i = 1, \dots, B+1$: $z_i := h^s(z_{i-1} \| x_i)$; output $z_{B+1}$</td></tr>
+</table></div>
+<div class="env thm" id="thm-md">
+<p>If $(\mathsf{Gen}, h)$ is collision resistant, then so is $(\mathsf{Gen}, H)$.</p>
+</div>
+<div class="proof"><p>We show that every collision in $H^s$ yields a collision in $h^s$; then an adversary finding $H$-collisions immediately gives one finding $h$-collisions (running in the same time, plus the walk below). Let $x \ne x'$ with lengths $L, L'$, block numbers $B, B'$ and chain values $z_i, z'_i$, and $H^s(x) = H^s(x')$.</p>
+<p><i>Case $L \ne L'$:</i> then $z_{B+1} = h^s(z_B \| L)$ and $z'_{B'+1} = h^s(z'_{B'} \| L')$ are equal although the inputs differ (in the length block). Collision.</p>
+<p><i>Case $L = L'$:</i> then $B = B'$. Since $x \ne x'$ have the same length, their padded blocks differ somewhere. Let $I_i := z_{i-1} \| x_i$ be the inputs to $h^s$ and $N$ the largest index with $I_N \ne I'_N$ (it exists: if all $I_i = I'_i$, all blocks would be equal). Since $I_{j} = I'_j$ for all $j \gt N$, and either $N = B + 1$ (outputs equal by assumption) or $I_{N+1} = I'_{N+1}$ contains $z_N = z'_N$, we get $h^s(I_N) = z_N = z'_N = h^s(I'_N)$ with $I_N \ne I'_N$: a collision in $h^s$.</p></div>
+<p>The length block (Merkle–Damgård strengthening) prevents trivial collisions such as $x$ and $x \| 0$. Since the output is the internal state, MD hashes allow <b>length extension</b>: from $H^s(x)$ one can compute $H^s(x \| \mathit{pad} \| L \| y)$ without knowing $x$. Therefore $\mathsf{Mac}_k(m) = H(k \| m)$ is <b>not</b> a secure MAC.</p>
+</section>
+
+<section class="sub" id="sec-hmac">
+<h3>Hash-and-MAC and HMAC</h3>
+<p><b>Hash-and-MAC:</b> to authenticate a long message with a fixed-length MAC, compute $t := \mathsf{Mac}_k(H^s(m))$. If $H$ is collision resistant and $\mathsf{Mac}$ is secure, this is a secure MAC: a forgery either uses a message whose hash was already authenticated (a collision) or authenticates a new hash value (a forgery for $\mathsf{Mac}$).</p>
+<p><b>HMAC</b> builds a MAC directly from an MD hash function $H$ with block length $b$ and fixed constants $\mathit{ipad} \ne \mathit{opad}$:</p>
+$$\mathsf{HMAC}_k(m) = H\big((k \oplus \mathit{opad}) \,\|\, H\big((k \oplus \mathit{ipad}) \,\|\, m\big)\big).$$
+<p>The inner hash is a keyed MD hash of $m$ (keyed through its first block); the outer hash, applied to a short value with a different key, prevents length extension. HMAC is secure if the compression function, keyed through its chaining input, behaves like a PRF/secure MAC and the inner hash is (weakly) collision resistant. It is the standard MAC in practice (TLS, IPsec, SSH).</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-cca-secure">
+<h2>Combining Encryption and Authentication; CCA-Secure Encryption</h2>
+<p>Let $\Pi_E = (\mathsf{Gen}_E, \mathsf{Enc}, \mathsf{Dec})$ be an encryption scheme and $\Pi_M = (\mathsf{Gen}_M, \mathsf{Mac}, \mathsf{Vrfy})$ a MAC, with independent keys $k_1, k_2$. Three ways to combine them:</p>
+<ol>
+  <li><b>Encrypt-and-authenticate:</b> send $\langle \mathsf{Enc}_{k_1}(m), \mathsf{Mac}_{k_2}(m) \rangle$. Insecure in general: a MAC need not hide $m$, and a deterministic MAC (unique tags) reveals when the same message is sent twice, so the combination is not even CPA-secure.</li>
+  <li><b>Authenticate-then-encrypt:</b> send $\mathsf{Enc}_{k_1}(m \| \mathsf{Mac}_{k_2}(m))$. Not secure in general (e.g. padding-oracle style attacks); depends on the encryption scheme.</li>
+  <li><b>Encrypt-then-authenticate:</b> send $\langle c, t \rangle$ with $c \leftarrow \mathsf{Enc}_{k_1}(m)$, $t \leftarrow \mathsf{Mac}_{k_2}(c)$. Secure whenever the components are; this is the construction below.</li>
+</ol>
+<p>Always use <b>independent keys</b> for different primitives.</p>
+
+<section class="sub" id="sec-etm">
+<h3>The Encrypt-then-MAC Construction</h3>
+<div class="alg" id="constr-etm"><table>
+<tr><td>$\mathsf{Gen}$</td><td>input $1^n$: $k_1 \leftarrow \mathsf{Gen}_E(1^n)$, $k_2 \leftarrow \mathsf{Gen}_M(1^n)$; output $(k_1, k_2)$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $(k_1, k_2)$, $m$: $c \leftarrow \mathsf{Enc}_{k_1}(m)$; $t \leftarrow \mathsf{Mac}_{k_2}(c)$; output $\langle c, t \rangle$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $(k_1, k_2)$, $\langle c, t \rangle$: if $\mathsf{Vrfy}_{k_2}(c, t) = 1$ output $\mathsf{Dec}_{k_1}(c)$, else output $\bot$</td></tr>
+</table></div>
+<div class="env thm" id="thm-etm">
+<p>If $\Pi_E$ is CPA-secure and $\Pi_M$ is a secure MAC with unique tags, the construction is CCA-secure.</p>
+</div>
+<div class="proof"><p>Let $\mathcal{A}$ be a PPT adversary in $\mathsf{PrivK}^{\mathsf{cca}}_{\mathcal{A},\Pi}$. Call a decryption query $\langle c, t \rangle$ <b>valid</b> if $\mathsf{Vrfy}_{k_2}(c, t) = 1$ and $c$ was <i>not</i> output by the encryption oracle (or the challenge) as part of an earlier answer. Let $\mathsf{ValidQuery}$ be the event that $\mathcal{A}$ makes at least one valid query. Idea: queries on ciphertexts that came from the encryption oracle are useless to $\mathcal{A}$ (it already knows the plaintext, and by unique tags the only valid tag is the one it was given); all other queries are rejected unless $\mathcal{A}$ forges a tag.</p>
+<div class="env claim" id="claim-validquery"><p>$\Pr[\mathsf{ValidQuery}] \le q_{\mathsf{dec}}(n) \cdot \mathsf{negl}(n)$, i.e. negligible.</p></div>
+<p><i>Proof.</i> Let $q(n)$ bound the number of decryption queries. Build $\mathcal{A}_M$ in $\mathsf{Mac\text{-}forge}$ with oracle $\mathsf{Mac}_{k_2}(\cdot)$: it chooses $k_1$ itself and an index $i \leftarrow \{1, \dots, q(n)\}$, and runs $\mathcal{A}$. Encryption queries $m$ (and the challenge) are answered as $c \leftarrow \mathsf{Enc}_{k_1}(m)$, $t \leftarrow \mathsf{Mac}_{k_2}(c)$ (via the oracle). Decryption queries $\langle c, t \rangle$: if $c$ came from an earlier encryption answer $\langle c, t^* \rangle$, return the known plaintext if $t = t^*$ and $\bot$ otherwise (correct by unique tags); otherwise return $\bot$, except for the $i$-th query, where $\mathcal{A}_M$ stops and outputs $(c, t)$ as its forgery. Until the first valid query the simulation is perfect, and if $i$ hits it (probability $1/q$), $\mathcal{A}_M$ outputs a valid tag on a message $c$ it never queried. So $\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A}_M} = 1] \ge \Pr[\mathsf{ValidQuery}]/q(n)$, and the claim follows from the security of $\Pi_M$.</p>
+<div class="env claim" id="claim-etm-cpa"><p>$\Pr[\mathsf{PrivK}^{\mathsf{cca}}_{\mathcal{A},\Pi} = 1 \land \overline{\mathsf{ValidQuery}}] \le \frac12 + \mathsf{negl}(n)$.</p></div>
+<p><i>Proof.</i> Build $\mathcal{A}_E$ in $\mathsf{PrivK}^{\mathsf{cpa}}$ against $\Pi_E$: it chooses $k_2$ itself and runs $\mathcal{A}$. Encryption queries: get $c$ from its own encryption oracle, compute $t := \mathsf{Mac}_{k_2}(c)$. Challenge: forward $m_0, m_1$, receive $c^*$, give $\langle c^*, \mathsf{Mac}_{k_2}(c^*) \rangle$. Decryption queries: if $c$ was returned before (with plaintext known to $\mathcal{A}_E$; for the challenge such a query with the correct tag is forbidden), answer as above; otherwise answer $\bot$. Output $\mathcal{A}$'s guess. As long as $\mathsf{ValidQuery}$ does not occur, all answers are exactly those of the real CCA experiment, so $\Pr[\mathcal{A}_E \text{ wins}] \ge \Pr[\mathcal{A} \text{ wins} \land \overline{\mathsf{ValidQuery}}]$, and the left side is at most $\frac12 + \mathsf{negl}(n)$ by CPA security.</p>
+<p>Together: $\Pr[\mathsf{PrivK}^{\mathsf{cca}}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{ValidQuery}] + \Pr[\text{win} \land \overline{\mathsf{ValidQuery}}] \le \frac12 + \mathsf{negl}(n)$.</p></div>
+<p>The scheme also provides <b>authenticated encryption</b>: no adversary can produce a new ciphertext that decrypts to anything other than $\bot$. In practice dedicated modes (GCM, CCM, ChaCha20-Poly1305) combine both.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-blockciphers">
+<h2>Practical Constructions of Block Ciphers</h2>
+<p>Block ciphers such as DES and AES are the practical instantiations of (strong) pseudorandom permutations. Their security is not proven from simpler assumptions; it rests on decades of cryptanalysis. They follow common design principles.</p>
+
+<section class="sub" id="sec-confusion-diffusion">
+<h3>Confusion and Diffusion</h3>
+<p>A random permutation of 128-bit blocks cannot be stored. The <b>confusion–diffusion</b> paradigm (Shannon) builds a large "random-looking" permutation from small ones:</p>
+<ul>
+  <li><b>confusion:</b> split the input $x = x_1 \cdots x_{16}$ into small pieces and apply small key-dependent random-looking functions, $F_k(x) = f_1(x_1) \cdots f_{16}(x_{16})$ (each $f_i$ e.g. on 8 bits);</li>
+  <li><b>diffusion:</b> mix (permute) the bits of the result so that the pieces influence each other in the next round.</li>
+</ul>
+<p>One round is weak: changing one input byte only changes one output byte. After repeating confusion and diffusion over several rounds, every output bit depends on every input bit and key bit (<b>avalanche effect</b>: changing one input bit changes about half the output bits).</p>
+</section>
+
+<section class="sub" id="sec-spn">
+<h3>Substitution–Permutation Networks</h3>
+<p>An SPN is a direct implementation of the paradigm with fixed, public S-boxes and a key schedule. Each round:</p>
+<ol>
+  <li><b>key mixing:</b> $x := x \oplus k_i$ with the round key $k_i$;</li>
+  <li><b>substitution:</b> apply fixed invertible S-boxes $S : \{0,1\}^8 \to \{0,1\}^8$ to each byte;</li>
+  <li><b>permutation:</b> permute the bits of the whole block (mixing).</li>
+</ol>
+<p>After the last round, a final key mixing is applied (otherwise the last substitution and permutation could simply be inverted by the adversary). Since S-boxes and permutation are invertible, the cipher is a permutation for every key, and decryption runs the steps backwards. Design requirements: S-boxes must be invertible, and changing one input bit of an S-box must change at least two output bits; the mixing permutation must spread the outputs of one S-box to many S-boxes of the next round.</p>
+<p><b>Attacks on few rounds.</b> With one round (and final key mixing) the key is found from one input/output pair. With two rounds, each output byte depends on only a few input bytes and key bytes, which allows guessing small parts of the key separately. Security comes from <b>enough rounds</b>; this is why real ciphers use 10 to 16 rounds.</p>
+</section>
+
+<section class="sub" id="sec-feistel">
+<h3>Feistel Networks</h3>
+<p>A Feistel network builds an <i>invertible</i> function from round functions that need not be invertible. The input is split into halves $(L_0, R_0)$; round $i$ with round function $f_i$ (depending on the round key $k_i$) computes</p>
+$$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
+<div class="env prop" id="prop-feistel">
+<p>A Feistel network is a permutation for any round functions $f_i$. It is inverted by $R_{i-1} := L_i$, $L_{i-1} := R_i \oplus f_i(L_i)$, i.e. by running the rounds backwards; no $f_i^{-1}$ is needed.</p>
+</div>
+<p>If the halves are swapped after the last round (as in DES), decryption is <b>the same procedure with the round keys in reverse order</b>. Theory: with pseudorandom round functions, three rounds give a PRP and four rounds a strong PRP (Luby–Rackoff).</p>
+</section>
+
+<section class="sub" id="sec-des">
+<h3>DES and Triple-DES</h3>
+<p><b>DES</b> (1977): 16-round Feistel network, 64-bit blocks, 56-bit key (plus 8 parity bits). The round function $f(k_i, R)$ on the 32-bit half: expand $R$ to 48 bits (some bits duplicated), XOR the 48-bit round key $k_i$, apply eight S-boxes mapping 6 bits to 4 bits (the only non-linear part), and permute the 32 output bits. The key schedule selects 48 bits per round from the master key by rotating two 28-bit halves ($PC\text{-}1$, $PC\text{-}2$). Before and after the rounds, fixed permutations $IP$ and $IP^{-1}$ are applied.</p>
+<ul>
+  <li>Changing one input bit affects all output bits after a few rounds (avalanche). Reduced-round DES (up to 3 rounds) is easy to break.</li>
+  <li><b>Weak keys:</b> four keys produce 16 identical round keys, and then $\mathsf{DES}_k(\mathsf{DES}_k(x)) = x$.</li>
+  <li><b>Complementarity:</b> $\mathsf{DES}_{\bar k}(\bar x) = \overline{\mathsf{DES}_k(x)}$; this halves the cost of exhaustive search under chosen-plaintext attacks.</li>
+  <li>The real weakness is the <b>short key</b>: $2^{56}$ keys were searched in days by special hardware in 1998. Best analytical attacks (differential, linear cryptanalysis) need $2^{43}$–$2^{47}$ known/chosen plaintexts and are not practical.</li>
+</ul>
+<p><b>Increasing the key length.</b></p>
+<ul>
+  <li><b>Double encryption</b> $F_{k_1}(F_{k_2}(x))$ with $2n$-bit key gives only about $n$ bits of security: the <b>meet-in-the-middle attack</b> computes $F_{k_2}(x)$ for all $k_2$ and $F^{-1}_{k_1}(y)$ for all $k_1$ and looks for matches, in time and memory about $2^n$.</li>
+  <li><b>Triple encryption</b> $F_{k_3}(F^{-1}_{k_2}(F_{k_1}(x)))$: meet-in-the-middle costs $2^{2n}$, so 3-key 3DES offers about 112-bit security. The two-key variant ($k_3 = k_1$) is also used; the middle decryption makes it compatible with single DES when all keys are equal.</li>
+  <li>Triple encryption only helps because <b>DES is not a group</b>: there is (in general) no single key $k$ with $\mathsf{DES}_k = \mathsf{DES}_{k_3} \circ \mathsf{DES}_{k_2} \circ \mathsf{DES}_{k_1}$. Otherwise triple-DES would be just another DES key.</li>
+</ul>
+<p><b>AES</b> (2001, Rijndael) is an SPN with 128-bit blocks, keys of 128, 192 or 256 bits and 10, 12 or 14 rounds. Each round applies byte-wise S-boxes (SubBytes), ShiftRows and MixColumns for diffusion, and AddRoundKey. No practical attack better than brute force is known.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-number-theory">
+<h2>Number Theory</h2>
+<p>Public-key cryptography rests on number-theoretic problems. This section collects the facts that are needed. All numbers are integers.</p>
+
+<section class="sub" id="sec-divisibility">
+<h3>Divisibility, GCD and the Euclidean Algorithm</h3>
+<div class="env def" id="def-divides" data-title="Divides">
+<p>$a$ divides $b$, written $a \mid b$, if $b = ac$ for some integer $c$. Basic rules: $a \mid b$ and $b \mid c$ imply $a \mid c$; $a \mid b$ and $a \mid c$ imply $a \mid (xb + yc)$ for all $x, y$.</p>
+</div>
+<div class="env def" id="def-gcd" data-title="GCD, coprime">
+<p>$\gcd(a, b)$ is the largest integer dividing both $a$ and $b$ (not both $0$). $a, b$ are coprime (relatively prime) if $\gcd(a, b) = 1$.</p>
+</div>
+<div class="env thm" id="thm-division" data-title="Division with remainder">
+<p>For $a \in \mathbb{Z}$ and $b \gt 0$ there are unique $q, r$ with $a = qb + r$ and $0 \le r \lt b$. We write $r = [a \bmod b]$.</p>
+</div>
+<div class="env thm" id="thm-euclid" data-title="Euclidean algorithm">
+<p>$\gcd(a, b) = \gcd(b, [a \bmod b])$ and $\gcd(a, 0) = a$. Repeating this computes $\gcd(a, b)$ in $O(\log a + \log b)$ steps. The <b>extended</b> algorithm additionally returns $x, y$ with $ax + by = \gcd(a, b)$ (Bézout).</p>
+</div>
+<p class="small">Example: $\gcd(1140, 11)$: $1140 = 103 \cdot 11 + 7$, $11 = 1 \cdot 7 + 4$, $7 = 1 \cdot 4 + 3$, $4 = 1 \cdot 3 + 1$, $3 = 3 \cdot 1$. Backwards: $1 = 4 - 3 = 4 - (7 - 4) = 2 \cdot 4 - 7 = 2(11 - 7) - 7 = 2 \cdot 11 - 3 \cdot 7 = 2 \cdot 11 - 3(1140 - 103 \cdot 11) = 311 \cdot 11 - 3 \cdot 1140$.</p>
+<div class="env cor" id="cor-coprime-divides">
+<p>If $c \mid ab$ and $\gcd(a, c) = 1$, then $c \mid b$. In particular, a prime dividing $ab$ divides $a$ or $b$. If $p \mid N$, $q \mid N$ and $\gcd(p, q) = 1$, then $pq \mid N$.</p>
+</div>
+<div class="env def" id="def-prime" data-title="Prime">
+<p>$p \gt 1$ is prime if its only positive divisors are $1$ and $p$. Every $N \gt 1$ is a product of primes, uniquely up to order (fundamental theorem of arithmetic): $N = \prod_i p_i^{e_i}$.</p>
+</div>
+</section>
+
+<section class="sub" id="sec-modular">
+<h3>Modular Arithmetic</h3>
+<p>$a \equiv b \pmod N$ means $N \mid a - b$, i.e. $[a \bmod N] = [b \bmod N]$. Reduction is compatible with addition and multiplication: $[ab \bmod N] = [[a \bmod N] \cdot [b \bmod N] \bmod N]$, and similarly for $+$ and $-$. Division is not always possible:</p>
+<div class="env prop" id="prop-inverse" data-title="Inverses">
+<p>$a$ is invertible modulo $N$ (there is $b$ with $ab \equiv 1 \pmod N$) if and only if $\gcd(a, N) = 1$. The inverse $b = [a^{-1} \bmod N]$ is computed with the extended Euclidean algorithm: from $ax + Ny = 1$ we get $a x \equiv 1$.</p>
+</div>
+<p><b>Efficient exponentiation</b> (square-and-multiply): to compute $[a^e \bmod N]$, go through the bits of $e$ from the most significant one; for each bit square the current value and, if the bit is $1$, multiply by $a$. This needs at most $2 \log_2 e$ multiplications modulo $N$, so it is polynomial in the input length even for exponents with thousands of bits.</p>
+<div class="env thm" id="thm-crt1" data-title="Chinese remainder theorem">
+<p>Let $N = pq$ with $\gcd(p, q) = 1$. For all $a_p, a_q$ there is exactly one $x \in \{0, \dots, N-1\}$ with $x \equiv a_p \pmod p$ and $x \equiv a_q \pmod q$. It is computed as $x = [a_p \cdot q \cdot (q^{-1} \bmod p) + a_q \cdot p \cdot (p^{-1} \bmod q) \bmod N]$.</p>
+</div>
+<p>Use in RSA: instead of computing $[y^d \bmod N]$ with a full-size modulus, compute $y^{d \bmod (p-1)} \bmod p$ and $y^{d \bmod (q-1)} \bmod q$ with half-size numbers and combine them; this is about 4 times faster.</p>
+<div class="env thm" id="thm-fermat" data-title="Fermat's little theorem">
+<p>If $p$ is prime and $p \nmid a$, then $a^{p-1} \equiv 1 \pmod p$. Hence $a^p \equiv a \pmod p$ for all $a$.</p>
+</div>
+<p>Fermat's test (check $a^{N-1} \equiv 1$ for random $a$) almost detects composite $N$, but fails for Carmichael numbers such as $561 = 3 \cdot 11 \cdot 17$; the Miller–Rabin test fixes this and is used in practice. Random primes of a given length are found by testing random numbers: about one in $\ln(2^n) \approx 0.7 n$ numbers of $n$ bits is prime.</p>
+<div class="env def" id="def-phi" data-title="Euler's totient function">
+<p>$\phi(N) = |\{a \in \{1, \dots, N\} : \gcd(a, N) = 1\}|$. For $N = \prod_i p_i^{e_i}$: $\phi(N) = \prod_i p_i^{e_i - 1}(p_i - 1)$. In particular $\phi(p) = p - 1$ and $\phi(pq) = (p-1)(q-1)$ for distinct primes $p, q$.</p>
+</div>
+<div class="env thm" id="thm-euler" data-title="Euler">
+<p>If $\gcd(a, N) = 1$, then $a^{\phi(N)} \equiv 1 \pmod N$. Consequently $a^x \equiv a^{[x \bmod \phi(N)]} \pmod N$.</p>
+</div>
+<p class="small">Example: $[3^{1000} \bmod 100]$: $\phi(100) = 40$ and $1000 = 25 \cdot 40$, so the result is $1$.</p>
+</section>
+
+<section class="sub" id="sec-groups">
+<h3>Groups</h3>
+<div class="env def" id="def-group" data-title="Group">
+<p>A group is a set $\mathbb{G}$ with a binary operation $\circ$ such that: (closure) $g \circ h \in \mathbb{G}$; (identity) there is $1 \in \mathbb{G}$ with $1 \circ g = g \circ 1 = g$; (inverses) for each $g$ there is $h$ with $g \circ h = h \circ g = 1$; (associativity) $(g \circ h) \circ f = g \circ (h \circ f)$. It is abelian if $g \circ h = h \circ g$. $|\mathbb{G}|$ is its order.</p>
+</div>
+<p>Examples: $(\mathbb{Z}_N, +)$ with $\mathbb{Z}_N = \{0, \dots, N-1\}$ and addition modulo $N$; and</p>
+$$\mathbb{Z}_N^* = \{a \in \{1, \dots, N-1\} : \gcd(a, N) = 1\}$$
+<p>with multiplication modulo $N$, an abelian group of order $\phi(N)$ (inverses exist by <a class="xref" href="#prop-inverse"></a>). For a prime $p$, $\mathbb{Z}_p^* = \{1, \dots, p-1\}$.</p>
+<p>In a group, cancellation holds ($ac = bc \Rightarrow a = b$), and $g^m$ denotes $g \circ \dots \circ g$ ($m$ times).</p>
+<div class="env thm" id="thm-group-order">
+<p>Let $\mathbb{G}$ be a finite group with $m = |\mathbb{G}|$. Then $g^m = 1$ for every $g \in \mathbb{G}$. Hence $g^x = g^{[x \bmod m]}$, and if $\gcd(e, m) = 1$, the map $g \mapsto g^e$ is a permutation of $\mathbb{G}$ with inverse $g \mapsto g^d$, $d = [e^{-1} \bmod m]$.</p>
+</div>
+<div class="proof"><p>(For abelian $\mathbb{G}$.) Multiplication by $g$ permutes $\mathbb{G}$, so $\prod_{h \in \mathbb{G}} h = \prod_{h \in \mathbb{G}} (g h) = g^m \prod_{h} h$; cancel. For the last statement: $(g^e)^d = g^{ed} = g^{[ed \bmod m]} = g^1$.</p></div>
+<p>Euler's theorem is the special case $\mathbb{G} = \mathbb{Z}_N^*$, and Fermat's theorem the case $N = p$.</p>
+<div class="env thm" id="thm-crt2" data-title="Chinese remainder theorem, group version">
+<p>If $N = pq$ with $\gcd(p, q) = 1$, the map $x \mapsto ([x \bmod p], [x \bmod q])$ is an isomorphism $\mathbb{Z}_N \cong \mathbb{Z}_p \times \mathbb{Z}_q$ and $\mathbb{Z}_N^* \cong \mathbb{Z}_p^* \times \mathbb{Z}_q^*$ (bijective and compatible with the operations). In particular $\phi(N) = \phi(p)\phi(q)$.</p>
+</div>
+</section>
+
+<section class="sub" id="sec-cyclic">
+<h3>Cyclic Groups</h3>
+<div class="env def" id="def-order-element" data-title="Order, generator">
+<p>The order of $g \in \mathbb{G}$ is the smallest $i \gt 0$ with $g^i = 1$. The set $\langle g \rangle = \{g^0, g^1, \dots, g^{i-1}\}$ is a subgroup of size $i$. $\mathbb{G}$ is <b>cyclic</b> with <b>generator</b> $g$ if $\langle g \rangle = \mathbb{G}$, i.e. every element is a power of $g$.</p>
+</div>
+<div class="env prop" id="prop-order-divides">
+<p>Let $g$ have order $i$. Then $g^x = g^{[x \bmod i]}$, $g^x = g^y \iff x \equiv y \pmod i$, and $i$ divides $|\mathbb{G}|$ (Lagrange).</p>
+</div>
+<div class="env cor" id="cor-prime-order">
+<p>If $|\mathbb{G}| = q$ is prime, $\mathbb{G}$ is cyclic and every element $g \ne 1$ is a generator.</p>
+</div>
+<div class="env thm" id="thm-zp-cyclic">
+<p>For a prime $p$, the group $\mathbb{Z}_p^*$ is cyclic (of order $p - 1$).</p>
+</div>
+<p class="small">Example: in $\mathbb{Z}_5^*$, $\langle 2 \rangle = \{1, 2, 4, 3\} = \mathbb{Z}_5^*$, so $2$ is a generator; $\langle 4 \rangle = \{1, 4\}$ has order $2$.</p>
+<p>In cryptography one usually works in a subgroup of <b>prime order</b> $q$: e.g. for a "safe prime" $p = 2q + 1$, the quadratic residues modulo $p$ form a subgroup of $\mathbb{Z}_p^*$ of prime order $q$. Elliptic-curve groups are the other common choice.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-assumptions-hard">
+<h2>Cryptographic Hardness Assumptions</h2>
+
+<section class="sub" id="sec-factoring">
+<h3>Factoring and RSA</h3>
+<p>Multiplying two primes is easy; recovering them from the product is believed to be hard. Let $\mathsf{GenModulus}(1^n)$ be a PPT algorithm that outputs $(N, p, q)$ with $N = pq$ and $p, q$ random $n$-bit primes (except with negligible probability).</p>
+<div class="game" id="game-factor">
+<div class="gtitle">$\mathsf{Factor}_{\mathcal{A},\mathsf{GenModulus}}(n)$:</div>
+<ol>
+  <li>$(N, p, q) \leftarrow \mathsf{GenModulus}(1^n)$.</li>
+  <li>$p', q' \leftarrow \mathcal{A}(N)$.</li>
+  <li>Output $1$ iff $p' \cdot q' = N$ and $p', q' \gt 1$.</li>
+</ol>
+</div>
+<div class="env def" id="def-factoring" data-title="Factoring assumption">
+<p>Factoring is hard relative to $\mathsf{GenModulus}$ if for every PPT $\mathcal{A}$: $\Pr[\mathsf{Factor}_{\mathcal{A},\mathsf{GenModulus}}(n) = 1] \le \mathsf{negl}(n)$.</p>
+</div>
+<p>The <b>RSA problem</b>: given $N$, $e$ with $\gcd(e, \phi(N)) = 1$ and $y \in \mathbb{Z}_N^*$, find $x$ with $x^e \equiv y \pmod N$. With $d = [e^{-1} \bmod \phi(N)]$ this is easy: $x = y^d$ (<a class="xref" href="#thm-group-order"></a>). Without $d$ (or the factorization), it is believed to be hard.</p>
+<div class="alg" id="alg-genrsa"><table>
+<tr><td colspan="2">$\mathsf{GenRSA}(1^n)$:</td></tr>
+<tr><td>1.</td><td>$(N, p, q) \leftarrow \mathsf{GenModulus}(1^n)$</td></tr>
+<tr><td>2.</td><td>$\phi(N) := (p-1)(q-1)$</td></tr>
+<tr><td>3.</td><td>find $e \gt 1$ with $\gcd(e, \phi(N)) = 1$</td></tr>
+<tr><td>4.</td><td>$d := [e^{-1} \bmod \phi(N)]$</td></tr>
+<tr><td>5.</td><td>return $(N, e, d)$</td></tr>
+</table></div>
+<div class="game" id="game-rsa-inv">
+<div class="gtitle">$\mathsf{RSA\text{-}inv}_{\mathcal{A},\mathsf{GenRSA}}(n)$:</div>
+<ol>
+  <li>$(N, e, d) \leftarrow \mathsf{GenRSA}(1^n)$.</li>
+  <li>$y \leftarrow \mathbb{Z}_N^*$.</li>
+  <li>$x \leftarrow \mathcal{A}(N, e, y)$.</li>
+  <li>Output $1$ iff $x^e \equiv y \pmod N$.</li>
+</ol>
+</div>
+<div class="env def" id="def-rsa-assumption" data-title="RSA assumption">
+<p>The RSA problem is hard relative to $\mathsf{GenRSA}$ if for every PPT $\mathcal{A}$: $\Pr[\mathsf{RSA\text{-}inv}_{\mathcal{A},\mathsf{GenRSA}}(n) = 1] \le \mathsf{negl}(n)$.</p>
+</div>
+<p><b>Relation.</b> If factoring is easy, RSA is easy: from $p, q$ compute $\phi(N)$ and $d$. Conversely, from $N$ and $\phi(N)$ (or from $N$, $e$, $d$) one can factor $N$; e.g. $p + q = N - \phi(N) + 1$, and $p, q$ are the roots of $X^2 - (p+q)X + N$. It is not known whether hardness of factoring implies hardness of RSA.</p>
+</section>
+
+<section class="sub" id="sec-dlog">
+<h3>Discrete Logarithm and Diffie–Hellman</h3>
+<p>Let $\mathcal{G}(1^n)$ be a PPT algorithm that outputs a description of a cyclic group $\mathbb{G}$, its order $q$ with $\|q\| = n$, and a generator $g$. Every $h \in \mathbb{G}$ can be written uniquely as $h = g^x$ with $x \in \mathbb{Z}_q$; $x =: \log_g h$ is the <b>discrete logarithm</b> of $h$. Logarithm rules hold modulo $q$, e.g. $\log_g(h_1 h_2) = [\log_g h_1 + \log_g h_2 \bmod q]$.</p>
+<div class="game" id="game-dlog">
+<div class="gtitle">$\mathsf{DLog}_{\mathcal{A},\mathcal{G}}(n)$:</div>
+<ol>
+  <li>$(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$.</li>
+  <li>$h \leftarrow \mathbb{G}$ (e.g. $x' \leftarrow \mathbb{Z}_q$, $h := g^{x'}$).</li>
+  <li>$x \leftarrow \mathcal{A}(\mathbb{G}, q, g, h)$.</li>
+  <li>Output $1$ iff $g^x = h$.</li>
+</ol>
+</div>
+<div class="env def" id="def-dlog" data-title="Discrete-log assumption">
+<p>The discrete logarithm problem is hard relative to $\mathcal{G}$ if for every PPT $\mathcal{A}$: $\Pr[\mathsf{DLog}_{\mathcal{A},\mathcal{G}}(n) = 1] \le \mathsf{negl}(n)$.</p>
+</div>
+<p>For $h_1 = g^x$, $h_2 = g^y$ define $\mathsf{DH}_g(h_1, h_2) := g^{xy} = h_1^y = h_2^x$.</p>
+<div class="env def" id="def-cdh" data-title="CDH">
+<p>The computational Diffie–Hellman problem is hard relative to $\mathcal{G}$ if for every PPT $\mathcal{A}$: $\Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y) = g^{xy}] \le \mathsf{negl}(n)$, for $(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$ and $x, y \leftarrow \mathbb{Z}_q$.</p>
+</div>
+<div class="env def" id="def-ddh" data-title="DDH">
+<p>The decisional Diffie–Hellman problem is hard relative to $\mathcal{G}$ if for every PPT $\mathcal{A}$:</p>
+$$\big|\Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^z) = 1] - \Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^{xy}) = 1]\big| \le \mathsf{negl}(n),$$
+<p>for $x, y, z \leftarrow \mathbb{Z}_q$: the Diffie–Hellman value cannot be distinguished from a random group element.</p>
+</div>
+<div class="env prop" id="prop-dh-relations">
+<p>If DDH is hard, then CDH is hard; if CDH is hard, then DLog is hard.</p>
+</div>
+<div class="proof"><p>Contrapositive in both cases. An algorithm computing $\log_g$ solves CDH: compute $x = \log_g h_1$ and output $h_2^x$. An algorithm $\mathcal{A}$ solving CDH with probability $\varepsilon$ gives the DDH distinguisher "output $1$ iff $\mathcal{A}(g, h_1, h_2) = h_3$": for real tuples it outputs $1$ with probability $\varepsilon$, for random ones with probability $1/q$, so its advantage $\varepsilon - 1/q$ is non-negligible.</p></div>
+<p>DDH is easy in $\mathbb{Z}_p^*$ itself (the Legendre symbol of $g^{xy}$ is determined by those of $g^x, g^y$); it is believed to be hard in prime-order subgroups of $\mathbb{Z}_p^*$ and in suitable elliptic-curve groups.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-key-exchange">
+<h2>Key Management and Key Exchange</h2>
+
+<section class="sub" id="sec-key-management">
+<h3>Limitations of Private-Key Cryptography</h3>
+<p>Private-key cryptography assumes that the parties already share a key. In a group of $U$ users who all want to communicate pairwise, each user must store $U - 1$ keys and the system $\binom{U}{2}$ keys; keys must be distributed securely beforehand, and the approach does not work in open systems (e.g. buying from a web shop one has never contacted).</p>
+<p><b>Key distribution centers (KDC).</b> Each user shares one long-term key with a trusted server. When Alice wants to talk to Bob, the KDC generates a fresh session key $k'$ and sends $\mathsf{Enc}_{k_A}(k')$ to Alice and $\mathsf{Enc}_{k_B}(k')$ to Bob (as in Kerberos). Each user stores only one key, and new users only need a key with the KDC. Drawbacks: the KDC is a single point of failure, a performance bottleneck, and can read all traffic.</p>
+<p><b>The public-key revolution</b> (Diffie and Hellman, 1976): each party has a <b>public key</b> that everybody may know and a <b>private key</b> that only it knows. This enables</p>
+<ul>
+  <li><b>public-key encryption:</b> anyone encrypts with $e$ (public), only the owner decrypts with $d$ (private);</li>
+  <li><b>digital signatures:</b> only the owner signs with $d$, anyone verifies with $e$;</li>
+  <li><b>key agreement</b> over a public channel without any prior shared secret.</li>
+</ul>
+<p>The remaining problem is authenticity of public keys: how does Alice know that $e_B$ really belongs to Bob? <b>Certificates</b> solve it: a certification authority (CA) whose public key everyone knows signs the statement "the key $e_B$ belongs to Bob", $\sigma = \mathsf{Sign}_{d_{CA}}(\text{"Bob"}, e_B)$. CAs can form hierarchies (root CA, sub-CAs, end users) or webs of trust; standards include X.509 and the PKCS family.</p>
+</section>
+
+<section class="sub" id="sec-ke-def">
+<h3>Key-Exchange Protocols and their Security</h3>
+<p>A key-exchange protocol $\Pi$ is run by two parties on input $1^n$; at the end both output a key $k$. Its <b>transcript</b> $\mathit{trans}$ consists of all messages exchanged.</p>
+<div class="game" id="game-ke-eav">
+<div class="gtitle">$\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>The parties run $\Pi(1^n)$; this yields $\mathit{trans}$ and the key $k$.</li>
+  <li>$b \leftarrow \{0,1\}$.</li>
+  <li>$k_0 \leftarrow \{0,1\}^n$ (a uniform key); $k_1 := k$.</li>
+  <li>$b' \leftarrow \mathcal{A}(\mathit{trans}, k_b)$.</li>
+  <li>Output $1$ iff $b' = b$.</li>
+</ol>
+</div>
+<div class="env def" id="def-ke" data-title="Secure key exchange">
+<p>$\Pi$ is secure in the presence of an eavesdropper if for every PPT $\mathcal{A}$: $\Pr[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$.</p>
+</div>
+<p>It is not enough that the eavesdropper cannot compute the whole key; the key must be indistinguishable from random, so that it can be used in any private-key scheme. (For Diffie–Hellman the key is a group element, so in the experiment $k_0$ is a uniform element of $\mathbb{G}$.)</p>
+</section>
+
+<section class="sub" id="sec-dh">
+<h3>The Diffie–Hellman Protocol</h3>
+<div class="alg" id="constr-dh"><table>
+<tr><td>Alice</td><td>$(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$; $x \leftarrow \mathbb{Z}_q$; $h_1 := g^x$; send $(\mathbb{G}, q, g, h_1)$ to Bob</td></tr>
+<tr><td>Bob</td><td>$y \leftarrow \mathbb{Z}_q$; $h_2 := g^y$; send $h_2$ to Alice; output $k_B := h_1^y$</td></tr>
+<tr><td>Alice</td><td>output $k_A := h_2^x$</td></tr>
+</table></div>
+<p>Correctness: $k_A = (g^y)^x = g^{xy} = (g^x)^y = k_B$.</p>
+<div class="env thm" id="thm-dh">
+<p>If DDH is hard relative to $\mathcal{G}$, the Diffie–Hellman protocol is secure in the presence of an eavesdropper (with keys in $\mathbb{G}$).</p>
+</div>
+<div class="proof"><p>The transcript is $(\mathbb{G}, q, g, g^x, g^y)$ and the real key is $g^{xy}$; the random key is $g^z$ for uniform $z$. Let $\mathcal{A}$ be PPT. Splitting by $b$:</p>
+$$\Pr[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] = \tfrac12 \Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^{xy}) = 1] + \tfrac12 \Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^z) = 0]$$
+$$= \tfrac12 + \tfrac12\Big(\Pr[\mathcal{A}(\dots, g^{xy}) = 1] - \Pr[\mathcal{A}(\dots, g^z) = 1]\Big) \le \tfrac12 + \tfrac12 \mathsf{negl}(n),$$
+<p>because $\mathcal{A}$ itself is a DDH distinguisher.</p></div>
+<p><b>Only passive security.</b> Against an active adversary the protocol is insecure: in a <b>man-in-the-middle attack</b> Eve replaces $h_1$ and $h_2$ by her own values $g^{e_1}, g^{e_2}$, shares $g^{x e_2}$ with Alice and $g^{y e_1}$ with Bob, and relays (and reads or changes) all traffic. Preventing this requires authentication, e.g. signatures on the exchanged values with certified keys.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-pke">
+<h2>Public-Key Encryption</h2>
+
+<section class="sub" id="sec-pke-def">
+<h3>Definitions</h3>
+<div class="env def" id="def-pke" data-title="Public-key encryption scheme">
+<p>A public-key encryption scheme is a triple of PPT algorithms $\Pi = (\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$:</p>
+<div class="alg"><table>
+<tr><td>$\mathsf{Gen}$</td><td>input $1^n$; output a key pair $(pk, sk)$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $pk$ and $m$ from the message space; output $c \leftarrow \mathsf{Enc}_{pk}(m)$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $sk$, $c$; output $m$ or $\bot$ (deterministic)</td></tr>
+</table></div>
+<p>Correctness: for all $(pk, sk)$ output by $\mathsf{Gen}$ and all $m$, $\mathsf{Dec}_{sk}(\mathsf{Enc}_{pk}(m)) = m$, possibly except with negligible probability over $\mathsf{Gen}$ (e.g. if the prime generation fails).</p>
+</div>
+<div class="game" id="game-pubk-eav">
+<div class="gtitle">$\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$(pk, sk) \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$m_0, m_1 \leftarrow \mathcal{A}(pk)$ with $|m_0| = |m_1|$.</li>
+  <li>$b \leftarrow \{0,1\}$; $c \leftarrow \mathsf{Enc}_{pk}(m_b)$.</li>
+  <li>$b' \leftarrow \mathcal{A}(c)$.</li>
+  <li>Output $1$ iff $b' = b$.</li>
+</ol>
+</div>
+<div class="env def" id="def-pubk-eav" data-title="IND-EAV / IND-CPA, public key">
+<p>$\Pi$ has indistinguishable encryptions in the presence of an eavesdropper if for every PPT $\mathcal{A}$: $\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$.</p>
+</div>
+<p>Differences to the private-key setting:</p>
+<ul>
+  <li>The adversary gets $pk$, so it can encrypt any message itself: <b>eavesdropping security already implies CPA security.</b> We simply say "CPA-secure".</li>
+  <li><b>Perfect secrecy is impossible:</b> an unbounded adversary can, for each candidate message, enumerate all random tapes of $\mathsf{Enc}_{pk}$ and check whether $c$ is a possible encryption; by correctness only the true message qualifies. So $\Pr[\mathsf{PubK}^{\mathsf{eav}} = 1] = 1$ for unbounded $\mathcal{A}$.</li>
+  <li><b>No deterministic scheme is CPA-secure:</b> the adversary computes $\mathsf{Enc}_{pk}(m_0)$ itself and compares with $c$.</li>
+</ul>
+<div class="game" id="game-pubk-mult">
+<div class="gtitle">$\mathsf{PubK}^{\mathsf{mult}}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$(pk, sk) \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$\vec M_0 = (m_0^1, \dots, m_0^t)$, $\vec M_1 = (m_1^1, \dots, m_1^t) \leftarrow \mathcal{A}(pk)$ with $|m_0^i| = |m_1^i|$.</li>
+  <li>$b \leftarrow \{0,1\}$; $c^i \leftarrow \mathsf{Enc}_{pk}(m_b^i)$ for $i = 1, \dots, t$.</li>
+  <li>$b' \leftarrow \mathcal{A}(c^1, \dots, c^t)$; output $1$ iff $b' = b$.</li>
+</ol>
+</div>
+<div class="env thm" id="thm-pk-mult">
+<p>If $\Pi$ is CPA-secure, it is also secure for multiple encryptions: $\Pr[\mathsf{PubK}^{\mathsf{mult}}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$ for every PPT $\mathcal{A}$.</p>
+</div>
+<div class="proof" data-title="hybrid argument"><p>Fix $\mathcal{A}$ with $t = t(n)$ messages per vector. For $i = 0, \dots, t$ define the hybrid distribution</p>
+$$H^{(i)} = \big(\mathsf{Enc}_{pk}(m_0^1), \dots, \mathsf{Enc}_{pk}(m_0^i), \mathsf{Enc}_{pk}(m_1^{i+1}), \dots, \mathsf{Enc}_{pk}(m_1^t)\big),$$
+<p>so $H^{(t)}$ is the encryption of $\vec M_0$ and $H^{(0)}$ that of $\vec M_1$. Let $p_i := \Pr[\mathcal{A}(H^{(i)}) = 0]$; the advantage of $\mathcal{A}$ is $\varepsilon = \frac12(p_t - p_0) = \frac12 \sum_{i=1}^t (p_i - p_{i-1})$.</p>
+<p>Build $\mathcal{A}'$ against single-message security: on $pk$, run $\mathcal{A}(pk)$ to get $\vec M_0, \vec M_1$, choose $i \leftarrow \{1, \dots, t\}$, output the challenge pair $(m_0^i, m_1^i)$, receive $c$, and give $\mathcal{A}$ the vector $(\mathsf{Enc}_{pk}(m_0^1), \dots, \mathsf{Enc}_{pk}(m_0^{i-1}), c, \mathsf{Enc}_{pk}(m_1^{i+1}), \dots, \mathsf{Enc}_{pk}(m_1^t))$, computed with the <b>public key</b>. Output what $\mathcal{A}$ outputs. If $c$ encrypts $m_0^i$, $\mathcal{A}$ sees $H^{(i)}$; if it encrypts $m_1^i$, it sees $H^{(i-1)}$. Averaging over $i$:</p>
+$$\Pr[\mathcal{A}' \text{ wins}] - \tfrac12 = \frac{1}{2t} \sum_{i=1}^t (p_i - p_{i-1}) = \frac{\varepsilon}{t}.$$
+<p>By CPA security this is negligible, so $\varepsilon \le t(n) \cdot \mathsf{negl}(n)$ is negligible.</p></div>
+<p>Consequence: a CPA-secure scheme for <b>single bits</b> yields one for arbitrary-length messages by encrypting bit by bit.</p>
+</section>
+
+<section class="sub" id="sec-hybrid">
+<h3>Hybrid Encryption</h3>
+<p>Public-key encryption is much slower than private-key encryption (and its ciphertexts longer). Hybrid encryption combines them: encrypt a fresh short key with the public-key scheme $\Pi$ and the long message with that key under a private-key scheme $\Pi'$.</p>
+<div class="alg" id="constr-hybrid"><table>
+<tr><td>$\mathsf{Gen}^{\mathsf{hy}}$</td><td>input $1^n$: $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$</td></tr>
+<tr><td>$\mathsf{Enc}^{\mathsf{hy}}$</td><td>input $pk$, $m$: $k \leftarrow \mathsf{Gen}'(1^n)$; $c_1 \leftarrow \mathsf{Enc}_{pk}(k)$; $c_2 \leftarrow \mathsf{Enc}'_k(m)$; output $\langle c_1, c_2 \rangle$</td></tr>
+<tr><td>$\mathsf{Dec}^{\mathsf{hy}}$</td><td>input $sk$, $\langle c_1, c_2 \rangle$: $k := \mathsf{Dec}_{sk}(c_1)$; output $\mathsf{Dec}'_k(c_2)$</td></tr>
+</table></div>
+<p><b>Efficiency.</b> Let $\alpha$ be the cost of encrypting $k$ with $\Pi$ and $\beta$ the cost per message bit of $\Pi'$. For a message of $t$ bits, the cost per bit is $\frac{\alpha + \beta t}{t} = \frac{\alpha}{t} + \beta$, which approaches the private-key cost $\beta$ for long messages.</p>
+<p>Notation: $X \stackrel{c}{\equiv} Y$ means that no PPT algorithm distinguishes the distributions with non-negligible advantage. $\stackrel{c}{\equiv}$ is transitive (for a constant number of steps). Security of $\Pi$ means $(pk, \mathsf{Enc}_{pk}(m_0)) \stackrel{c}{\equiv} (pk, \mathsf{Enc}_{pk}(m_1))$, and EAV security of $\Pi'$ means $\mathsf{Enc}'_k(m_0) \stackrel{c}{\equiv} \mathsf{Enc}'_k(m_1)$.</p>
+<div class="env thm" id="thm-hybrid">
+<p>If $\Pi$ is CPA-secure and $\Pi'$ is IND-EAV secure, then $\Pi^{\mathsf{hy}}$ is CPA-secure.</p>
+</div>
+<div class="proof"><p>We must show $(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \stackrel{c}{\equiv} (pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_1))$ for messages chosen by the adversary. Go through an intermediate world where $c_1$ encrypts $0^n$ instead of $k$:</p>
+$$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\equiv}} (pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0)) \overset{(3)}{\stackrel{c}{\equiv}} (pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_1)) \overset{(2)}{\stackrel{c}{\equiv}} (pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_1)).$$
+<p>Fix a PPT $\mathcal{A}^{\mathsf{hy}}$ and write $\Pr[\mathcal{A}^{\mathsf{hy}}(\cdot) = 1]$ on the four distributions as $P_1, P_2, P_3, P_4$ (from left to right); its advantage is $\varepsilon = \frac12 |P_1 - P_4| \le \frac12(|P_1 - P_2| + |P_2 - P_3| + |P_3 - P_4|)$.</p>
+<p><b>Step (1)</b>, reduction to $\Pi$. $\mathcal{A}_1$ in $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}_1,\Pi}$: on $pk$, choose $k \leftarrow \mathsf{Gen}'(1^n)$ and output the challenge pair $(k, 0^n)$; on challenge $c_1$, run $\mathcal{A}^{\mathsf{hy}}(pk)$ to get $m_0, m_1$, compute $c_2 \leftarrow \mathsf{Enc}'_k(m_0)$, and output $0$ iff $\mathcal{A}^{\mathsf{hy}}(\langle c_1, c_2 \rangle) = 1$. Its advantage is $\frac12|P_1 - P_2|$, hence $|P_1 - P_2| \le \mathsf{negl}(n)$.</p>
+<p><b>Step (2)</b>: the same with $m_1$ in place of $m_0$ gives $|P_3 - P_4| \le \mathsf{negl}(n)$.</p>
+<p><b>Step (3)</b>, reduction to $\Pi'$. $\mathcal{A}'$ in $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}$: generate $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ itself, run $\mathcal{A}^{\mathsf{hy}}(pk)$ to get $m_0, m_1$ and output them; on challenge $c_2 = \mathsf{Enc}'_k(m_b)$ (with the challenger's unknown $k$), compute $c_1 \leftarrow \mathsf{Enc}_{pk}(0^n)$ and output $1 - \mathcal{A}^{\mathsf{hy}}(\langle c_1, c_2 \rangle)$ (so that it guesses $b = 0$ when $\mathcal{A}^{\mathsf{hy}}$ says $1$). Since $c_1$ does not depend on $k$, the view matches the middle distributions exactly, and the advantage of $\mathcal{A}'$ is $\frac12 |P_2 - P_3|$, hence negligible.</p>
+<p>Together $\varepsilon \le \mathsf{negl}(n)$.</p></div>
+<p>Only <b>EAV</b> security is needed for $\Pi'$ because each key $k$ is used for a single message. If $\Pi$ and $\Pi'$ are CCA-secure, the hybrid scheme is CCA-secure as well.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-rsa">
+<h2>RSA Encryption</h2>
+
+<section class="sub" id="sec-textbook-rsa">
+<h3>Textbook RSA and its Insecurity</h3>
+<div class="alg" id="constr-textbook-rsa"><table>
+<tr><td>$\mathsf{Gen}$</td><td>$(N, e, d) \leftarrow \mathsf{GenRSA}(1^n)$; $pk := \langle N, e \rangle$, $sk := \langle N, d \rangle$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $pk$, $m \in \mathbb{Z}_N^*$: $c := [m^e \bmod N]$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $sk$, $c$: $m := [c^d \bmod N]$</td></tr>
+</table></div>
+<p>Correctness follows from $ed \equiv 1 \pmod{\phi(N)}$ and <a class="xref" href="#thm-group-order"></a> (it even holds for all $m \in \mathbb{Z}_N$, by the CRT). The RSA assumption only says that the <i>whole</i> message of a <i>uniform</i> $m$ cannot be recovered. That is far from security:</p>
+<ul>
+  <li><b>Deterministic</b>, hence not CPA-secure; a small message space (e.g. "yes"/"no") is decrypted by encrypting all candidates.</li>
+  <li><b>Small $e$ and short messages:</b> if $e = 3$ and $m \lt N^{1/3}$, then $m^3 \lt N$, so $c = m^3$ over the integers and $m = \sqrt[3]{c}$ (ordinary cube root).</li>
+  <li><b>Broadcast (Håstad):</b> the same $m$ is sent to three users with $e = 3$ and moduli $N_1, N_2, N_3$ (pairwise coprime, otherwise a gcd factors them). By the CRT the adversary computes $\hat c \equiv c_i \pmod{N_i}$ modulo $N_1 N_2 N_3$; since $m^3 \lt N_1 N_2 N_3$, $\hat c = m^3$ over the integers and $m = \sqrt[3]{\hat c}$.</li>
+  <li><b>Short messages, meet in the middle:</b> if $m$ is a random $\ell$-bit integer, with noticeable probability $m = r \cdot s$ with $r, s \le 2^{\ell/2 + \alpha}$; then $c / s^e \equiv r^e$, and comparing a table of $r^e$ with values $c \cdot s^{-e}$ finds $m$ in about $2^{\ell/2}$ steps instead of $2^\ell$.</li>
+  <li><b>Common modulus I:</b> users share $N$ with different $(e_i, d_i)$. Any user knowing its own $(e_i, d_i)$ can factor $N$ (see the factoring remark above) and then compute all other private keys.</li>
+  <li><b>Common modulus II:</b> the same $m$ is encrypted under $(N, e_1)$ and $(N, e_2)$ with $\gcd(e_1, e_2) = 1$. With $X e_1 + Y e_2 = 1$ (extended Euclid): $c_1^X c_2^Y = m^{X e_1 + Y e_2} = m \pmod N$.</li>
+  <li><b>Malleable:</b> $c \cdot s^e$ is an encryption of $m \cdot s$, which enables chosen-ciphertext attacks.</li>
+</ul>
+</section>
+
+<section class="sub" id="sec-padded-rsa">
+<h3>Padded RSA</h3>
+<p>Randomize before exponentiating: let $\ell(n) \le 2n - 2$ and messages $m \in \{0,1\}^{\ell(n)}$.</p>
+<div class="alg" id="constr-padded-rsa"><table>
+<tr><td>$\mathsf{Gen}$</td><td>as for textbook RSA</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>$r \leftarrow \{0,1\}^{\|N\| - \ell(n) - 1}$; $\hat m := r \| m$ (as an element of $\mathbb{Z}_N^*$); $c := [\hat m^e \bmod N]$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>$\hat m := [c^d \bmod N]$; output the $\ell(n)$ low-order bits of $\hat m$</td></tr>
+</table></div>
+<p>If the random part is short (e.g. $\ell(n) = 2n - O(\log n)$), it is insecure (the random part can be guessed). If $\ell(n) = O(\log n)$, i.e. the message is very short and almost all bits are random, padded RSA is CPA-secure under the RSA assumption (via the hardness of the least significant bit). For the realistic case in between, there is no proof; the standard <b>PKCS #1 v1.5</b> uses this approach with the encoding $0x00 \| 0x02 \| r \| 0x00 \| m$ ($r$ at least 8 random non-zero bytes), and is vulnerable to chosen-ciphertext attacks (Bleichenbacher). Today <b>RSA-OAEP</b> is used, which is CCA-secure in the random-oracle model (<a class="xref" href="#sec-rom"></a>).</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-elgamal">
+<h2>ElGamal Encryption</h2>
+<div class="env lemma" id="lemma-uniform-shift">
+<p>Let $\mathbb{G}$ be a finite group and $m \in \mathbb{G}$ fixed. If $g \leftarrow \mathbb{G}$ is uniform, then $g' := m \cdot g$ is uniform in $\mathbb{G}$. In particular, $m \cdot g$ reveals nothing about $m$.</p>
+</div>
+<div class="proof"><p>For each $\hat g \in \mathbb{G}$: $\Pr[m g = \hat g] = \Pr[g = m^{-1} \hat g] = 1/|\mathbb{G}|$.</p></div>
+<p>This is the one-time pad in an arbitrary group. If sender and receiver share a uniform group element, they can use it as a pad; the Diffie–Hellman value $g^{xy}$ looks uniform under DDH, and the receiver's half $g^x$ can be published as a public key.</p>
+<div class="alg" id="constr-elgamal"><table>
+<tr><td>$\mathsf{Gen}$</td><td>$(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$; $x \leftarrow \mathbb{Z}_q$; $h := g^x$; $pk := \langle \mathbb{G}, q, g, h \rangle$, $sk := \langle \mathbb{G}, q, g, x \rangle$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $pk$, $m \in \mathbb{G}$: $y \leftarrow \mathbb{Z}_q$; output $\langle c_1, c_2 \rangle = \langle g^y, h^y \cdot m \rangle$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $sk$, $\langle c_1, c_2 \rangle$: $m := c_2 / c_1^x$</td></tr>
+</table></div>
+<p>Correctness: $c_2 / c_1^x = g^{xy} m / g^{xy} = m$.</p>
+<div class="env thm" id="thm-elgamal">
+<p>If DDH is hard relative to $\mathcal{G}$, ElGamal encryption is CPA-secure.</p>
+</div>
+<div class="proof"><p>Let $\mathcal{A}$ be PPT and $\varepsilon(n) := \Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] - \frac12$. Let $\tilde\Pi$ be the variant where the ciphertext is $\langle g^y, g^z \cdot m \rangle$ with an additional independent $z \leftarrow \mathbb{Z}_q$. By <a class="xref" href="#lemma-uniform-shift"></a> the second component is uniform and independent of $m$, and $g^y$ and $h = g^x$ do not depend on $m$ either; so $\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\tilde\Pi} = 1] = \frac12$ exactly.</p>
+<p>DDH distinguisher $D(\mathbb{G}, q, g, h_1, h_2, h_3)$: set $pk := \langle \mathbb{G}, q, g, h_1 \rangle$, run $\mathcal{A}(pk)$ to get $m_0, m_1$, choose $b \leftarrow \{0,1\}$, give $\langle h_2, h_3 \cdot m_b \rangle$ to $\mathcal{A}$, and output $1$ iff $\mathcal{A}$ outputs $b$.</p>
+<ul>
+  <li>If $(h_1, h_2, h_3) = (g^x, g^y, g^{xy})$: $pk$ is a real key ($h = g^x$) and $\langle g^y, g^{xy} m_b \rangle = \langle g^y, h^y m_b \rangle$ is a real ElGamal ciphertext, so $\Pr[D = 1] = \frac12 + \varepsilon(n)$.</li>
+  <li>If $h_3 = g^z$: $\mathcal{A}$ sees exactly the experiment for $\tilde\Pi$, so $\Pr[D = 1] = \frac12$.</li>
+</ul>
+<p>By the DDH assumption, $\varepsilon(n) = |\Pr[D(\dots, g^{xy}) = 1] - \Pr[D(\dots, g^z) = 1]| \le \mathsf{negl}(n)$.</p></div>
+<p>ElGamal is <b>homomorphic</b> and therefore <b>malleable</b>: $\langle c_1, c_2 \cdot \alpha \rangle$ encrypts $\alpha m$, and the componentwise product of two ciphertexts encrypts the product of the messages. So it is not CCA-secure. Messages must be encoded as group elements; in practice ElGamal (or Diffie–Hellman) is used as the key-encapsulation part of hybrid encryption: $\langle g^y, \mathsf{Enc}'_{H(h^y)}(m) \rangle$.</p>
+<p><b>RSA vs. ElGamal:</b> RSA relies on the hardness of the RSA problem, ElGamal on DDH; ElGamal is randomized by construction, textbook RSA is not; ElGamal ciphertexts consist of two group elements.</p>
+</section>
+
+<section class="chapter" id="sec-signatures">
+<h2>Digital Signatures</h2>
+<p>Signatures are the public-key counterpart of MACs: only the owner of the private key can sign, but <b>everyone</b> with the public key can verify. Unlike MACs they are <b>publicly verifiable</b>, <b>transferable</b> (a verified signature can be shown to third parties) and provide <b>non-repudiation</b> (the signer cannot later deny having signed). They are the basis of certificates.</p>
+
+<section class="sub" id="sec-sig-def">
+<h3>Definitions</h3>
+<div class="env def" id="def-signature" data-title="Signature scheme">
+<p>A signature scheme is a triple of PPT algorithms $\Pi = (\mathsf{Gen}, \mathsf{Sign}, \mathsf{Vrfy})$:</p>
+<div class="alg"><table>
+<tr><td>$\mathsf{Gen}$</td><td>input $1^n$; output $(pk, sk)$</td></tr>
+<tr><td>$\mathsf{Sign}$</td><td>input $sk$, message $m$; output a signature $\sigma \leftarrow \mathsf{Sign}_{sk}(m)$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>input $pk$, $m$, $\sigma$; output $1$ iff $\sigma$ is a valid signature on $m$ (deterministic)</td></tr>
+</table></div>
+<p>Correctness: $\mathsf{Vrfy}_{pk}(m, \mathsf{Sign}_{sk}(m)) = 1$ for all $(pk, sk)$ output by $\mathsf{Gen}$ and all $m$ (except with negligible probability).</p>
+</div>
+<div class="game" id="game-sig-forge">
+<div class="gtitle">$\mathsf{Sig\text{-}forge}_{\mathcal{A},\Pi}(n)$:</div>
+<ol>
+  <li>$(pk, sk) \leftarrow \mathsf{Gen}(1^n)$.</li>
+  <li>$(m, \sigma) \leftarrow \mathcal{A}^{\mathsf{Sign}_{sk}(\cdot)}(pk)$; let $\mathcal{Q}$ be the set of oracle queries.</li>
+  <li>Output $1$ iff $\mathsf{Vrfy}_{pk}(m, \sigma) = 1$ and $m \notin \mathcal{Q}$.</li>
+</ol>
+</div>
+<div class="env def" id="def-sig-secure" data-title="Existential unforgeability">
+<p>$\Pi$ is existentially unforgeable under an adaptive chosen-message attack if for every PPT $\mathcal{A}$: $\Pr[\mathsf{Sig\text{-}forge}_{\mathcal{A},\Pi}(n) = 1] \le \mathsf{negl}(n)$.</p>
+</div>
+<p>Differences to MAC security: the adversary gets $pk$, so it can verify on its own; and since everyone can verify, the experiment needs no verification oracle.</p>
+</section>
+
+<section class="sub" id="sec-rsa-sig">
+<h3>Textbook RSA Signatures and Attacks</h3>
+<div class="alg" id="constr-rsa-sig"><table>
+<tr><td>$\mathsf{Gen}$</td><td>$(N, e, d) \leftarrow \mathsf{GenRSA}(1^n)$; $pk := \langle N, e \rangle$, $sk := \langle N, d \rangle$</td></tr>
+<tr><td>$\mathsf{Sign}$</td><td>input $sk$, $m \in \mathbb{Z}_N^*$: $\sigma := [m^d \bmod N]$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>input $pk$, $m$, $\sigma$: output $1$ iff $m = [\sigma^e \bmod N]$</td></tr>
+</table></div>
+<p>Signing is "decryption" with $d$, verification "encryption" with $e$. The scheme is insecure:</p>
+<ul>
+  <li><b>No-message attack:</b> choose any $\sigma \in \mathbb{Z}_N^*$ and output $(m, \sigma)$ with $m := [\sigma^e \bmod N]$. Valid, without any query. The message is random-looking, but existential unforgeability forbids every forgery.</li>
+  <li><b>Chosen-message attack (forge on a chosen message $m$):</b> pick $m_1 \ne 1$ with $m_1 \in \mathbb{Z}_N^*$ and set $m_2 := [m / m_1 \bmod N]$. Query signatures $\sigma_1, \sigma_2$ on $m_1, m_2$ and output $\sigma := [\sigma_1 \sigma_2 \bmod N]$. Then $\sigma^e = m_1 m_2 = m$. The signature is multiplicative.</li>
+</ul>
+</section>
+
+<section class="sub" id="sec-hash-and-sign">
+<h3>Hashed RSA and the Hash-and-Sign Paradigm</h3>
+<p><b>Hashed RSA:</b> sign $H(m)$ instead of $m$, i.e. $\sigma := [H(m)^d \bmod N]$, verify $\sigma^e \equiv H(m)$, where $H$ maps arbitrary strings into $\mathbb{Z}_N^*$. This counters both attacks, if $H$ is suitable:</p>
+<ul>
+  <li><b>no-message attack:</b> from $\sigma$ the forger gets $y = \sigma^e$ and would need $m$ with $H(m) = y$: $H$ must be hard to invert (one-way);</li>
+  <li><b>chosen-message attack:</b> the forger would need $m, m_1, m_2$ with $H(m) = H(m_1) \cdot H(m_2) \bmod N$, which should be infeasible; in particular $H$ must be collision resistant (otherwise $\sigma(m_1)$ is also a signature on a colliding $m$).</li>
+</ul>
+<p>There is no proof based on the RSA assumption and collision resistance alone; with $H$ modeled as a random oracle (RSA-FDH, "full-domain hash") the scheme is provably secure under the RSA assumption.</p>
+<p>Hashing also allows signing <b>arbitrary-length messages</b> with a scheme for short messages:</p>
+<div class="env thm" id="thm-hash-and-sign" data-title="Hash-and-sign">
+<p>Let $\Pi$ be a secure signature scheme for messages of length $n$ and $(\mathsf{Gen}_H, H)$ a collision-resistant hash function with $n$-bit outputs. The scheme that signs $m$ as $\sigma \leftarrow \mathsf{Sign}_{sk}(H^s(m))$ (with $s$ part of the public key) is secure for arbitrary-length messages.</p>
+</div>
+<div class="proof" data-title="sketch"><p>Let $(m^*, \sigma^*)$ be a forgery after queries $m_1, \dots, m_q$. Either $H^s(m^*) = H^s(m_i)$ for some $i$: then $(m^*, m_i)$ is a collision, since $m^* \ne m_i$. Or $H^s(m^*)$ was never signed: then $(H^s(m^*), \sigma^*)$ is a forgery against $\Pi$. A forger thus yields either a collision finder (which simulates the signer with a self-generated key pair) or a forger for $\Pi$ (which hashes all queries itself); both succeed only with negligible probability.</p></div>
+</section>
+
+<section class="sub" id="sec-lamport">
+<h3>One-Time Signatures (Lamport)</h3>
+<p>Signatures can be built from any one-way function, without number theory.</p>
+<div class="env def" id="def-owf" data-title="One-way function">
+<p>A polynomial-time computable $f : \{0,1\}^* \to \{0,1\}^*$ is one-way if for every PPT $\mathcal{A}$: $\Pr[f(\mathcal{A}(1^n, f(x))) = f(x)] \le \mathsf{negl}(n)$ for $x \leftarrow \{0,1\}^n$ (the experiment $\mathsf{Invert}_{\mathcal{A},f}$). It is a one-way <b>permutation</b> if additionally it is length-preserving and bijective on each $\{0,1\}^n$.</p>
+</div>
+<p>Candidates: $f(p, q) = pq$ (factoring), $x \mapsto g^x$ (discrete log), $x \mapsto x^e \bmod N$ (RSA), cryptographic hash functions. A random oracle is one-way.</p>
+<div class="alg" id="constr-lamport"><table>
+<tr><td colspan="2">Lamport's scheme for messages $m \in \{0,1\}^\ell$, one-way function $f$:</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>for $i = 1, \dots, \ell$ and $b \in \{0,1\}$: $x_{i,b} \leftarrow \{0,1\}^n$, $y_{i,b} := f(x_{i,b})$; $pk := (y_{i,b})$, $sk := (x_{i,b})$</td></tr>
+<tr><td>$\mathsf{Sign}$</td><td>$\sigma := (x_{1,m_1}, \dots, x_{\ell,m_\ell})$</td></tr>
+<tr><td>$\mathsf{Vrfy}$</td><td>output $1$ iff $f(\sigma_i) = y_{i,m_i}$ for all $i$</td></tr>
+</table></div>
+<div class="env thm" id="thm-lamport">
+<p>If $f$ is one-way, Lamport's scheme is a <b>one-time</b> signature scheme: secure when the adversary may obtain the signature on at most one message.</p>
+</div>
+<div class="proof"><p>Let $\mathcal{A}$ be a forger: it asks for the signature on $m'$ and outputs a valid $(m, \sigma)$ with $m \ne m'$, with probability $\varepsilon(n)$. Inverter $\mathcal{I}(1^n, y)$: choose $i^* \leftarrow \{1, \dots, \ell\}$ and $b^* \leftarrow \{0,1\}$; set $y_{i^*,b^*} := y$ and generate all other pairs honestly. Run $\mathcal{A}(pk)$. If $\mathcal{A}$ asks for a signature on $m'$ with $m'_{i^*} = b^*$, abort; otherwise answer with the known $x_{i,m'_i}$. If $\mathcal{A}$ outputs $(m, \sigma)$ with $m_{i^*} = b^*$, output $\sigma_{i^*}$.</p>
+<p>$\mathcal{A}$'s view does not depend on $(i^*, b^*)$ ($y$ is distributed like every other $y_{i,b}$). Since $m \ne m'$, they differ in some position $i$, where $m_i = 1 - m'_i$. With probability at least $\frac{1}{2\ell}$, $(i^*, b^*) = (i, m_i)$; then the query was answered (since $m'_{i^*} \ne b^*$) and $f(\sigma_{i^*}) = y$. So $\mathcal{I}$ inverts $f$ with probability at least $\varepsilon(n)/(2\ell)$, and $\varepsilon$ must be negligible.</p></div>
+<p>After two signatures, e.g. on $0^\ell$ and $1^\ell$, the whole private key is revealed. Many-time signatures can be built from one-time ones using trees of keys (each node signs the public keys of its children), at the cost of long signatures; this yields signatures from one-way functions alone. The <b>DSS/DSA</b> and <b>ECDSA</b> standards are based on discrete logarithms; RSA-based signatures (RSA-PSS) are the other common standard.</p>
+</section>
+</section>
+
+<section class="chapter" id="sec-rom">
+<h2>The Random Oracle Model</h2>
+<p>Some practical schemes (hashed RSA, RSA-OAEP, many protocols) have no proof from standard assumptions. The <b>random oracle methodology</b> gives them a heuristic proof:</p>
+<ol>
+  <li>Design and analyse the scheme in an idealized world where all parties have oracle access to a <b>truly random function</b> $H$ (the random oracle, RO), chosen uniformly at the beginning of the experiment.</li>
+  <li>In practice, <b>instantiate</b> $H$ with a cryptographic hash function such as SHA-256.</li>
+</ol>
+<p>Nobody can evaluate $H$ locally: the only way to learn $H(x)$ is to query the oracle on $x$.</p>
+
+<section class="sub" id="sec-ro-properties">
+<h3>Properties of a Random Oracle</h3>
+<ol>
+  <li><b>Consistency:</b> $x = x' \Rightarrow H(x) = H(x')$; a repeated query gets the same answer.</li>
+  <li><b>Randomness:</b> for every new input the answer is uniform and independent of all previous answers; if $x$ was never queried, $H(x)$ is uniform even given everything else.</li>
+  <li><b>Privacy / extractability:</b> in a reduction, the simulator answers the adversary's oracle queries itself, so it <b>sees every query</b> the adversary makes.</li>
+  <li><b>Programmability:</b> the simulator may choose the answers (as long as they are uniformly distributed), e.g. embed a challenge value.</li>
+</ol>
+<p>The simulator implements $H$ by <b>lazy sampling</b>: keep a table of answered queries; answer a new query $x$ with a fresh uniform $y$ and store $(x, y)$. As a consequence, a random oracle is a one-way function ($q$ queries find a pre-image with probability $\le q/2^n$), a collision-resistant hash function (collisions only by the birthday bound, $q^2/2^{n+1}$), and the basis of a PRF ($F_k(x) := H(k \| x)$). Experiments in the ROM are written $\mathsf{Exp}^{H}_{\mathcal{A},\Pi}(n)$; security means, e.g., $\Pr[\mathsf{PubK}^{\mathsf{eav}, H}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$, with the probability also over the choice of $H$.</p>
+<p><b>Criticism.</b> No real function is a random oracle; there are (contrived) schemes that are secure in the ROM but insecure with <i>any</i> concrete hash function. Concrete properties of hash functions can also break ROM-proven schemes: $\mathsf{Mac}_k(m) = H(k \| m)$ is a secure MAC in the ROM but insecure for Merkle–Damgård hashes (length extension). Still, a ROM proof is much better than none: it shows that the design has no structural flaw, and attacks would have to exploit specific properties of the hash function. Widely used schemes with ROM proofs have not been broken in practice.</p>
+</section>
+
+<section class="sub" id="sec-rom-cpa">
+<h3>CPA-Secure RSA Encryption in the Random Oracle Model</h3>
+<div class="alg" id="constr-rsa-rom-cpa"><table>
+<tr><td colspan="2">$H : \mathbb{Z}_N^* \to \{0,1\}^{\ell(n)}$ is a random oracle.</td></tr>
+<tr><td>$\mathsf{Gen}$</td><td>$(N, e, d) \leftarrow \mathsf{GenRSA}(1^n)$; $pk := \langle N, e \rangle$, $sk := \langle N, d \rangle$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>input $pk$, $m \in \{0,1\}^{\ell(n)}$: $r \leftarrow \mathbb{Z}_N^*$; output $\langle [r^e \bmod N],\ H(r) \oplus m \rangle$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>input $sk$, $\langle c_1, c_2 \rangle$: $r := [c_1^d \bmod N]$; output $H(r) \oplus c_2$</td></tr>
+</table></div>
+<div class="env thm" id="thm-rsa-rom-cpa">
+<p>If the RSA problem is hard relative to $\mathsf{GenRSA}$ and $H$ is modeled as a random oracle, this scheme is CPA-secure.</p>
+</div>
+<div class="proof"><p>Let $\mathcal{A}$ be PPT, making at most $q(n)$ queries to $H$, and let $r^*$ be the value used in the challenge ciphertext $\langle (r^*)^e, H(r^*) \oplus m_b \rangle$. Let $\mathsf{Query}$ be the event that $\mathcal{A}$ queries $H(r^*)$.</p>
+<div class="env claim" id="claim-rom-cpa-1"><p>$\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1 \land \overline{\mathsf{Query}}] \le \frac12 \Pr[\overline{\mathsf{Query}}]$, hence $\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] \le \frac12 + \Pr[\mathsf{Query}]$.</p></div>
+<p><i>Proof.</i> If $\mathcal{A}$ never queries $r^*$, the value $H(r^*)$ is uniform and independent of $\mathcal{A}$'s view (property 2); $H(r^*) \oplus m_b$ is a one-time pad and reveals nothing about $b$.</p>
+<div class="env claim" id="claim-rom-cpa-2"><p>$\Pr[\mathsf{Query}] \le \mathsf{negl}(n)$.</p></div>
+<p><i>Proof.</i> Build $\mathcal{A}'$ for $\mathsf{RSA\text{-}inv}$, input $(N, e, y)$ with $y \leftarrow \mathbb{Z}_N^*$:</p>
+<ol>
+  <li>Give $pk = \langle N, e \rangle$ to $\mathcal{A}$; answer its $H$-queries by lazy sampling, recording all queries.</li>
+  <li>When $\mathcal{A}$ outputs $m_0, m_1$: choose $k \leftarrow \{0,1\}^{\ell(n)}$ and give the challenge $\langle y, k \rangle$. (This implicitly sets $r^* := y^d$ and $H(r^*) := k \oplus m_b$ for an unknown random $b$.)</li>
+  <li>For every $H$-query $r$ of $\mathcal{A}$, check whether $r^e \equiv y \pmod N$; if so, output $r$.</li>
+</ol>
+<p>Since $y$ is uniform in $\mathbb{Z}_N^*$, $r^* = y^d$ is uniform, as in the real scheme, and $k$ is uniform, as $H(r^*) \oplus m_b$ is. Until $\mathcal{A}$ queries $r^*$, its view is exactly as in $\mathsf{PubK}^{\mathsf{eav}}$, so $\mathsf{Query}$ occurs with the same probability in both, and when it occurs $\mathcal{A}'$ outputs $r^*$ with $(r^*)^e = y$. Thus $\Pr[\mathsf{RSA\text{-}inv}_{\mathcal{A}'} = 1] \ge \Pr[\mathsf{Query}]$, which is negligible by the RSA assumption. Together, $\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] \le \frac12 + \mathsf{negl}(n)$.</p></div>
+<p>The scheme is an instance of a general pattern: encrypt a random value with a one-way trapdoor permutation, hash it, and use the hash as a pad or a key. It is efficient (one exponentiation with small $e$), but not CCA-secure: $\langle c_1, c_2 \oplus \Delta \rangle$ decrypts to $m \oplus \Delta$.</p>
+</section>
+
+<section class="sub" id="sec-rom-cca">
+<h3>CCA-Secure RSA Encryption in the Random Oracle Model</h3>
+<p>Replace the XOR pad by a CCA-secure private-key scheme $\Pi' = (\mathsf{Gen}', \mathsf{Enc}', \mathsf{Dec}')$ whose key is derived with the random oracle $H : \mathbb{Z}_N^* \to \{0,1\}^n$:</p>
+<div class="alg" id="constr-rsa-rom-cca"><table>
+<tr><td>$\mathsf{Gen}$</td><td>$(N, e, d) \leftarrow \mathsf{GenRSA}(1^n)$; $pk := \langle N, e \rangle$, $sk := \langle N, d \rangle$</td></tr>
+<tr><td>$\mathsf{Enc}$</td><td>$r \leftarrow \mathbb{Z}_N^*$; $k := H(r)$; output $\langle [r^e \bmod N],\ \mathsf{Enc}'_k(m) \rangle$</td></tr>
+<tr><td>$\mathsf{Dec}$</td><td>$r := [c_1^d \bmod N]$; $k := H(r)$; output $\mathsf{Dec}'_k(c_2)$</td></tr>
+</table></div>
+<div class="env thm" id="thm-rsa-rom-cca">
+<p>If the RSA problem is hard relative to $\mathsf{GenRSA}$, $\Pi'$ is CCA-secure and $H$ is modeled as a random oracle, then this scheme is CCA-secure.</p>
+</div>
+<div class="proof" data-title="structure"><p>Let $\langle c_1^*, c_2^* \rangle$ with $c_1^* = (r^*)^e$ be the challenge and $\mathsf{Query}$ the event that $\mathcal{A}$ queries $H(r^*)$ (directly; decryption queries are answered by the experiment). As before</p>
+$$\Pr[\mathsf{PubK}^{\mathsf{cca}}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{PubK}^{\mathsf{cca}}_{\mathcal{A},\Pi} = 1 \land \overline{\mathsf{Query}}] + \Pr[\mathsf{Query}].$$
+<div class="env claim" id="claim-rom-cca-1"><p>If $\Pi'$ is CCA-secure, then $\Pr[\mathsf{PubK}^{\mathsf{cca}}_{\mathcal{A},\Pi} = 1 \land \overline{\mathsf{Query}}] \le \frac12 + \mathsf{negl}(n)$.</p></div>
+<p><i>Proof idea.</i> Without $\mathsf{Query}$, $k^* = H(r^*)$ is a uniform key unknown to $\mathcal{A}$, i.e. a fresh key of $\Pi'$. Reduction $\mathcal{A}'$ in $\mathsf{PrivK}^{\mathsf{cca}}_{\mathcal{A}',\Pi'}$ (challenger holds $k^*$): generate $(N, e, d)$ and $r^*$ itself, simulate $H$ by lazy sampling (but never answer $r^*$ consistently; if $\mathcal{A}$ queries $r^*$ the simulation ends, which is the event $\mathsf{Query}$); forward $m_0, m_1$, receive $c_2^*$, give $\langle (r^*)^e, c_2^* \rangle$. Decryption queries $\langle c_1, c_2 \rangle$: if $c_1 \ne c_1^*$, decrypt with $d$ and the simulated $H$; if $c_1 = c_1^*$ then $c_2 \ne c_2^*$, and $\mathcal{A}'$ forwards $c_2$ to its own decryption oracle (allowed, since it differs from its challenge). Until $\mathsf{Query}$ the simulation is perfect.</p>
+<div class="env claim" id="claim-rom-cca-2"><p>If RSA is hard, then $\Pr[\mathsf{Query}] \le \mathsf{negl}(n)$.</p></div>
+<p><i>Proof idea.</i> Inverter $\mathcal{A}''$ on input $(N, e, y)$ sets $c_1^* := y$ (so $r^* = y^d$ unknown), picks a uniform $k^*$ to play the role of $H(r^*)$, and gives $\langle y, \mathsf{Enc}'_{k^*}(m_b) \rangle$. It must answer decryption queries <b>without knowing $d$</b>. It keeps two tables: answered $H$-queries $(r, k)$, and "pending" values $(c_1, k)$ for ciphertexts $c_1$ whose $r = c_1^d$ is unknown. For a decryption query $\langle c_1, c_2 \rangle$: if some $H$-query $r$ satisfies $r^e = c_1$, use its key; otherwise use (or create) a random key for $c_1$ in the pending table, and use $k^*$ for $c_1 = y$. When $\mathcal{A}$ later queries $H(r)$, check whether $r^e$ equals a pending $c_1$ and answer consistently with that key; and if $r^e = y$, output $r$ as the RSA inverse. Since $x \mapsto x^e$ is a permutation, every $c_1$ corresponds to exactly one $r$, so the answers are consistent with a random oracle, and $\mathcal{A}''$ inverts $y$ whenever $\mathsf{Query}$ occurs.</p>
+<p>Both claims together give $\Pr[\mathsf{PubK}^{\mathsf{cca}}_{\mathcal{A},\Pi} = 1] \le \frac12 + \mathsf{negl}(n)$.</p></div>
+<p>The same idea underlies the standardized schemes: <b>RSA-OAEP</b> (an encoding with two hash functions, CCA-secure in the ROM) for encryption, and <b>RSA-FDH</b> / RSA-PSS for signatures.</p>
+</section>
+</section>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="assets/script.js"></script>
+</body>
+</html>

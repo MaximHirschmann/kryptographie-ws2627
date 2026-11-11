@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 94</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="94">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>A variant of Lamport's scheme with $2\ell$ secret values $x_1, \dots, x_{2\ell}$ and public values $y_i = f(x_i)$ for a one-way function $f$. Messages are mapped injectively to subsets $S_m \subseteq \{1, \dots, 2\ell\}$ of size exactly $\ell$, and the signature on $m$ reveals $\{x_i\}_{i \in S_m}$. Prove that this is a one-time signature scheme. What is the longest message length it supports?</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 12.8 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Scheme</h2>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>$x_1, \dots, x_{2\ell} \leftarrow \{0,1\}^n$; $pk = (y_1, \dots, y_{2\ell})$, $y_i = f(x_i)$; $sk = (x_1, \dots, x_{2\ell})$</td></tr>
+      <tr><td>Sign</td><td>$\sigma = (x_i)_{i \in S_m}$</td></tr>
+      <tr><td>Vrfy</td><td>check $f(\sigma_i) = y_i$ for all $i \in S_m$</td></tr>
+    </table></div>
+
+    <h2>Key combinatorial fact</h2>
+    <p>If $m^* \ne m$, then $S_{m^*} \ne S_m$ (the map is injective), and both sets have size $\ell$. Two different sets of the <b>same size</b> cannot contain each other, so</p>
+    $$S_{m^*} \not\subseteq S_m: \quad \text{there is an } i^* \in S_{m^*} \setminus S_m.$$
+    <p>To forge on $m^*$, the adversary must output a pre-image of $y_{i^*}$, a value whose pre-image was <b>never revealed</b>.</p>
+    <p class="note">This is where the equal size matters. With arbitrary subsets, a message whose set is contained in $S_m$ could be forged by deleting values from a signature.</p>
+
+    <h2>Security proof</h2>
+    <p>Let $\mathcal{A}$ be a PPT forger in the one-time experiment (one signing query, then a forgery on a new message) with success probability $\varepsilon(n)$. Build an inverter $\mathcal{I}$ for $f$:</p>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{I}(1^n, y)$:</td><td></td></tr>
+      <tr><td>1.</td><td>Choose $j \leftarrow \{1, \dots, 2\ell\}$ and set $y_j := y$. For $i \ne j$ choose $x_i$ and set $y_i := f(x_i)$.</td></tr>
+      <tr><td>2.</td><td>Run $\mathcal{A}(pk)$. When it asks for a signature on $m$: if $j \in S_m$, abort; otherwise answer $(x_i)_{i \in S_m}$.</td></tr>
+      <tr><td>3.</td><td>When $\mathcal{A}$ outputs $(m^*, \sigma^*)$: if $j \in S_{m^*}$, output the component $\sigma^*_j$.</td></tr>
+    </table></div>
+    <p><b>Simulation.</b> $y = f(x)$ for uniform $x$ has the same distribution as every other $y_i$, so $\mathcal{A}$'s view does not depend on $j$ (as long as we don't abort).</p>
+    <p><b>Success.</b> $\mathcal{I}$ inverts $y$ if $\mathcal{A}$ succeeds and $j \in S_{m^*} \setminus S_m$; then $f(\sigma^*_j) = y_j = y$. If $\mathcal{A}$ succeeds, $S_{m^*} \setminus S_m$ contains at least one index, and $j$ is a uniform index independent of $\mathcal{A}$'s view, so it hits that set with probability at least $\frac{1}{2\ell}$. (Then $j \notin S_m$ automatically, so we never aborted.)</p>
+    $$\Pr[\mathsf{Invert}_{\mathcal{I},f}(n) = 1] \ge \frac{\varepsilon(n)}{2\ell}.$$
+    <p>Since $f$ is one-way and $\ell$ is polynomial, $\varepsilon$ is negligible. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>Maximum message length</h2>
+    <p>The messages must map injectively into the size-$\ell$ subsets of $\{1, \dots, 2\ell\}$, of which there are $\binom{2\ell}{\ell}$. So at most</p>
+    $$\ell_{\max} = \left\lfloor \log_2 \binom{2\ell}{\ell} \right\rfloor \approx 2\ell - \tfrac12 \log_2(\pi \ell)$$
+    <p>bits (using $\binom{2\ell}{\ell} \approx 4^\ell/\sqrt{\pi \ell}$). For example, $\ell = 128$ gives $\binom{256}{128} \approx 2^{251.6}$, i.e. 251-bit messages with 256 public values. That is almost <b>twice</b> the 128 bits of plain Lamport with the same key size. An efficient injective map is the combinatorial number system (ranking/unranking of subsets).</p>
+
+    <div class="box result"><span class="label">Result.</span> Since all signature sets have the same size, any forgery must reveal a pre-image that was never published, which inverts $f$ with probability $\ge \varepsilon/(2\ell)$. The scheme signs messages of up to $\log_2\binom{2\ell}{\ell} \approx 2\ell - O(\log \ell)$ bits with $2\ell$ public values. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

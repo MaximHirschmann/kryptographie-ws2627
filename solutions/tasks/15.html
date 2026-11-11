@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 15</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="15">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove that Definition 2.1 implies Definition 2.4.</p>
+    <p><b>Definition 2.1</b> An encryption scheme $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ over a message space $\mathcal{M}$ is perfectly secret if for every probability distribution over $\mathcal{M}$, every $m \in \mathcal{M}$, and every ciphertext $c \in \mathcal{C}$ for which $\Pr[C = c] \gt 0$ it holds that $\Pr[M = m \mid C = c] = \Pr[M = m]$.</p>
+    <p><b>Definition 2.4</b> An encryption scheme $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ over a message space $\mathcal{M}$ is perfectly secret if for every adversary $\mathcal{A}$ it holds that $\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] = \frac12$.</p>
+    <p><i>Hints: use the answer to Exercise 2.6 in [Katz &amp; Lindell] (Question 14 here). Note that $\mathcal{A}$ is a deterministic algorithm, so it always outputs the same pair of messages. Since $\mathcal{A}$ is deterministic, the sets of ciphertexts for which it answers 0 and 1 are well-defined and disjoint.</i></p>
+  </div>
+
+  <div class="solution">
+    <h2>The game $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}$ (script <a href="../script.html#game-privk-eav">§5.1</a>)</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>$k \leftarrow \mathsf{Gen}$</td></tr>
+      <tr><td>2.</td><td>$\mathcal{A}$ outputs two messages $m_0, m_1 \in \mathcal{M}$</td></tr>
+      <tr><td>3.</td><td>$b \leftarrow \{0,1\}$ uniformly; $c \leftarrow \mathsf{Enc}_k(m_b)$</td></tr>
+      <tr><td>4.</td><td>$\mathcal{A}(c)$ outputs a guess $b'$; the game outputs $1$ iff $b' = b$</td></tr>
+    </table></div>
+
+    <h2>Proof</h2>
+    <p>Assume the scheme satisfies Definition 2.1 and fix an adversary $\mathcal{A}$.</p>
+
+    <p><b>Step 1: The message distribution in the game.</b> $\mathcal{A}$ is deterministic, so it always outputs the same pair $m_0, m_1$.</p>
+    <ul>
+      <li>If $m_0 = m_1$, then $c$ has the same distribution for $b = 0$ and $b = 1$. So $\mathcal{A}$'s guess is independent of $b$, and $\Pr[b' = b] = \frac12$. Done.</li>
+      <li>Otherwise $m_0 \ne m_1$. The message $M := m_b$ that is encrypted is <b>uniform over $\mathcal{M}' = \{m_0, m_1\}$</b>, and the event $b = i$ is the same as the event $M = m_i$.</li>
+    </ul>
+    <p>This is a distribution over $\mathcal{M}$ with $\Pr[M = m] = 0$ for $m \notin \{m_0, m_1\}$. By Definition 2.1 (and, by <a href="14.html">Question 14</a>, even if one only assumes it for distributions with full support), for every $c$ with $\Pr[C = c] \gt 0$:</p>
+    $$\Pr[M = m_0 \mid C = c] = \Pr[M = m_0] = \tfrac12 \quad\text{and}\quad \Pr[M = m_1 \mid C = c] = \Pr[M = m_1] = \tfrac12. \tag{$*$}$$
+
+    <p><b>Step 2: Split by $\mathcal{A}$'s answer.</b> $\mathcal{A}$ is deterministic, so for each $c$ its answer $\mathcal{A}(c)$ is fixed. Let</p>
+    $$\mathcal{C}_0 := \{c \in \mathcal{C} \mid \mathcal{A}(c) = 0\}, \qquad \mathcal{C}_1 := \{c \in \mathcal{C} \mid \mathcal{A}(c) = 1\}.$$
+    <p>These sets are disjoint and $\mathcal{C} = \mathcal{C}_0 \cup \mathcal{C}_1$. Only ciphertexts with $\Pr[C = c] \gt 0$ contribute.</p>
+
+    <p><b>Step 3: Compute the success probability.</b> $\mathcal{A}$ wins exactly when $c \in \mathcal{C}_0$ and $M = m_0$, or when $c \in \mathcal{C}_1$ and $M = m_1$. By the law of total probability:</p>
+    $$
+    \begin{aligned}
+    \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1]
+    &= \sum_{c \in \mathcal{C}_0} \Pr[C = c \wedge M = m_0] + \sum_{c \in \mathcal{C}_1} \Pr[C = c \wedge M = m_1] \\
+    &= \sum_{c \in \mathcal{C}_0} \Pr[M = m_0 \mid C = c] \cdot \Pr[C = c] + \sum_{c \in \mathcal{C}_1} \Pr[M = m_1 \mid C = c] \cdot \Pr[C = c] \\
+    &\overset{(*)}{=} \sum_{c \in \mathcal{C}_0} \tfrac12 \Pr[C = c] + \sum_{c \in \mathcal{C}_1} \tfrac12 \Pr[C = c] \\
+    &= \tfrac12 \sum_{c \in \mathcal{C}} \Pr[C = c] = \tfrac12.
+    \end{aligned}
+    $$
+    <p>Since $\mathcal{A}$ was arbitrary, Definition 2.4 holds. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Intuition.</span> Whatever ciphertext $\mathcal{A}$ sees, both messages are still equally likely, because the posterior equals the prior of $\frac12$. So every guess is right with probability exactly $\frac12$.</div>
+
+    <p class="note">The script proves the same statement starting from <a href="../script.html#def-ps-3">Definition 5</a> (<a href="../script.html#thm-ps-4-3">Theorem 4</a>, case Def. 5 $\Rightarrow$ Def. 6). This proof starts from Definition 2.1 directly, so it does not need the detour through Definitions 4 and 5. If $\mathcal{A}$ were randomised, we would fix its random coins, apply the argument above for each choice, and average. The result is still $\frac12$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

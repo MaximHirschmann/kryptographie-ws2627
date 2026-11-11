@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cryptography: Exercise solutions</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="crumbs">Kryptographie · Master</div>
+  <h1>Exercise solutions</h1>
+  <p><a href="script.html">Read the extended lecture script →</a> · Chapters, definitions, security games, and proofs with permanent links.</p>
+  <p class="lead">Solutions to the questions in <code>excercises.pdf</code> (1–54), using the notation from the lecture script. Questions 55–97 are extra practice: exercises from Katz &amp; Lindell (1st ed.) that are not on the sheet.</p>
+
+  <div class="progress">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="txt" id="progress-txt"></div>
+  </div>
+
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="Search by number or title…">
+    <label><input id="only-solved" type="checkbox"> Only solved</label>
+  </div>
+
+  <div id="topics"></div>
+</div>
+
+<script src="assets/tasks.js"></script>
+<script>
+  const solvedCount = TASKS.filter((t) => t.solved).length;
+  document.getElementById("fill").style.width = (100 * solvedCount / TASKS.length) + "%";
+  document.getElementById("progress-txt").textContent = `${solvedCount} of ${TASKS.length} questions solved`;
+
+  const q = document.getElementById("q");
+  const onlySolved = document.getElementById("only-solved");
+
+  function render() {
+    const term = q.value.trim().toLowerCase();
+    const match = (t) =>
+      (!onlySolved.checked || t.solved) &&
+      (!term || String(t.n) === term || t.title.toLowerCase().includes(term));
+
+    document.getElementById("topics").innerHTML = TOPICS.map((topic) => {
+      const tasks = TASKS.filter((t) => t.n >= topic.range[0] && t.n <= topic.range[1] && match(t));
+      if (!tasks.length) return "";
+      const cards = tasks.map((t) => {
+        const inner = `<div class="num">${t.n}</div>
+          <div><div class="t">${t.title}</div><div class="s">${t.solved ? "Solved" : "Open"}</div></div>`;
+        return t.solved
+          ? `<a class="task solved" href="tasks/${taskFile(t.n)}">${inner}</a>`
+          : `<div class="task">${inner}</div>`;
+      }).join("");
+      return `<section class="topic"><h2>${topic.title}</h2><div class="grid">${cards}</div></section>`;
+    }).join("");
+  }
+
+  q.addEventListener("input", render);
+  onlySolved.addEventListener("change", render);
+  render();
+</script>
+</body>
+</html>

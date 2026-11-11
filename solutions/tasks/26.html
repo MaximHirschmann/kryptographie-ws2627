@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 26</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="26">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove that if a private-key cipher $\Pi$ can encrypt messages of arbitrary length and the adversary is not restricted to output messages of equal lengths then $\Pi$ cannot have indistinguishable encryptions in the presence of an eavesdropper.</p>
+    <p><i>Hint: The answer is not as trivial as one may think at first glimpse. Note that $\Pi$ does not necessarily have to encrypt a message of length $\ell$ into a ciphertext of equal length $\ell$. Consider a polynomial upper bound $p(\cdot)$ on the length of the ciphertext when $\Pi$ is used to encrypt a single bit and use that as a starting point.</i></p>
+  </div>
+
+  <div class="solution">
+    <h2>Idea</h2>
+    <p>$\mathsf{Enc}$ runs in polynomial time, so the encryption of a <b>single bit</b> has length at most $p(n)$ for some polynomial $p$. Long messages cannot all have such short ciphertexts, because there are too few short strings and decryption must be able to tell them apart. So the <b>length</b> of the ciphertext tells "one bit" apart from "a long message".</p>
+
+    <h2>Counting</h2>
+    <p>Let $L := p(n) + 2$. Fix any key $k$. By correctness, two different messages can never produce the same ciphertext under $k$. There are fewer than $2^{p(n)+1}$ strings of length at most $p(n)$. So fewer than $2^{p(n)+1}$ messages $m \in \{0,1\}^L$ can have <i>any</i> short ciphertext, i.e. a ciphertext of length at most $p(n)$, under $k$. That is fewer than half of the $2^L = 2^{p(n)+2}$ messages. Averaged over the key and over a uniformly random message $m_1 \leftarrow \{0,1\}^L$:</p>
+    $$\Pr_{k,\, m_1}\big[\,|\mathsf{Enc}_k(m_1)| \le p(n)\,\big] \lt \frac{2^{p(n)+1}}{2^{p(n)+2}} = \frac12.$$
+
+    <h2>Adversary</h2>
+    <div class="algo"><table>
+      <tr><td>ask</td><td>$m_0 := 0$ (one bit); &nbsp; $m_1 \leftarrow \{0,1\}^{p(n)+2}$ uniformly</td></tr>
+      <tr><td>guess</td><td>on $c$: output $0$ if $|c| \le p(n)$, otherwise output $1$</td></tr>
+    </table></div>
+    <p>$\mathcal{A}$ is PPT, since $p$ is a fixed polynomial.</p>
+
+    <h2>Analysis</h2>
+    <ul>
+      <li>$b = 0$: $|c| \le p(n)$ always, so $\mathcal{A}$ is right with probability $1$.</li>
+      <li>$b = 1$: $|c| \gt p(n)$ with probability greater than $\frac12$ (counting above), so $\mathcal{A}$ is right with probability greater than $\frac12$.</li>
+    </ul>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \gt \tfrac12 \cdot 1 + \tfrac12 \cdot \tfrac12 = \tfrac34.$$
+    <p>This is not $\le \frac12 + \mathsf{negl}(n)$, so $\Pi$ does not have indistinguishable encryptions. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">Why the hint says "not trivial": one cannot simply assume $|c| = |m|$. A scheme might pad every ciphertext to some length. But it can only pad up to a polynomial length, and the adversary simply picks a message longer than that. This is why the definitions require $|m_0| = |m_1|$: encryption may always reveal the length of the plaintext.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

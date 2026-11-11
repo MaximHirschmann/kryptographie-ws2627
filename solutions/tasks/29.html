@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 29</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="29">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove <i>unconditionally</i> the existence of an efficient pseudorandom function $F : \{0,1\}^* \times \{0,1\}^* \to \{0,1\}^*$ where the input length is logarithmic in the security parameter (and the key has length polynomial in the security parameter).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Idea</h2>
+    <p>If the input has only $\log n$ bits, there are only $2^{\log n} = n$ possible inputs. A <b>truly random function</b> on this domain is just a table of $n$ random values, which has polynomial size. So we can use the whole table as the key.</p>
+
+    <h2>Construction</h2>
+    <p>Let the input length be $\ell_{in}(n) = \log n$ (for simplicity, $n$ a power of 2) and the output length $\ell_{out}(n) = n$.</p>
+    <div class="algo"><table>
+      <tr><td>Key</td><td>$k = (k_0, k_1, \dots, k_{n-1})$ with each $k_i \in \{0,1\}^n$, chosen uniformly; $|k| = n^2$</td></tr>
+      <tr><td>$F_k(x)$</td><td>read $x \in \{0,1\}^{\log n}$ as an integer $i \in \{0, \dots, n-1\}$ and output $k_i$</td></tr>
+    </table></div>
+    <ul>
+      <li><b>Efficient:</b> computing $F_k(x)$ is one table lookup, polynomial in $n$.</li>
+      <li><b>Polynomial key length:</b> $n \cdot n = n^2$.</li>
+    </ul>
+
+    <h2>Proof of pseudorandomness</h2>
+    <p>A uniformly random function $f : \{0,1\}^{\log n} \to \{0,1\}^n$ is described by its table of values $(f(0), \dots, f(n-1))$, and this table is uniform over $(\{0,1\}^n)^n$. A uniform key $k$ is uniform over exactly the same set. So $F_k$ and $f$ have <b>identical distributions</b>, and for every distinguisher $D$, even one with unlimited running time,</p>
+    $$\big|\Pr[D^{F_k(\cdot)}(1^n) = 1] - \Pr[D^{f(\cdot)}(1^n) = 1]\big| = 0.$$
+    <p>This uses no computational assumption, so the existence is unconditional. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">This also works for input length $c \cdot \log n$ (table size $n^c$), but not for $\omega(\log n)$: then the table would be super-polynomial. Building PRFs with long inputs needs assumptions (e.g. one-way functions, via GGM).</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

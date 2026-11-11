@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 24</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="24">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <ol>
+      <li>Show that the CBC, OFB and CTR-Mode are not CCA-secure encryption schemes (for every $F$).</li>
+      <li>Do the operation modes presented in the lecture protect the integrity of the data? Discuss!</li>
+    </ol>
+  </div>
+
+  <div class="solution">
+    <h2>1. CBC, OFB and CTR are not CCA-secure</h2>
+    <p>In the CCA game, the adversary may ask the decryption oracle about any ciphertext <i>except the challenge itself</i>. All three modes are <b>malleable</b>: changing one bit of the ciphertext changes the plaintext in a predictable way. So the attacker modifies the challenge slightly, has it decrypted, and undoes the change.</p>
+    <p>Use single-block messages $m_0 = 0^n$ and $m_1 = 1^n$, and let $\delta := 0^{n-1}1$. The challenge is $\langle c_0, c_1 \rangle$, where $c_0$ is the $IV$ or counter.</p>
+    <table class="data">
+      <tr><th>Mode</th><th>Decryption query</th><th>Answer</th></tr>
+      <tr><td>CBC</td><td>$\langle c_0 \oplus \delta,\ c_1 \rangle$</td><td>$F_k^{-1}(c_1) \oplus c_0 \oplus \delta = m_b \oplus \delta$</td></tr>
+      <tr><td>OFB</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$c_1 \oplus \delta \oplus F_k(c_0) = m_b \oplus \delta$</td></tr>
+      <tr><td>CTR</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$c_1 \oplus \delta \oplus F_k(c_0 + 1) = m_b \oplus \delta$</td></tr>
+    </table>
+    <p>In each case the query differs from the challenge, so it is allowed. The attacker computes $m_b = \text{answer} \oplus \delta$ and outputs $b$. It wins with probability $1$. The attack uses no property of $F$, so it works <b>for every $F$</b>, even a truly random permutation. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>2. Integrity</h2>
+    <p><b>No.</b> The modes only provide <i>confidentiality</i> (CPA security). They do not protect integrity:</p>
+    <ul>
+      <li><b>Every string decrypts.</b> Decryption never rejects, so the receiver cannot tell a forged or modified ciphertext from a real one.</li>
+      <li><b>Bit flipping (OFB, CTR):</b> flipping bit $j$ of $c_i$ flips exactly bit $j$ of $m_i$. If the attacker knows part of the plaintext, they can change it to anything, e.g. "pay 100" becomes "pay 900".</li>
+      <li><b>CBC:</b> flipping bits in the $IV$ flips the same bits in $m_1$. Changing $c_i$ garbles $m_i$ but flips chosen bits of $m_{i+1}$. Blocks can also be cut off at the end, which leaves a valid shorter plaintext.</li>
+      <li><b>ECB:</b> blocks can be swapped, repeated or removed without being detected.</li>
+    </ul>
+    <p>Integrity needs a separate mechanism: a <b>MAC</b>, ideally as encrypt-then-MAC, or an authenticated mode such as GCM. The CCA attacks above are exactly integrity attacks: the decryption oracle accepts modified ciphertexts.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

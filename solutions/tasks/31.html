@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 31</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="31">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $(\mathsf{Gen}, H)$ be a collision-resistant hash function. Is $(\mathsf{Gen}, \bar H)$ with $\bar H^s(x) := H^s(H^s(x))$ necessarily collision resistant?</p>
+  </div>
+
+  <div class="solution">
+    <div class="box result"><span class="label">Answer.</span> <b>Yes.</b> Any collision for $\bar H$ contains a collision for $H$.</div>
+
+    <h2>Key observation</h2>
+    <p>Let $x \ne x'$ with $\bar H^s(x) = \bar H^s(x')$, i.e. $H^s(H^s(x)) = H^s(H^s(x'))$. There are two cases:</p>
+    <ol>
+      <li><b>$H^s(x) \ne H^s(x')$.</b> Then $y := H^s(x)$ and $y' := H^s(x')$ are different inputs with $H^s(y) = H^s(y')$, a collision for $H$.</li>
+      <li><b>$H^s(x) = H^s(x')$.</b> Then $(x, x')$ itself is a collision for $H$, because $x \ne x'$.</li>
+    </ol>
+
+    <h2>Reduction</h2>
+    <p>Let $\bar{\mathcal{A}}$ be a PPT adversary in $\mathsf{Hash\text{-}coll}_{\bar{\mathcal{A}},\bar H}(n)$. Build $\mathcal{A}$ against $H$:</p>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{A}(s)$</td><td>
+        <span class="line">run $\bar{\mathcal{A}}(s)$ and receive $x, x'$</span>
+        <span class="line">if $H^s(x) \ne H^s(x')$: output $(H^s(x), H^s(x'))$</span>
+        <span class="line">else: output $(x, x')$</span>
+      </td></tr>
+    </table></div>
+    <p>$\mathcal{A}$ is PPT, gets the same key $s \leftarrow \mathsf{Gen}(1^n)$, and by the case distinction it outputs a collision whenever $\bar{\mathcal{A}}$ does:</p>
+    $$\Pr[\mathsf{Hash\text{-}coll}_{\mathcal{A},H}(n) = 1] \ \ge\ \Pr[\mathsf{Hash\text{-}coll}_{\bar{\mathcal{A}},\bar H}(n) = 1].$$
+    <p>The left side is negligible, so the right side is too. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">For the composition to be defined, the output of $H^s$ must be a valid input for $H^s$. This holds for $H^s : \{0,1\}^* \to \{0,1\}^{\ell(n)}$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

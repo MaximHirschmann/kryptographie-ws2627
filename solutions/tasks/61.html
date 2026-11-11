@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 61</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="61">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Adapt the CPA definition (Definition 3.21) to perfect secrecy: no limit on the adversary's running time, and the success probability must be <b>exactly</b> $\frac12$. Show that no encryption scheme can satisfy this definition.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 3.12 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Definition</h2>
+    <p>The experiment $\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>$k \leftarrow \mathsf{Gen}$.</td></tr>
+      <tr><td>2.</td><td>$\mathcal{A}$ gets oracle access to $\mathsf{Enc}_k(\cdot)$ and outputs $m_0, m_1$ of equal length.</td></tr>
+      <tr><td>3.</td><td>$b \leftarrow \{0,1\}$, $c \leftarrow \mathsf{Enc}_k(m_b)$ is given to $\mathcal{A}$, who still has the oracle.</td></tr>
+      <tr><td>4.</td><td>$\mathcal{A}$ outputs $b'$; the output is $1$ iff $b' = b$.</td></tr>
+    </table></div>
+    <p>$\Pi$ is <b>perfectly CPA-secret</b> if $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] = \frac12$ for <b>every</b> adversary $\mathcal{A}$, with no bound on its running time.</p>
+
+    <h2>Attack</h2>
+    <p>Fix two different messages $m_0 \ne m_1$ of the same length.</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Query the oracle once: $c_0 \leftarrow \mathsf{Enc}_k(m_0)$.</td></tr>
+      <tr><td>2.</td><td>Output $m_0, m_1$; receive the challenge $c$.</td></tr>
+      <tr><td>3.</td><td>Output $b' = 0$ if $c = c_0$, otherwise $b' = 1$.</td></tr>
+    </table></div>
+
+    <h2>Analysis</h2>
+    <p><b>Case $b = 1$.</b> Then $c$ is an encryption of $m_1$ and $c_0$ an encryption of $m_0$ under the <b>same key</b>. If $c = c_0$, correctness would give $m_1 = \mathsf{Dec}_k(c) = \mathsf{Dec}_k(c_0) = m_0$. So $c \ne c_0$ always, and $\mathcal{A}$ outputs $1$: correct with probability $1$.</p>
+    <p><b>Case $b = 0$.</b> Then $c$ and $c_0$ are two independent encryptions of $m_0$ under $k$. Let $\delta := \Pr[c = c_0 \mid b = 0]$. $\mathsf{Enc}_k(m_0)$ takes values in a finite set (a terminating algorithm uses finitely many coins), so for each fixed $k$</p>
+    $$\Pr[c = c_0 \mid k] = \sum_{x} \Pr[\mathsf{Enc}_k(m_0) = x]^2 \;\gt\; 0,$$
+    <p>and therefore $\delta \gt 0$. $\mathcal{A}$ is correct in this case exactly when $c = c_0$.</p>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] = \tfrac12 \cdot \delta + \tfrac12 \cdot 1 = \tfrac12 + \tfrac{\delta}{2} \;\gt\; \tfrac12.$$
+
+    <div class="box result"><span class="label">Result.</span> One oracle query always gives an advantage $\delta/2 \gt 0$, so no scheme is perfectly CPA-secret. For deterministic encryption $\delta = 1$ and the adversary always wins. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">This is why CPA security is only defined computationally. A randomized scheme with $\delta \le \mathsf{negl}(n)$ (e.g. $\langle r, F_k(r) \oplus m \rangle$ with a fresh $r$) makes this attack useless, but $\delta$ can never be exactly $0$. The adversary does not even need unbounded running time here; the only thing that fails is the requirement "exactly $\frac12$".</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

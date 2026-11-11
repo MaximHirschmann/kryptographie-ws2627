@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 8</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="8">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove an analogue of Theorem 2.7 for the case of "almost perfect" secrecy. That is, let $\varepsilon \lt 1$ be a constant and say we only require that for any distribution over $\mathcal{M}$, any $m \in \mathcal{M}$, and any $c \in \mathcal{C}$:</p>
+    $$\big|\Pr[M = m \mid C = c] - \Pr[M = m]\big| \lt \varepsilon.$$
+    <p>Prove that the same lower bound on the size of the key space $\mathcal{K}$ relative to $\mathcal{M}$ holds for this notion as for perfect secrecy.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box claim"><span class="label">Claim.</span> For every constant $\varepsilon \lt 1$, almost perfect secrecy implies $|\mathcal{K}| \ge |\mathcal{M}|$ (as for perfect secrecy, <a href="../script.html#thm-key-length">key-length theorem in the script</a>).</div>
+
+    <h2>Proof (contrapositive)</h2>
+    <p>Assume $|\mathcal{K}| \lt |\mathcal{M}|$. Fix $m_0 \in \mathcal{M}$, $k_0 \in \mathcal{K}$ and a ciphertext $c$ that $\mathsf{Enc}_{k_0}(m_0)$ can output. The set $\mathcal{M}(c) = \{\mathsf{Dec}_k(c) \mid k \in \mathcal{K}\}$ has at most $|\mathcal{K}| \lt |\mathcal{M}|$ elements, so some $\tilde m \notin \mathcal{M}(c)$ exists. By correctness no key encrypts $\tilde m$ to $c$, and $\tilde m \ne m_0$ (since $\mathsf{Dec}_{k_0}(c) = m_0$).</p>
+    <p>Choose the distribution $\Pr[M = m_0] = 1 - \varepsilon$, $\Pr[M = \tilde m] = \varepsilon$. Then $\Pr[C = c] \gt 0$ (via $m_0, k_0$), but $\Pr[M = \tilde m \mid C = c] = 0$, so</p>
+    $$\big|\Pr[M = \tilde m \mid C = c] - \Pr[M = \tilde m]\big| = \varepsilon \not\lt \varepsilon.$$
+    <p>The scheme is not almost perfectly secret. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The uniform distribution (as in the script's proof) only gives a difference of $1/|\mathcal{M}|$, which may be below $\varepsilon$. Putting weight $\varepsilon$ on $\tilde m$ fixes that. For $\varepsilon \gt 1$ the condition would always hold.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

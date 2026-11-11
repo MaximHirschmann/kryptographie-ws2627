@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 68</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="68">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Give formal definitions of <b>second pre-image resistance</b> and <b>pre-image resistance</b> for a hash function $(\mathsf{Gen}, H)$. Prove that collision resistance implies second pre-image resistance, and that second pre-image resistance implies pre-image resistance.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 4.10 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Setting</h2>
+    <p>$\mathsf{Gen}(1^n)$ outputs a key $s$. $H^s$ maps inputs of length $\ell'(n)$ to outputs of length $\ell(n) \lt \ell'(n)$. (For variable-length hash functions, fix one input length $\ell'(n)$.) For the second implication the function must <b>compress a lot</b>: $\ell'(n) - \ell(n) \ge n$ suffices, and anything $\omega(\log n)$ also works.</p>
+
+    <h2>Definitions</h2>
+    <p><b>Collision resistance</b> (from the lecture): no PPT $\mathcal{A}$ given $s$ outputs $x \ne x'$ with $H^s(x) = H^s(x')$, except with negligible probability.</p>
+    <p><b>Second pre-image experiment</b> $\mathsf{Hash\text{-}2pre}_{\mathcal{A},H}(n)$: $s \leftarrow \mathsf{Gen}(1^n)$, $x \leftarrow \{0,1\}^{\ell'(n)}$ uniform; $\mathcal{A}(s, x)$ outputs $x'$; the output is $1$ iff $x' \ne x$ and $H^s(x') = H^s(x)$.</p>
+    <p><b>Pre-image experiment</b> $\mathsf{Hash\text{-}pre}_{\mathcal{A},H}(n)$: $s \leftarrow \mathsf{Gen}(1^n)$, $x \leftarrow \{0,1\}^{\ell'(n)}$ uniform, $y := H^s(x)$; $\mathcal{A}(s, y)$ outputs $x'$; the output is $1$ iff $H^s(x') = y$.</p>
+    <p>$H$ is second pre-image resistant (pre-image resistant) if every PPT $\mathcal{A}$ wins the respective experiment with only negligible probability.</p>
+    <p class="note">In the pre-image experiment $y$ is the hash of a random input, not a uniformly random string, because a uniform $y$ might have no pre-image at all.</p>
+
+    <h2>Collision resistant ⇒ second pre-image resistant</h2>
+    <p>Let $\mathcal{A}_2$ attack second pre-images. Build $\mathcal{A}_{\mathsf{coll}}(s)$: choose $x \leftarrow \{0,1\}^{\ell'(n)}$, run $x' \leftarrow \mathcal{A}_2(s, x)$, and output $(x, x')$.</p>
+    <p>$\mathcal{A}_2$ sees exactly the distribution of its experiment. Whenever it wins, $x \ne x'$ and $H^s(x) = H^s(x')$, which is a collision. So</p>
+    $$\Pr[\mathsf{Hash\text{-}coll}_{\mathcal{A}_{\mathsf{coll}},H} = 1] = \Pr[\mathsf{Hash\text{-}2pre}_{\mathcal{A}_2,H} = 1],$$
+    <p>and the right-hand side is negligible because the left-hand side is. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>Second pre-image resistant ⇒ pre-image resistant</h2>
+    <p>Let $\mathcal{A}_{\mathsf{pre}}$ find pre-images with probability $\varepsilon(n)$. Build $\mathcal{A}_2(s, x)$: compute $y := H^s(x)$, run $x' \leftarrow \mathcal{A}_{\mathsf{pre}}(s, y)$, and output $x'$.</p>
+    <p>$\mathcal{A}_{\mathsf{pre}}$ gets $(s, H^s(x))$ for uniform $x$, exactly as in its experiment, so $H^s(x') = H^s(x)$ with probability $\varepsilon$. $\mathcal{A}_2$ wins unless $x' = x$. We must show that $\Pr[x' = x]$ is negligible.</p>
+    <p><b>Bounding $\Pr[x' = x]$.</b> $\mathcal{A}_{\mathsf{pre}}$ only sees $y$. Given $y$, the input $x$ is uniform over the pre-image set $H^{-1}(y)$, so $\Pr[x' = x \mid y] \le 1/|H^{-1}(y)|$. Call $x$ <i>lonely</i> if its pre-image set has at most $T$ elements. There are at most $2^{\ell}$ outputs, each with at most $T$ lonely pre-images, so</p>
+    $$\Pr_x[x \text{ lonely}] \le \frac{T \cdot 2^{\ell}}{2^{\ell'}}, \qquad \Pr[x' = x] \le \frac{T \cdot 2^{\ell}}{2^{\ell'}} + \frac{1}{T}.$$
+    <p>Choose $T = 2^{(\ell' - \ell)/2}$: then $\Pr[x' = x] \le 2 \cdot 2^{-(\ell' - \ell)/2} \le 2 \cdot 2^{-n/2}$, which is negligible.</p>
+    $$\Pr[\mathsf{Hash\text{-}2pre}_{\mathcal{A}_2,H} = 1] \ge \varepsilon(n) - 2 \cdot 2^{-n/2}.$$
+    <p>If $H$ is second pre-image resistant, the left side is negligible, so $\varepsilon$ is negligible. <span class="qed">$\blacksquare$</span></p>
+
+    <div class="box result"><span class="label">Result.</span> Collision resistance ⇒ second pre-image resistance ⇒ pre-image resistance. The first step is direct. The second needs enough compression, so that a found pre-image is almost never the original input. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">Why compression is needed: the identity function $H^s(x) = x$ is trivially second pre-image resistant (there is no second pre-image), but not pre-image resistant.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

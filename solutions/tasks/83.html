@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 83</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="83">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Consider any public-key encryption scheme for single-bit messages. Show that an adversary with unlimited computing power, given $pk$ and $c \leftarrow \mathsf{Enc}_{pk}(m)$, can find $m$ with probability $1$. Conclude that perfectly secret public-key encryption is impossible.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 10.1 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Idea</h2>
+    <p>In the private-key setting the adversary does not know the key, so it cannot encrypt. With public keys the adversary can encrypt everything itself. With unlimited time it can list <b>all possible encryptions of 0</b> and check whether $c$ is among them.</p>
+
+    <h2>The adversary</h2>
+    <p>$\mathsf{Enc}$ is a polynomial-time algorithm, so on input $pk$ it uses at most $p(n)$ random bits for some polynomial $p$. Write $\mathsf{Enc}_{pk}(0; r)$ for the encryption with random tape $r$.</p>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{A}(pk, c)$:</td><td></td></tr>
+      <tr><td>1.</td><td>For every $r \in \{0,1\}^{p(n)}$: if $\mathsf{Enc}_{pk}(0; r) = c$, output $0$.</td></tr>
+      <tr><td>2.</td><td>If no $r$ matched, output $1$.</td></tr>
+    </table></div>
+    <p>This takes $2^{p(n)}$ encryptions: exponential, but we put no limit on time.</p>
+
+    <h2>Correctness</h2>
+    <ul>
+      <li><b>If $m = 0$:</b> $c = \mathsf{Enc}_{pk}(0; r^*)$ for the random tape $r^*$ that was actually used, so the search finds a match and $\mathcal{A}$ outputs $0$.</li>
+      <li><b>If $m = 1$:</b> suppose some $r$ gives $\mathsf{Enc}_{pk}(0; r) = c$. Then $c$ is both a possible encryption of $0$ and of $1$ under $pk$. With the matching $sk$, correctness requires $\mathsf{Dec}_{sk}(c) = 0$ and $\mathsf{Dec}_{sk}(c) = 1$, which is impossible. So no $r$ matches and $\mathcal{A}$ outputs $1$.</li>
+    </ul>
+    <p>$\mathcal{A}$ is always right. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>Consequence</h2>
+    <p>In $\mathsf{PubK}^{\mathsf{eav}}$ with $m_0 = 0$ and $m_1 = 1$, this adversary wins with probability $1 \ne \frac12$. So no public-key scheme is perfectly secret. Any security must be <b>computational</b>.</p>
+
+    <div class="box result"><span class="label">Result.</span> Because anyone can encrypt, an unbounded adversary can compare $c$ with all encryptions of $0$. The supports of $\mathsf{Enc}_{pk}(0)$ and $\mathsf{Enc}_{pk}(1)$ are disjoint, so this decides $m$ with certainty. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">An alternative is to search all random tapes of $\mathsf{Gen}$ for some $(pk, sk')$ with the given $pk$ and decrypt with $sk'$. If correctness only holds with overwhelming probability (not perfectly), the adversary still succeeds with probability $1 - \mathsf{negl}(n)$, which is still far from $\frac12$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 96</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="96">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Call a public-key scheme <b>one-way</b> if every PPT adversary that gets $pk$ and an encryption $c$ of a <b>uniform</b> $m \in \{0,1\}^n$ outputs $m$ with only negligible probability.</p>
+    <ol type="a">
+      <li>In the random oracle model, construct a CPA-secure scheme from any one-way scheme.</li>
+      <li>Can a scheme with <b>deterministic</b> encryption be one-way? Give a proof, or a construction based on an assumption from the lecture.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 13.5 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>(a) From one-way to CPA-secure</h2>
+    <p>Let $\Pi = (\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ be one-way and $H : \{0,1\}^n \to \{0,1\}^{\ell}$ a random oracle. Encrypt a random string with $\Pi$ and use its hash as a one-time pad:</p>
+    <div class="algo"><table>
+      <tr><td>Gen'</td><td>same as $\mathsf{Gen}$</td></tr>
+      <tr><td>Enc'</td><td>$r \leftarrow \{0,1\}^n$; output $\langle c_1, c_2 \rangle = \langle \mathsf{Enc}_{pk}(r),\; H(r) \oplus m \rangle$ for $m \in \{0,1\}^\ell$</td></tr>
+      <tr><td>Dec'</td><td>$r := \mathsf{Dec}_{sk}(c_1)$; output $H(r) \oplus c_2$</td></tr>
+    </table></div>
+
+    <h3>Proof</h3>
+    <p>Let $\mathcal{A}$ be a PPT adversary in $\mathsf{PubK}^{\mathsf{eav}}$ (which equals CPA for public-key schemes) making $q$ queries to $H$. Let $r^*$ be the random string in the challenge and $\mathsf{Query}$ the event that $\mathcal{A}$ queries $H(r^*)$.</p>
+    <p><b>Without $\mathsf{Query}$, $\mathcal{A}$ only guesses.</b> If $\mathcal{A}$ never asks for $H(r^*)$, that value is uniform and independent of its view, so $c_2 = H(r^*) \oplus m_b$ is a one-time pad and $\Pr[b' = b \mid \neg\mathsf{Query}] = \frac12$. Hence</p>
+    $$\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A},\Pi'} = 1] \le \tfrac12 + \Pr[\mathsf{Query}].$$
+    <p><b>$\mathsf{Query}$ inverts $\Pi$.</b> Build $\mathcal{I}$ for the one-way experiment, which gets $(pk, c)$ with $c = \mathsf{Enc}_{pk}(r^*)$ for uniform $r^*$:</p>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Run $\mathcal{A}(pk)$ and answer its $H$-queries with fresh random values, kept in a table.</td></tr>
+      <tr><td>2.</td><td>When $\mathcal{A}$ outputs $m_0, m_1$, give it $\langle c, s \rangle$ for a uniform $s \in \{0,1\}^\ell$.</td></tr>
+      <tr><td>3.</td><td>When $\mathcal{A}$ stops, output a uniformly chosen one of its $q$ $H$-queries.</td></tr>
+    </table></div>
+    <p>Until $\mathcal{A}$ queries $r^*$, this is a perfect simulation (implicitly $H(r^*) := s \oplus m_b$). So $\mathsf{Query}$ has the same probability here as in the real experiment, and</p>
+    $$\Pr[\mathcal{I} \text{ outputs } r^*] \ge \frac{\Pr[\mathsf{Query}]}{q}.$$
+    <p>By one-wayness the left side is negligible, so $\Pr[\mathsf{Query}] \le q \cdot \mathsf{negl}(n)$ is negligible too, and $\Pi'$ is CPA-secure. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>(b) Deterministic one-way encryption exists</h2>
+    <p><b>Yes.</b> One-wayness only asks that a <i>uniform</i> message cannot be recovered <i>completely</i>. Deterministic encryption breaks CPA security (<a href="84.html">Question 84</a>), but not this weaker goal.</p>
+    <p><b>Construction: textbook RSA.</b> $\mathsf{Enc}_{(N,e)}(m) = m^e \bmod N$ is deterministic. Its one-wayness for uniform messages in $\mathbb{Z}_N^*$ is exactly the RSA assumption: an adversary recovering $m$ from $m^e$ solves the RSA problem for $y = m^e$, which is uniform in $\mathbb{Z}_N^*$.</p>
+    <p class="note">To match the message space $\{0,1\}^n$, choose $N$ with $2^n \lt N \lt 2^{n+1}$ and treat $m \in \{0,1\}^n$ as a number below $N$. An RSA inverter gets a uniform $y$; if it is not of the form $m^e$ with $m \lt 2^n$, we cannot use the one-way adversary directly. Instead, re-randomize: $y \cdot s^e$ for random $s$ until the decryption would be a valid message, which happens after an expected constant number of tries since at least half of $\mathbb{Z}_N$ is below $2^n$. Then divide the answer by $s$.</p>
+    <p>Plugging textbook RSA into (a) gives $\langle r^e \bmod N,\ H(r) \oplus m \rangle$, the CPA-secure RSA scheme in the random oracle model.</p>
+
+    <div class="box result"><span class="label">Result.</span> (a) $\langle \mathsf{Enc}_{pk}(r), H(r) \oplus m \rangle$ is CPA-secure in the random oracle model: learning anything about $m$ requires querying $H(r)$, i.e. inverting $\Pi$. (b) Yes: textbook RSA is deterministic and one-way under the RSA assumption. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

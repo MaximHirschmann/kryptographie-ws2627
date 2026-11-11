@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 33</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="33">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>In this method (encrypt and authenticate), encryption and message authentication are computed independently. That is, given a plaintext $m$, the sender transmits $\langle c, t \rangle$ where:</p>
+    $$c \leftarrow \mathsf{Enc}_{k_1}(m) \quad \text{and} \quad t \leftarrow \mathsf{Mac}_{k_2}(m).$$
+    <p>Show that if any message authentication code having unique tags is used in the encrypt-and-authenticate approach, the resulting combination is not CPA-secure.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Problem</h2>
+    <p>With <b>unique tags</b>, every message has exactly one valid tag, so $\mathsf{Mac}_{k_2}$ is deterministic. The tag is computed on the <i>plaintext</i> and sent in the clear, so equal plaintexts give equal tags. This reveals when the same message is sent twice, regardless of how good $\mathsf{Enc}$ is.</p>
+
+    <h2>CPA attack</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Choose two different messages $m_0 \ne m_1$ of equal length. Query the encryption oracle on $m_0$ and receive $\langle c, t_0 \rangle$ with $t_0 = \mathsf{Mac}_{k_2}(m_0)$.</td></tr>
+      <tr><td>2.</td><td>Output the challenge pair $m_0, m_1$ and receive $\langle c^*, t^* \rangle$ with $t^* = \mathsf{Mac}_{k_2}(m_b)$.</td></tr>
+      <tr><td>3.</td><td>Output $b' = 0$ if $t^* = t_0$, otherwise $b' = 1$.</td></tr>
+    </table></div>
+
+    <h2>Analysis</h2>
+    <ul>
+      <li>$b = 0$: $t^* = \mathsf{Mac}_{k_2}(m_0) = t_0$, since the tag is unique. The attacker is always right.</li>
+      <li>$b = 1$: the attacker is wrong only if $\mathsf{Mac}_{k_2}(m_1) = \mathsf{Mac}_{k_2}(m_0)$. That can only happen with negligible probability. Otherwise, after one query on $m_0$, an adversary could output $(m_1, t_0)$ as a forgery, which contradicts the security of the MAC.</li>
+    </ul>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A}}(n) = 1] \ \ge\ \tfrac12 \cdot 1 + \tfrac12 \big(1 - \mathsf{negl}(n)\big) = 1 - \mathsf{negl}(n). \qquad \blacksquare$$
+    <p class="note">A secure MAC protects integrity, not secrecy. A MAC tag may even reveal parts of the message. The recommended combination is <b>encrypt-then-MAC</b>: $t \leftarrow \mathsf{Mac}_{k_2}(c)$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

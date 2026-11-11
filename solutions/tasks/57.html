@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 57</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="57">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Call a scheme <i>perfectly secret for two messages</i> if two messages $M, M'$, drawn independently from the same distribution over $\mathcal{M}$ and encrypted <b>with the same key</b> to $C, C'$, satisfy</p>
+    $$\Pr[M = m \wedge M' = m' \mid C = c \wedge C' = c'] = \Pr[M = m \wedge M' = m']$$
+    <p>for all distributions, all $m, m' \in \mathcal{M}$ and all $c, c'$ with $\Pr[C = c \wedge C' = c'] \gt 0$. Prove that no encryption scheme satisfies this definition.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 2.9 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Idea</h2>
+    <p>Both ciphertexts are decrypted with the same key. So if the two ciphertexts are <b>equal</b>, the two messages must be equal too. Seeing $C = C'$ therefore tells the adversary that $M = M'$, which is information about the messages.</p>
+
+    <h2>Proof</h2>
+    <p>Let $|\mathcal{M}| \ge 2$ (otherwise there is nothing to encrypt) and take the uniform distribution over $\mathcal{M}$. Fix $m \ne m'$, so $\Pr[M = m \wedge M' = m'] = 1/|\mathcal{M}|^2 \gt 0$.</p>
+
+    <h3>Step 1: equal ciphertexts happen with positive probability</h3>
+    <p>Fix a key $k$ and a message $\hat m$. $\mathsf{Enc}_k(\hat m)$ is a distribution over the finite set $\mathcal{C}$. Two independent encryptions of $\hat m$ under $k$ are equal with probability</p>
+    $$\sum_{c} \Pr[\mathsf{Enc}_k(\hat m) = c]^2 \;\ge\; \frac{1}{|\mathcal{C}|} \gt 0$$
+    <p>(by Cauchy–Schwarz; if $\mathsf{Enc}$ is deterministic it is even $1$). The event $M = M' = \hat m$ has probability $1/|\mathcal{M}|^2 \gt 0$. Hence $\Pr[C = C'] \gt 0$, and there is some $c^*$ with $\Pr[C = c^* \wedge C' = c^*] \gt 0$.</p>
+
+    <h3>Step 2: given $C = C' = c^*$, the messages are equal</h3>
+    <p>Let $k$ be the key that was used. By correctness, $M = \mathsf{Dec}_k(C)$ and $M' = \mathsf{Dec}_k(C')$, and $\mathsf{Dec}$ is deterministic. If $C = C' = c^*$, then $M = \mathsf{Dec}_k(c^*) = M'$. So</p>
+    $$\Pr[M = m \wedge M' = m' \mid C = c^* \wedge C' = c^*] = 0 \quad \text{since } m \ne m'.$$
+
+    <h3>Step 3: contradiction</h3>
+    $$0 = \Pr[M = m \wedge M' = m' \mid C = C' = c^*] \ne \Pr[M = m \wedge M' = m'] = \frac{1}{|\mathcal{M}|^2}.$$
+
+    <div class="box result"><span class="label">Result.</span> Every scheme violates the definition for the uniform distribution, two different messages $m \ne m'$ and a ciphertext pair $(c^*, c^*)$. No scheme is perfectly secret for two messages under the same key. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">The book's hint uses the opposite view, which is shorter for deterministic $\mathsf{Enc}$: take $m = m'$ and $c \ne c'$. A deterministic scheme encrypts the same message twice to the same ciphertext, so $\Pr[M = M' = m \mid C = c, C' = c'] = 0 \ne \Pr[M = M' = m]$. The proof above also covers randomized encryption. The lesson matches the one-time pad: a key must only be used once (see the script, §5.3).</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

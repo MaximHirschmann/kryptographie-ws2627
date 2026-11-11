@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 40</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="40">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>DES has the so-called complementarity property. This means that</p>
+    $$\mathrm{DES}_k(x) = \overline{\mathrm{DES}_{\overline k}(\overline x)}$$
+    <p>for $k \in \mathcal{K}$ and $x \in \mathcal{M}$. Show that it is possible to find the secret key in DES (with probability 1) using $2^{55}$ local computations of DES.</p>
+    <p><i>Hint: Use a chosen-plaintext attack with two carefully chosen plaintexts.</i></p>
+  </div>
+
+  <div class="solution">
+    <h2>Chosen plaintexts</h2>
+    <p>Choose any $x$ and ask for the encryptions of $x$ and $\overline x$:</p>
+    $$y_1 := \mathrm{DES}_k(x), \qquad y_2 := \mathrm{DES}_k(\overline x).$$
+    <p>By the complementarity property (<a href="39.html">Question 39</a>), the encryption of $x$ under the <b>complementary key</b> is also known:</p>
+    $$\mathrm{DES}_{\overline k}(x) = \overline{\mathrm{DES}_{k}(\overline x)} = \overline{y_2}.$$
+
+    <h2>Search over half the keys</h2>
+    <p>The key space $\{0,1\}^{56}$ splits into $2^{55}$ pairs $\{k', \overline{k'}\}$. Exactly one key of each pair starts with $0$. For each of these $2^{55}$ keys $k'$, compute <b>one</b> DES encryption $z := \mathrm{DES}_{k'}(x)$:</p>
+    <ul>
+      <li>if $z = y_1$: $k'$ is a candidate for $k$;</li>
+      <li>if $z = \overline{y_2}$: then $\mathrm{DES}_{k'}(x) = \mathrm{DES}_{\overline k}(x)$, so $\overline{k'}$ is a candidate for $k$.</li>
+    </ul>
+    <p>One encryption under $k'$ tests both $k'$ and $\overline{k'}$. So $2^{55}$ DES computations cover all $2^{56}$ keys, and the true key is always among the candidates.</p>
+
+    <h2>Correctness</h2>
+    <p>The true key $k$ is never missed. If $k$ starts with $0$, it is found as $k' = k$ via $z = y_1$. Otherwise $\overline k$ starts with $0$, and for $k' = \overline k$ we get $z = \mathrm{DES}_{\overline k}(x) = \overline{y_2}$, which yields $\overline{k'} = k$. A wrong key that happens to map $x$ to the same value gives a false candidate. Such candidates are rare (about $2^{56-64}$ expected) and are removed by checking them against the second pair, or against one more known pair. This costs only a handful of extra DES computations. So the key is found with probability $1$ using about $2^{55}$ DES evaluations, half of a naive exhaustive search. <span class="qed">$\blacksquare$</span></p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<!-- Copy this file to NN.html, set data-task, fill in the question and solution,
+     then set solved: true for the task in assets/tasks.js.
+     Math: $inline$ and $$display$$ (KaTeX). Write < as \lt inside math. -->
+<body data-task="0">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Task statement from excercises.pdf.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Solution</h2>
+
+    <div class="box claim"><span class="label">Claim.</span> …</div>
+
+    <h3>Step 1</h3>
+    <p>…</p>
+    $$ \Pr[K = k] $$
+
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>…</td></tr>
+      <tr><td>Enc</td><td>…</td></tr>
+      <tr><td>Dec</td><td>…</td></tr>
+    </table></div>
+
+    <div class="box result"><span class="label">Result.</span> … <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

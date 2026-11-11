@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 64</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="64">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $F$ be a pseudorandom function and $k \in \{0,1\}^n$ the shared key. Show that each of these MACs is insecure:</p>
+    <ol type="a">
+      <li>For $m = m_1 \cdots m_\ell$ with $m_i \in \{0,1\}^n$: $t := F_k(m_1) \oplus \cdots \oplus F_k(m_\ell)$.</li>
+      <li>Same blocks, but choose $r \leftarrow \{0,1\}^n$, set $t := F_k(r) \oplus F_k(m_1) \oplus \cdots \oplus F_k(m_\ell)$ and send $\langle r, t \rangle$.</li>
+      <li>Blocks $m_i \in \{0,1\}^{n/2}$; choose $r \leftarrow \{0,1\}^n$, set $t := F_k(r) \oplus F_k(\langle 1 \rangle \| m_1) \oplus \cdots \oplus F_k(\langle \ell \rangle \| m_\ell)$, where $\langle i \rangle$ is the $n/2$-bit encoding of $i$, and send $\langle r, t \rangle$.</li>
+    </ol>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 4.4 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Common idea</h2>
+    <p>All three tags are XORs of PRF values. If the same PRF input appears <b>twice</b> in the sum, the two terms cancel: $F_k(x) \oplus F_k(x) = 0^n$. The adversary picks inputs so that every term cancels and the valid tag is $0^n$, without knowing $k$ and <b>without any oracle query</b>. Each forgery is valid with probability $1$, so each MAC is broken.</p>
+
+    <h2>(a)</h2>
+    <p>Output the message $m^* = x \| x$ for any block $x$, with tag $t^* = 0^n$:</p>
+    $$\mathsf{Mac}_k(x \| x) = F_k(x) \oplus F_k(x) = 0^n.$$
+    <p class="note">Other attacks: XOR is commutative, so after querying $m_1 \| m_2$ the same tag is valid for $m_2 \| m_1$. Also, the tags of $x\|y$, $x$ and $y$ satisfy $t_{xy} = t_x \oplus t_y$.</p>
+
+    <h2>(b)</h2>
+    <p>The random $r$ is chosen by the sender, but the <b>forger</b> may put any $r$ into its forgery. Output the one-block message $m^* = x$ with $\langle r^*, t^* \rangle = \langle x, 0^n \rangle$:</p>
+    $$F_k(r^*) \oplus F_k(m_1) = F_k(x) \oplus F_k(x) = 0^n.$$
+
+    <h2>(c)</h2>
+    <p>The counters $\langle i \rangle$ prevent repeated block terms, but the term $F_k(r)$ is <b>not separated</b> from the block terms: $r$ is an $n$-bit string and so is $\langle i \rangle \| m_i$. Output the one-block message $m^* = x$ (with $x \in \{0,1\}^{n/2}$) and</p>
+    $$r^* := \langle 1 \rangle \| x, \qquad t^* := 0^n.$$
+    $$\text{Verification: } F_k(r^*) \oplus F_k(\langle 1 \rangle \| x) = F_k(\langle 1 \rangle \| x) \oplus F_k(\langle 1 \rangle \| x) = 0^n. \checkmark$$
+
+    <div class="box result"><span class="label">Result.</span> All three MACs allow a forgery with tag $0^n$ and no queries: (a) $x \| x$; (b) message $x$ with $r = x$; (c) message $x$ with $r = \langle 1\rangle \| x$. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">Construction (c) is almost the XOR-MAC of Bellare, Guérin and Rogaway. Their version is secure because it uses <i>domain separation</i>: $F_k(0 \| r) \oplus \bigoplus_i F_k(1 \| \langle i \rangle \| m_i)$. With the extra prefix bit, the nonce term can never equal a block term. The general lesson: when you combine PRF values, make sure different roles use disjoint input sets.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

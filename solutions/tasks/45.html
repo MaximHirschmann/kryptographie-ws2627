@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 45</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="45">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Consider the following key-exchange protocol:</p>
+    <ol>
+      <li>Alice chooses $k, r \leftarrow \{0,1\}^n$ at random, and sends $s := k \oplus r$ to Bob.</li>
+      <li>Bob chooses $t \leftarrow \{0,1\}^n$ at random and sends $u := s \oplus t$ to Alice.</li>
+      <li>Alice computes $w := u \oplus r$ and sends $w$ to Bob.</li>
+      <li>Alice outputs $k$ and Bob computes $w \oplus t$.</li>
+    </ol>
+    <p>Show that Alice and Bob output the same key. Analyze the security of the scheme (i.e., either prove its security or show a concrete attack).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Correctness</h2>
+    $$w \oplus t = (u \oplus r) \oplus t = (k \oplus r \oplus t) \oplus r \oplus t = k.$$
+    <p>So Bob outputs $k$, the same key as Alice.</p>
+
+    <h2>Security: completely insecure</h2>
+    <p>An eavesdropper sees the whole transcript $(s, u, w)$. XORing the three messages gives</p>
+    $$s \oplus u \oplus w = (k \oplus r) \oplus (k \oplus r \oplus t) \oplus (k \oplus t) = k.$$
+    <p>Every mask $r$ and $t$ appears exactly twice and cancels, and $k$ appears three times, so it remains.</p>
+
+    <h3>Attack in $\mathsf{KE}^{\mathsf{eav}}$</h3>
+    <p>As in the lecture's experiment (<a href="46.html">Question 46</a>), $\mathcal{A}$ gets the transcript $(s, u, w)$ and $k_b$, where $k_1 = k$ is the real key and $k_0$ is uniform. $\mathcal{A}$ outputs $b' = 1$ iff $k_b = s \oplus u \oplus w$.</p>
+    $$\Pr[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] = \tfrac12 \cdot 1 + \tfrac12 \cdot (1 - 2^{-n}) = 1 - 2^{-(n+1)}.$$
+    <p>This is far from $\frac12$, so the protocol is not secure. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The idea is the "double lock" (Shamir's three-pass protocol): Alice locks the box, Bob adds his lock, Alice removes hers, Bob removes his. This needs locks that commute but <i>cannot be removed by combining the transcripts</i>, such as exponentiation $k^{a}$, $k^{ab}$, $k^{b}$ modulo $p$. XOR is commutative too, but it is linear, so the transcripts can simply be XORed together.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

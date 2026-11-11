@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 23</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="23">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $\Pi'$ and $\Pi''$ be two private-key encryption schemes for which it is known that at least one of them is CPA-secure. However, you do not know which are the CPA-secure ones. Construct a CPA-secure encryption scheme $\Pi$, which uses $\Pi', \Pi''$, while not knowing which of the two is CPA-secure. Prove that your $\Pi$ is CPA-secure.</p>
+    <p><i>Hint: Generate two plaintext messages from the original plaintext so that knowledge of either one of the parts reveals nothing about the plaintext, but knowledge of both does yield the original plaintext.</i></p>
+    <p>It is sufficient to give half the proof, that is, to give a proof assuming that $\Pi'$ is CPA-secure. Note that, to complete the proof, one would have to show also that the construction is CPA-secure if one assumes that $\Pi''$ is CPA-secure.</p>
+  </div>
+
+  <div class="solution">
+    <h2>Construction: secret-share the message</h2>
+    <p>Split $m$ into two XOR shares $r$ and $r \oplus m$. Each share on its own is uniformly random, but together they give $m$. Encrypt one share with each scheme.</p>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>$k' \leftarrow \mathsf{Gen}'(1^n)$, $k'' \leftarrow \mathsf{Gen}''(1^n)$; output $k = (k', k'')$</td></tr>
+      <tr><td>Enc</td><td>input $k$, $m$: &nbsp; $r \leftarrow \{0,1\}^{|m|}$; &nbsp; $c' \leftarrow \mathsf{Enc}'_{k'}(r)$; &nbsp; $c'' \leftarrow \mathsf{Enc}''_{k''}(r \oplus m)$; &nbsp; output $\langle c', c'' \rangle$</td></tr>
+      <tr><td>Dec</td><td>input $k$, $\langle c', c'' \rangle$: &nbsp; output $\mathsf{Dec}'_{k'}(c') \oplus \mathsf{Dec}''_{k''}(c'')$</td></tr>
+    </table></div>
+    <p><b>Correctness:</b> $r \oplus (r \oplus m) = m$.</p>
+
+    <h2>Proof (assuming $\Pi'$ is CPA-secure)</h2>
+    <p>Let $\mathcal{A}$ be a PPT adversary attacking $\Pi$. We build $\mathcal{A}'$ attacking $\Pi'$. $\mathcal{A}'$ has an encryption oracle for $\mathsf{Enc}'_{k'}$ and generates $k'' \leftarrow \mathsf{Gen}''(1^n)$ <b>itself</b>.</p>
+    <div class="algo"><table>
+      <tr><td>Oracle</td><td>When $\mathcal{A}$ asks for the encryption of $m$: choose $r \leftarrow \{0,1\}^{|m|}$, get $c' \leftarrow \mathsf{Enc}'_{k'}(r)$ from the own oracle, compute $c'' \leftarrow \mathsf{Enc}''_{k''}(r \oplus m)$ with the own key, and return $\langle c', c'' \rangle$.</td></tr>
+      <tr><td>Challenge</td><td>When $\mathcal{A}$ outputs $m_0, m_1$: choose $s \leftarrow \{0,1\}^{|m_0|}$ and output the pair $(s \oplus m_0,\ s \oplus m_1)$ as $\mathcal{A}'$'s own challenge. Receive $c'^* \leftarrow \mathsf{Enc}'_{k'}(s \oplus m_b)$, compute $c''^* \leftarrow \mathsf{Enc}''_{k''}(s)$, and give $\langle c'^*, c''^* \rangle$ to $\mathcal{A}$.</td></tr>
+      <tr><td>Output</td><td>Keep answering queries as above. Output whatever bit $b'$ $\mathcal{A}$ outputs.</td></tr>
+    </table></div>
+
+    <h3>The simulation is perfect</h3>
+    <ul>
+      <li>Oracle answers are real $\Pi$-encryptions.</li>
+      <li>The challenge is a real encryption of $m_b$ with the share $r := s \oplus m_b$. This $r$ is uniform because $s$ is uniform, and $r \oplus m_b = s$, so $c''^*$ encrypts exactly the right second share.</li>
+      <li>$|s \oplus m_0| = |s \oplus m_1|$, so $\mathcal{A}'$'s challenge pair is valid.</li>
+    </ul>
+    <p>Hence $\mathcal{A}$'s view is distributed exactly as in $\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}$ with the same bit $b$, and</p>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] = \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A}',\Pi'}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
+    <p>$\mathcal{A}'$ is PPT, so $\Pi$ is CPA-secure. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The other half is symmetric. If $\Pi''$ is CPA-secure, $\mathcal{A}''$ generates $k'$ itself, puts the fresh uniform share $s$ under $\Pi'$, and sends the challenge pair $(s \oplus m_0, s \oplus m_1)$ to its $\Pi''$ challenger. The construction works without knowing which scheme is secure, because one uniformly random share reveals nothing about $m$.</p>
+
+    <h2>The lecture's version (00_header.pdf, Theorem 1)</h2>
+    <p>The lecture uses the same construction ($\mathsf{Enc}_{k'}(r)$, $\mathsf{Enc}_{k''}(m \oplus r)$ with $r \leftarrow \{0,1\}^n$) and proves the contrapositive with advantage $\epsilon(n) := \big|\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] - \frac12\big|$. For Case 1 ($\Pi'$ secure) it argues differently: instead of re-randomising the challenge, $\mathcal{A}'$ asks its challenger to encrypt <b>either the real share or $0^n$</b>.</p>
+    <div class="algo"><table>
+      <tr><td>Ask</td><td>$k'' \leftarrow \mathsf{Gen}''(1^n)$; $r \leftarrow \{0,1\}^n$; output the pair $(r,\ 0^n)$.</td></tr>
+      <tr><td>Guess</td><td>On $c_1$: $m_0, m_1 \leftarrow \mathcal{A}$; $b \leftarrow \{0,1\}$; $c_2 \leftarrow \mathsf{Enc}''_{k''}(m_b \oplus r)$; $b' \leftarrow \mathcal{A}(c_1, c_2)$; output $0$ iff $b = b'$.</td></tr>
+      <tr><td>Oracle</td><td>On $m^i$: $r^i \leftarrow \{0,1\}^n$; $c^i_1 \leftarrow \mathsf{Enc}'(r^i)$ via the own oracle; $c^i_2 \leftarrow \mathsf{Enc}''_{k''}(m^i \oplus r^i)$.</td></tr>
+    </table></div>
+    <p>If the challenger encrypted $r$ ($\hat b = 0$), $\mathcal{A}$ sees a real $\Pi$-encryption and wins with probability $\frac12 + \epsilon(n)$. If it encrypted $0^n$ ($\hat b = 1$), $c_1$ says nothing about $r$, so $c_2$ is a one-time pad encryption of $m_b$ and $\mathcal{A}$ wins with probability exactly $\frac12$. Hence</p>
+    $$\tfrac12 + \mathsf{negl}(n) \ \ge\ \tfrac12\Big(\tfrac12 + \epsilon(n)\Big) + \tfrac12 \cdot \tfrac12 = \tfrac12 + \tfrac12\epsilon(n) \quad\Longrightarrow\quad \epsilon(n) \le 2\,\mathsf{negl}(n).$$
+    <p>Case 2 ($\Pi''$ secure) in the lecture is the direct re-randomisation: $\mathcal{A}''$ outputs $(m_0 \oplus r, m_1 \oplus r)$ and adds $c_1 \leftarrow \mathsf{Enc}_{k'}(r)$ itself. That is exactly the argument used above, applied to the other scheme. Both styles are valid; the version above simulates perfectly, the lecture's Case 1 uses a hybrid with $0^n$.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

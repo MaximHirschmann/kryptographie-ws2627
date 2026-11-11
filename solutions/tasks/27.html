@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 27</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="27">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $G$ be a pseudorandom generator where $|G(s)| \gt 2|s|$.</p>
+    <ol>
+      <li>Is $G'(s) = G(s 0^{|s|})$ necessarily a pseudorandom generator?</li>
+      <li>Is $G'(s) := G(s_1 \cdots s_{n/2})$, where $s = s_1 \cdots s_n$, necessarily a pseudorandom generator?</li>
+    </ol>
+  </div>
+
+  <div class="solution">
+    <h2>1. $G'(s) = G(s\,0^{|s|})$: no, not necessarily</h2>
+    <p>$G'$ feeds $G$ a seed that is <b>not uniform</b>: its second half is always $0^n$. A PRG only guarantees pseudorandom output for uniform seeds, so it may behave badly on this tiny set of seeds.</p>
+    <p><b>Counterexample.</b> Let $\hat G$ be any PRG with $|\hat G(s)| \gt 2|s|$, and define on seeds $x \| y$ with $|x| = |y|$:</p>
+    $$G(x \| y) := \begin{cases} 0^{\ell} & \text{if } y = 0^{|y|}, \\ \hat G(x \| y) & \text{otherwise.} \end{cases}$$
+    <ul>
+      <li><b>$G$ is a PRG:</b> for a uniform seed, $y = 0^{|y|}$ happens only with probability $2^{-|y|}$, which is negligible. Otherwise $G$ behaves like $\hat G$, so any distinguisher's advantage changes by at most a negligible amount.</li>
+      <li><b>$G'$ is not a PRG:</b> $G'(s) = G(s \| 0^{|s|}) = 0^{\ell}$ for every seed. The distinguisher "output $1$ iff the input is all zeros" has advantage $1 - 2^{-\ell}$.</li>
+    </ul>
+
+    <h2>2. $G'(s) = G(s_1 \cdots s_{n/2})$: yes</h2>
+    <p><b>Expansion:</b> $|G'(s)| = |G(s_1 \cdots s_{n/2})| \gt 2 \cdot \frac n2 = n = |s|$.</p>
+    <p><b>Pseudorandomness:</b> if $s$ is uniform in $\{0,1\}^n$, its first half $s' := s_1 \cdots s_{n/2}$ is uniform in $\{0,1\}^{n/2}$. Let $D$ be a PPT distinguisher for $G'$. Then $D$ itself distinguishes $G$ at seed length $n/2$:</p>
+    $$\Big|\Pr[D(G'(s)) = 1] - \Pr[D(r) = 1]\Big| = \Big|\Pr_{s' \leftarrow \{0,1\}^{n/2}}[D(G(s')) = 1] - \Pr[D(r) = 1]\Big| \le \mathsf{negl}(n/2).$$
+    <p>$n \mapsto \mathsf{negl}(n/2)$ is negligible in $n$. For any polynomial $p$, apply the definition with the polynomial $p(2m)$: $\mathsf{negl}(m) \lt \frac{1}{p(2m)}$ for large $m$, i.e. $\mathsf{negl}(n/2) \lt \frac{1}{p(n)}$. So $G'$ is a PRG. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The difference: in part 2 the bits that are thrown away are simply ignored, and the bits that are used are still uniform. In part 1 half of the seed $G$ receives is fixed, so it is no longer uniform.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

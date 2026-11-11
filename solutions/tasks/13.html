@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 13</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="13">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove or refute: Every encryption scheme for which the size of the key space equals the size of the message space, and for which the key is chosen uniformly from the key space, is perfectly secret.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box result"><span class="label">Answer.</span> <b>False.</b> $|\mathcal{K}| = |\mathcal{M}|$ and a uniform key are necessary for this kind of scheme, but not enough. Shannon's theorem (script <a href="../script.html#thm-shannon">Theorem 7</a>) also requires that, for every pair $(m, c)$, <b>exactly one</b> key maps $m$ to $c$. The encryption has to actually use the key.</div>
+
+    <h2>Counterexample 1: a scheme that ignores the key</h2>
+    <p>Let $\mathcal{M} = \mathcal{K} = \mathcal{C} = \{0,1\}^\ell$ and define</p>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>$k \leftarrow \{0,1\}^\ell$ uniformly; output $k$</td></tr>
+      <tr><td>Enc</td><td>input $k$, $m$; output $c := m$</td></tr>
+      <tr><td>Dec</td><td>input $k$, $c$; output $m := c$</td></tr>
+    </table></div>
+    <p>The scheme is correct, $|\mathcal{K}| = |\mathcal{M}| = 2^\ell$, and the key is uniform. But for any $m_0 \ne m_1$ and $c = m_0$:</p>
+    $$\Pr[C = c \mid M = m_0] = 1 \ne 0 = \Pr[C = c \mid M = m_1].$$
+    <p>This violates the script's <a href="../script.html#def-ps-3">Definition 5</a>, so the scheme is not perfectly secret. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>Counterexample 2: a scheme that uses the key, but not fully</h2>
+    <p>The first example might look like cheating, so here is one where the key is used. Let $\mathcal{M} = \mathcal{K} = \mathcal{C} = \{0,1\}^2$, with $\mathsf{Gen}$ uniform, and</p>
+    $$\mathsf{Enc}_{k_1 k_2}(m_1 m_2) := (m_1 \oplus k_1) \, (m_2 \oplus k_1).$$
+    <p>The second key bit is never used. Decryption works: $\mathsf{Dec}_{k}(c_1 c_2) = (c_1 \oplus k_1)(c_2 \oplus k_1)$. However, $c_1 \oplus c_2 = m_1 \oplus m_2$ is always visible. For example, the ciphertext $00$ can only come from $00$ or $11$:</p>
+    $$\Pr[C = 00 \mid M = 01] = 0 \ne \tfrac12 = \Pr[C = 00 \mid M = 00].$$
+    <p>Here, two keys ($k_2 = 0$ and $k_2 = 1$) map $m$ to the same $c$, so the uniqueness condition of Shannon's theorem fails.</p>
+
+    <p class="note">By Shannon's theorem, for $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}|$: perfect secrecy $\iff$ uniform key <b>and</b> a unique key for every $(m, c)$. The question only gives the first condition.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 84</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="84">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>A deterministic public-key encryption scheme is used to encrypt a message $m$ that is known to come from a small set of $L$ possible values. Show how to find $m$ in time linear in $L$ (one encryption takes one unit of time).</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 10.2 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Attack</h2>
+    <p>Let $S = \{m_1, \dots, m_L\}$ be the set of possible messages and $c = \mathsf{Enc}_{pk}(m)$.</p>
+    <div class="algo"><table>
+      <tr><td>For</td><td>$i = 1, \dots, L$: compute $c_i := \mathsf{Enc}_{pk}(m_i)$; if $c_i = c$, output $m_i$.</td></tr>
+    </table></div>
+    <p><b>Time:</b> $L$ encryptions and $L$ comparisons, i.e. $O(L)$.</p>
+    <p><b>Correctness:</b> since $\mathsf{Enc}$ is deterministic, encrypting the true $m$ gives exactly $c$, so the loop finds it. No other $m_j \ne m$ can give $c$: by correctness $\mathsf{Dec}_{sk}(c)$ has only one value, so a deterministic $\mathsf{Enc}_{pk}$ is injective. The answer is unique. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>Examples</h2>
+    <ul>
+      <li>A vote "yes"/"no" ($L = 2$): two encryptions reveal it.</li>
+      <li>A salary in whole euros up to 1,000,000: at most $10^6$ encryptions, a few seconds of work.</li>
+      <li>Textbook RSA $c = m^e \bmod N$ is deterministic, so it is vulnerable in exactly this way.</li>
+    </ul>
+
+    <div class="box result"><span class="label">Result.</span> With a deterministic public-key scheme the adversary can "encrypt and compare" every candidate, which recovers $m$ in time $O(L)$. Hence a deterministic public-key scheme can never be CPA-secure (or even EAV-secure in the public-key setting): choose $m_0 \ne m_1$, encrypt both and compare with the challenge. Public-key encryption must be randomized. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

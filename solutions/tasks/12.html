@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 12</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="12">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>In this exercise, we study the conditions under which the shift, mono-alphabetic substitution, and Vigenère ciphers are perfectly secret:</p>
+    <ol>
+      <li>Prove that if only a single character is encrypted, then the shift cipher is perfectly secret.</li>
+      <li>What is the largest plaintext space $\mathcal{M}$ you can find for which the mono-alphabetic substitution cipher provides perfect secrecy? (Note: $\mathcal{M}$ need not contain only valid English words.)</li>
+      <li>Show how to use the Vigenère cipher to encrypt any word of length $t$ so that perfect secrecy is obtained (note: you can choose the length of the key). Prove your answer.</li>
+    </ol>
+    <p>Reconcile this with the attacks that were shown in the previous chapter.</p>
+  </div>
+
+  <div class="solution">
+    <p class="note">Main tool: <b>Shannon's theorem</b> (script <a href="../script.html#thm-shannon">Theorem 7</a>). If $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}|$, the scheme is perfectly secret if and only if (1) $\mathsf{Gen}$ chooses every key with probability $\frac{1}{|\mathcal{K}|}$, and (2) for every $m, c$ there is exactly one key $k$ with $c = \mathsf{Enc}_k(m)$. Notation as in <a href="01.html">Question 1</a>, with $\Sigma = \{0, \dots, 25\}$.</p>
+
+    <h2>1. Shift cipher on a single character</h2>
+    <p>Here $\mathcal{M} = \mathcal{K} = \mathcal{C} = \Sigma$, so $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}| = 26$, and $\mathsf{Gen}$ chooses $k$ uniformly.</p>
+    <p>For every $m, c \in \Sigma$ there is exactly one key with $c = m + k \bmod 26$, namely $k = c - m \bmod 26$. By Shannon's theorem the shift cipher is perfectly secret.</p>
+    <p>Directly (script <a href="../script.html#def-ps-3">Definition 5</a>): $K$ is independent of $M$, so</p>
+    $$\Pr[C = c \mid M = m] = \Pr[K = c - m \bmod 26] = \tfrac{1}{26},$$
+    <p>which is the same for every $m$. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>2. Largest $\mathcal{M}$ for the substitution cipher</h2>
+    <div class="box result"><span class="label">Answer.</span> $\mathcal{M} = $ all words of length $26$ in which every letter appears exactly once, i.e. all arrangements of the alphabet. Then $|\mathcal{M}| = 26!$. The words of length $25$ with distinct letters work equally well and also give $26!$ messages.</div>
+
+    <h3>No larger $\mathcal{M}$ is possible</h3>
+    <p>The key space is the set of permutations of $\Sigma$, so $|\mathcal{K}| = 26!$. Every perfectly secret scheme has $|\mathcal{M}| \le |\mathcal{K}|$ (script <a href="../script.html#thm-key-length">Theorem 6</a>). Hence $|\mathcal{M}| \le 26!$.</p>
+
+    <h3>This $\mathcal{M}$ works</h3>
+    <p>Here $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}| = 26!$, because the encryption of such a word is again a word containing every letter once. Keys are chosen uniformly. For any $m = m_0 \cdots m_{25}$ and $c = c_0 \cdots c_{25}$ in $\mathcal{M}$, the condition $\pi(m_i) = c_i$ for all $i$ defines $\pi$ on every letter exactly once. So there is exactly one key with $c = \mathsf{Enc}_\pi(m)$. By Shannon's theorem the scheme is perfectly secret. <span class="qed">$\blacksquare$</span></p>
+
+    <h3>Why repeated letters are a problem</h3>
+    <p>The substitution cipher keeps the <i>pattern</i> of equal letters. If $\mathcal{M}$ contains $\texttt{aa}$ and $\texttt{ab}$, then $c = \texttt{XX}$ shows that $m \ne \texttt{ab}$. In general $\mathcal{M}$ may only contain words with the same length and the same pattern of repeated letters. Words of length $n$ with all letters different give $\frac{26!}{(26-n)!}$ messages:</p>
+    $$\Pr[C = c \mid M = m] = \frac{\#\{\pi : \pi(m_i) = c_i \ \forall i\}}{26!} = \frac{(26 - n)!}{26!},$$
+    <p>which is the same for all such $m$ and $c$. The count is largest for $n = 25$ or $n = 26$.</p>
+    <p class="note">The single letters, $\mathcal{M} = \Sigma$ ($n = 1$), also work, with $\Pr[C = c \mid M = m] = \frac{25!}{26!} = \frac{1}{26}$, but that space is much smaller.</p>
+
+    <h2>3. Vigenère for words of length $t$</h2>
+    <p>Choose the <b>key length equal to the message length</b> $t$ and choose each key letter uniformly. Use the key only once. Then $\mathcal{M} = \mathcal{K} = \mathcal{C} = \Sigma^t$ and $c_i = m_i + k_i \bmod 26$ for $i = 0, \dots, t-1$.</p>
+    <div class="box claim"><span class="label">Claim.</span> Vigenère with a uniform key of length $t$ is perfectly secret on $\mathcal{M} = \Sigma^t$.</div>
+    <p><b>Proof.</b> $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}| = 26^t$, and $\mathsf{Gen}$ picks each of the $26^t$ keys with probability $26^{-t}$. For given $m, c$, the only key with $c = \mathsf{Enc}_k(m)$ is $k_i = c_i - m_i \bmod 26$ for all $i$. By Shannon's theorem the scheme is perfectly secret. Directly:</p>
+    $$\Pr[C = c \mid M = m] = \prod_{i=0}^{t-1} \Pr[K_i = c_i - m_i] = 26^{-t}. \qquad \blacksquare$$
+    <p class="note">This is the one-time pad over the alphabet $\Sigma$ instead of bits, with addition mod 26 instead of XOR.</p>
+
+    <h2>Reconciling with the attacks</h2>
+    <p>The attacks on these ciphers (frequency analysis, Kasiski, index of coincidence, and the known- and chosen-plaintext attacks of Questions 3–5) all rely on <b>reusing the key</b>:</p>
+    <ul>
+      <li>The shift cipher was attacked on long texts in which <i>every</i> letter uses the same key. With one letter there is nothing to compare.</li>
+      <li>The substitution cipher was broken through the frequencies of repeated letters and bigrams. If $\mathcal{M}$ contains no repeated letters, there are no frequencies to exploit.</li>
+      <li>Vigenère was broken because the key is shorter than the text and repeats, so every $t$-th letter shares a shift. If the key is as long as the message and used once, there is no period and each column has a single letter.</li>
+      <li>Known- and chosen-plaintext attacks reveal the key, but a key that is never used again protects nothing. Perfect secrecy is about one ciphertext.</li>
+    </ul>
+    <p>Perfect secrecy is only possible if $|\mathcal{K}| \ge |\mathcal{M}|$ (script <a href="../script.html#thm-key-length">Theorem 6</a>). The attacks work exactly when this fails: long messages with short keys.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

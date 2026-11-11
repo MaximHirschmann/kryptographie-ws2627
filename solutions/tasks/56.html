@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 56</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="56">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Prove the missing direction of Lemma 2.2: if $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ is perfectly secret (Definition 2.1), then for every distribution over $\mathcal{M}$, every $m \in \mathcal{M}$ and every $c \in \mathcal{C}$:</p>
+    $$\Pr[C = c \mid M = m] = \Pr[C = c].$$
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 2.1 (restated). In the lecture script this is the direction "Def. 1 ⇒ Def. 2" of Theorem 2 that is "left as an exercise".</p>
+  </div>
+
+  <div class="solution">
+    <h2>Setting</h2>
+    <p>Fix a distribution over $\mathcal{M}$, a message $m$ and a ciphertext $c$. To talk about $\Pr[C = c \mid M = m]$ at all we need $\Pr[M = m] \gt 0$. As in the book's convention for Chapter 2, we assume this.</p>
+
+    <h3>Case 1: $\Pr[C = c] \gt 0$</h3>
+    <p>Bayes' theorem in both directions gives</p>
+    $$\Pr[C = c \mid M = m] = \frac{\Pr[M = m \mid C = c] \cdot \Pr[C = c]}{\Pr[M = m]}.$$
+    <p>By perfect secrecy (Definition 2.1, which applies because $\Pr[C = c] \gt 0$), $\Pr[M = m \mid C = c] = \Pr[M = m]$. Substituting:</p>
+    $$\Pr[C = c \mid M = m] = \frac{\Pr[M = m] \cdot \Pr[C = c]}{\Pr[M = m]} = \Pr[C = c].$$
+
+    <h3>Case 2: $\Pr[C = c] = 0$</h3>
+    <p>Then also $\Pr[C = c \wedge M = m] \le \Pr[C = c] = 0$, so</p>
+    $$\Pr[C = c \mid M = m] = \frac{\Pr[C = c \wedge M = m]}{\Pr[M = m]} = 0 = \Pr[C = c].$$
+
+    <div class="box result"><span class="label">Result.</span> In both cases $\Pr[C = c \mid M = m] = \Pr[C = c]$. Since the distribution, $m$ and $c$ were arbitrary, the statement holds for all of them. Together with the direction shown in the book, Definition 2.1 and the condition of Lemma 2.2 are equivalent. <span class="qed">$\blacksquare$</span></div>
+    <p class="note">Case 2 is exactly the place where Definition 2.1 says nothing (it only speaks about $c$ with $\Pr[C = c] \gt 0$), so it has to be handled separately. Compare <a href="09.html">Question 9</a> and <a href="14.html">Question 14</a>.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

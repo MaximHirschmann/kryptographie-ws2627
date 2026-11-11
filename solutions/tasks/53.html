@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 53</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="53">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Let $f$ be a one-way permutation. Consider the following signature scheme $\Pi$ for messages in the set $\{1, \dots, n\}$:</p>
+    <ul>
+      <li>To generate keys, choose random $x \leftarrow \{0,1\}^n$ and set $y := f^n(x)$. The public key is $y$ and the private key is $x$.</li>
+      <li>To sign message $i \in \{1, \dots, n\}$, output $f^{n-i}(x)$, where $f^0(x) := x$ by definition.</li>
+      <li>To verify signature $\sigma$ on message $i$ with respect to public key $y$, check whether $y = f^i(\sigma)$.</li>
+    </ul>
+    <ol>
+      <li>Show that the above is not a one-time signature scheme. Given a signature on a message $i$, for what messages $j$ can an adversary output a forgery?</li>
+      <li>Prove that no PPT adversary $\mathcal{A}$ given a signature on $i$ can output a forgery on any message $j \gt i$ except with negligible probability. Define a modified one-time signature experiment $\mathsf{Sig\text{-}forge}'_{\mathcal{A}}(n)$; define security in it (<i>weakly secure</i>); construct an algorithm $\mathcal{D}$ that runs $\mathcal{A}$ as a subroutine in an inversion experiment $\mathsf{Invert}_{\mathcal{A},f}(n)$; use $\mathcal{D}$ to prove that $\Pi$ is weakly secure.</li>
+      <li>Suggest how to modify $\Pi$ so as to obtain a one-time signature scheme. Hint: Include two values $y, y'$ in the public key. Reason informally why your modification is secure.</li>
+    </ol>
+  </div>
+
+  <div class="solution">
+    <p>The signing key sits at the start of a hash chain: $x \to f(x) \to f^2(x) \to \cdots \to f^n(x) = y$. Signing $i$ reveals the element $f^{n-i}(x)$, which is $i$ steps before the end.</p>
+
+    <h2>1. Forgeries for every $j \lt i$</h2>
+    <p>Given $\sigma_i = f^{n-i}(x)$ and $j \lt i$, the attacker can walk <i>forward</i> along the chain, since $f$ is public and efficient:</p>
+    $$\sigma_j := f^{\,i-j}(\sigma_i) = f^{\,i-j}\big(f^{n-i}(x)\big) = f^{n-j}(x).$$
+    <p>This verifies: $f^j(\sigma_j) = f^n(x) = y$. So a single signature on $i$ allows forgeries on <b>every $j \lt i$</b>, and the scheme is not a one-time signature scheme. For example, a signature on $n$, which is $x$ itself, allows signing everything.</p>
+
+    <h2>2. No forgeries for $j \gt i$</h2>
+    <h3>Experiment $\mathsf{Sig\text{-}forge}'_{\mathcal{A},\Pi}(n)$</h3>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>$x \leftarrow \{0,1\}^n$, $y := f^n(x)$. $\mathcal{A}$ gets $y$.</td></tr>
+      <tr><td>2.</td><td>$\mathcal{A}$ chooses one message $i \in \{1, \dots, n\}$ and receives $\sigma_i := f^{n-i}(x)$.</td></tr>
+      <tr><td>3.</td><td>$\mathcal{A}$ outputs $(j, \sigma)$.</td></tr>
+      <tr><td>4.</td><td>Output $1$ iff $j \gt i$ and $f^j(\sigma) = y$.</td></tr>
+    </table></div>
+    <div class="box claim"><span class="label">Definition (weakly secure).</span> $\Pi$ is <i>weakly secure</i> if for every PPT $\mathcal{A}$: $\Pr[\mathsf{Sig\text{-}forge}'_{\mathcal{A},\Pi}(n) = 1] \le \mathsf{negl}(n)$.</div>
+
+    <h3>Inversion experiment $\mathsf{Invert}_{\mathcal{D},f}(n)$</h3>
+    <p>$x' \leftarrow \{0,1\}^n$, $y' := f(x')$. $\mathcal{D}$ gets $y'$ and wins if it outputs $x''$ with $f(x'') = y'$. Since $f$ is one-way, every PPT $\mathcal{D}$ wins with only negligible probability.</p>
+
+    <h3>The inverter $\mathcal{D}$</h3>
+    <p>Idea: put the challenge $y'$ into the chain at the position that will be revealed as the signature. A forgery further back in the chain then contains a preimage of $y'$.</p>
+    <div class="algo"><table>
+      <tr><td>$\mathcal{D}(y')$</td><td>
+        <span class="line">guess $i^* \leftarrow \{1, \dots, n\}$ uniformly</span>
+        <span class="line">$y := f^{\,i^*}(y')$; run $\mathcal{A}(y)$</span>
+        <span class="line">when $\mathcal{A}$ asks for a signature on $i$: if $i \ne i^*$ abort; else answer $\sigma_{i^*} := y'$</span>
+        <span class="line">when $\mathcal{A}$ outputs $(j, \sigma)$: if $j \gt i^*$ and $f^j(\sigma) = y$, output $x'' := f^{\,j - i^* - 1}(\sigma)$</span>
+      </td></tr>
+    </table></div>
+
+    <h3>Analysis</h3>
+    <ul>
+      <li><b>Perfect simulation.</b> $f$ is a permutation, so $y' = f(x')$ is uniform, and $x := f^{-(n-i^*)}(y')$ is a uniform secret key with $f^{n-i^*}(x) = y'$ and $f^n(x) = y$. Thus $y$ and the answer $\sigma_{i^*} = y'$ are distributed exactly as in $\mathsf{Sig\text{-}forge}'$. $\mathcal{A}$'s view does not depend on $i^*$, so $\Pr[i = i^*] = \frac1n$.</li>
+      <li><b>Forgery yields a preimage.</b> If $j \gt i^*$ and $f^j(\sigma) = y = f^{i^*}(y')$, then, since $f^{i^*}$ is injective, $f^{\,j-i^*}(\sigma) = y'$. Hence $f(x'') = f\big(f^{\,j-i^*-1}(\sigma)\big) = y'$, and $j - i^* - 1 \ge 0$.</li>
+      <li><b>Efficiency.</b> At most $2n$ evaluations of $f$ plus one run of $\mathcal{A}$, so $\mathcal{D}$ is PPT.</li>
+    </ul>
+    $$\Pr[\mathsf{Invert}_{\mathcal{D},f}(n) = 1] \ \ge\ \frac1n \cdot \Pr[\mathsf{Sig\text{-}forge}'_{\mathcal{A},\Pi}(n) = 1].$$
+    <p>The left side is negligible, so $\Pr[\mathsf{Sig\text{-}forge}'_{\mathcal{A},\Pi}(n) = 1] \le n \cdot \mathsf{negl}(n)$, which is negligible (<a href="17.html">Question 17</a>). So $\Pi$ is weakly secure. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>3. A real one-time signature: two chains in opposite directions</h2>
+    <p>Use a second chain that runs the other way:</p>
+    <div class="algo"><table>
+      <tr><td>Gen</td><td>$x, x' \leftarrow \{0,1\}^n$; &nbsp; $pk := (y, y') = (f^n(x), f^n(x'))$; &nbsp; $sk := (x, x')$</td></tr>
+      <tr><td>Sign</td><td>$\sigma_i := \big(f^{n-i}(x),\ f^{\,i}(x')\big)$</td></tr>
+      <tr><td>Vrfy</td><td>accept $(\sigma, \sigma')$ on $i$ iff $f^i(\sigma) = y$ and $f^{n-i}(\sigma') = y'$</td></tr>
+    </table></div>
+    <p><b>Why it is secure (informally).</b> From one signature on $i$:</p>
+    <ul>
+      <li>the first chain only allows forging messages $j \lt i$ (part 1), and forging $j \gt i$ there means inverting $f$ (part 2);</li>
+      <li>the second chain is mirrored: from $f^{i}(x')$ one can compute $f^{j}(x')$ only for $j \gt i$, and going to $j \lt i$ means inverting $f$.</li>
+    </ul>
+    <p>A forgery on any $j \ne i$ must satisfy <i>both</i> chains, so it requires inverting $f$ on one of them. By the reduction from part 2, applied to the chain where $j$ is on the "hard side", this happens with only negligible probability.</p>
+    <p class="note">This is the idea behind Winternitz one-time signatures. Each message moves "down" one chain and "up" the other, so no message dominates another.</p>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

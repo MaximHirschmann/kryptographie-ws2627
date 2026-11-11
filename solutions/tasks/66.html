@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 66</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="66">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Show that basic CBC-MAC is not a secure MAC if it is used for messages of <b>different lengths</b>.</p>
+    <p class="note">Source: Katz &amp; Lindell, 1st ed., Exercise 4.8 (restated).</p>
+  </div>
+
+  <div class="solution">
+    <h2>Basic CBC-MAC</h2>
+    <p>For $m = m_1 \cdots m_\ell$ with $n$-bit blocks: $t_0 := 0^n$, $t_i := F_k(t_{i-1} \oplus m_i)$, and the tag is $t := t_\ell$. Because $t_0 = 0^n$, the tag of a one-block message is simply $F_k(m_1)$.</p>
+
+    <h2>Attack</h2>
+    <div class="algo"><table>
+      <tr><td>1.</td><td>Query the one-block message $x$ and get $t_x = F_k(x)$.</td></tr>
+      <tr><td>2.</td><td>Output the two-block message $m^* = x \,\|\, (t_x \oplus x)$ with tag $t^* = t_x$.</td></tr>
+    </table></div>
+
+    <h2>Why the forgery is valid</h2>
+    <p>CBC-MAC of $m^*$:</p>
+    $$t_1 = F_k(x) = t_x, \qquad t_2 = F_k(t_1 \oplus (t_x \oplus x)) = F_k(t_x \oplus t_x \oplus x) = F_k(x) = t_x.$$
+    <p>So the tag of $m^*$ is $t_x$. The message $m^*$ has two blocks, so it differs from the only queried message $x$. The forgery is valid with probability $1$ after one query. <span class="qed">$\blacksquare$</span></p>
+
+    <h2>General form</h2>
+    <p>With tags $t$ of $m = m_1 \cdots m_\ell$ and $t'$ of $m' = m'_1 \cdots m'_{\ell'}$, the message</p>
+    $$m_1 \cdots m_\ell \,\|\, (m'_1 \oplus t) \,\|\, m'_2 \cdots m'_{\ell'}$$
+    <p>has tag $t'$: after the first $\ell$ blocks the chain value is $t$, and XORing $t$ into the next block "resets" the chain to the start of $m'$.</p>
+
+    <div class="box result"><span class="label">Result.</span> Basic CBC-MAC with variable lengths is forgeable with one query. That is why the length must be bound into the computation, e.g. by prepending $|m|$ as the first block or by encrypting the last chain value with a second key. <span class="qed">$\blacksquare$</span></div>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>

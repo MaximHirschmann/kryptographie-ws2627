@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question 5</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-task="5">
+<div class="wrap">
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="title"></h1>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Decrypt the following ciphertext. What is the decryption key?</p>
+<pre class="code">MKKBPNRBPVNNKGBMKKMFUOKFBVTOFQZD
+DPPSZKOHNYHOBFELUEURGFGRKORLMRVK
+FSFKOANYHOPHNUFIBZWKGMKKLFOJPEGO
+JCAFTNHSIAVOUZQYHOIXFKAAREKWTUGV
+LTMZZEARMNHTDHGAGRYOAAFJBECNKOPF
+JQUZTDRTOCSKAHPJKKBPNDCOFSNUAPCY
+AQIXFNSGCPXSXUYABPNYJBFTKGASBZKZ
+AXEINPFAWKBBNVLPDRDHZNDBLLNZAYIM
+KKPLNRZDPFAGFNURWZFAKGGTSOANMXZX
+SRBZVSCKRVKFSZDKHRKQOTOZOMFMNBZM
+RXWSGCTKSCN</pre>
+    <p>The ciphertext was generated with a Beaufort cipher.</p>
+    <p><b>Gen:</b> Let $t$ be the period. For $i = 0, \dots, t-1$ set $k_i$ to be a random number in $\{0, \dots, 25\}$. Output $k = k_0, \dots, k_{t-1}$.<br>
+    <b>Enc:</b> Given plaintext $p = p_0, \dots, p_n$ set $c_i = k_{i \bmod t} - p_i \bmod 26$. Output $c = c_0, \dots, c_n$.</p>
+  </div>
+
+  <div class="solution">
+    <div class="box result"><span class="label">Answer.</span> The key has period $t = 5$ and is <b class="mono">FROST</b> $= (5, 17, 14, 18, 19)$. The plaintext is the poem <i>A Cliff Dwelling</i> by Robert Frost.</div>
+
+    <h2>Decryption</h2>
+    <p>Solve $c_i = k_{i \bmod t} - p_i$ for $p_i$:</p>
+    $$p_i = k_{i \bmod t} - c_i \bmod 26.$$
+    <p>Decryption is therefore the <b>same</b> operation as encryption: the Beaufort cipher is its own inverse. The decryption key is the encryption key.</p>
+    <p>Every $t$-th letter uses the same key letter. With $-c_i = p_i - k_{i \bmod t}$, each column of the <i>negated</i> ciphertext is a shift cipher with key $-k_i$. So the Vigenère attack from the script works unchanged: first find $t$, then break each column as a shift cipher.</p>
+
+    <h2>Step 1: Find the period $t$</h2>
+    <h3>Kasiski</h3>
+    <p>The ciphertext has 331 letters. These 4-letter groups appear more than once:</p>
+    <table class="data">
+      <tr><th>Repeated group</th><th>Positions</th><th>Distance</th></tr>
+      <tr><td class="mono">KKBP</td><td>1, 176</td><td>$175 = 5 \cdot 35$</td></tr>
+      <tr><td class="mono">NYHO</td><td>40, 70</td><td>$30 = 5 \cdot 6$</td></tr>
+      <tr><td class="mono">RVKF</td><td>61, 296</td><td>$235 = 5 \cdot 47$</td></tr>
+    </table>
+    <p>$\gcd(175, 30, 235) = 5$, so the period is probably $t = 5$.</p>
+
+    <h3>Index of coincidence</h3>
+    <p>To check this, split the ciphertext into $\tilde t$ columns for $\tilde t = 1, \dots, 10$ and average the index of coincidence over the columns. A value near $0.065$ means the columns look like English. A value near $0.038$ means they look random.</p>
+    <table class="data">
+      <tr><th>$\tilde t$</th><td>1</td><td>2</td><td>3</td><td>4</td><td><b>5</b></td><td>6</td><td>7</td><td>8</td><td>9</td><td><b>10</b></td></tr>
+      <tr><th>IC</th><td>.045</td><td>.044</td><td>.046</td><td>.041</td><td style="background:var(--ok-soft)"><b>.069</b></td><td>.047</td><td>.048</td><td>.042</td><td>.040</td><td style="background:var(--ok-soft)"><b>.074</b></td></tr>
+    </table>
+    <p>Only $5$ and its multiple $10$ give English-like values, which confirms $t = 5$.</p>
+
+    <h2>Step 2: Break each column</h2>
+    <p>Column $i$ contains the letters $c_i, c_{i+5}, c_{i+10}, \dots$. Let $q_0, \dots, q_{25}$ be the frequencies of the negated letters $-c$ in that column. As in the script, for each candidate $k$ compare them with the English letter probabilities $p_0, \dots, p_{25}$:</p>
+    $$I_k = \sum_{j=0}^{25} p_j \cdot q_{j - k}$$
+    <p>The correct key letter gives $I_k \approx 0.065$:</p>
+    <table class="data">
+      <tr><th>Column $i$</th><th>Best $k_i$</th><th>$I_{k_i}$</th><th>Runner-up</th></tr>
+      <tr class="hit"><td>0</td><td>F (5)</td><td>0.061</td><td>U, 0.049</td></tr>
+      <tr class="hit"><td>1</td><td>R (17)</td><td>0.067</td><td>D, 0.051</td></tr>
+      <tr class="hit"><td>2</td><td>O (14)</td><td>0.070</td><td>D, 0.048</td></tr>
+      <tr class="hit"><td>3</td><td>S (18)</td><td>0.065</td><td>O, 0.046</td></tr>
+      <tr class="hit"><td>4</td><td>T (19)</td><td>0.071</td><td>X, 0.048</td></tr>
+    </table>
+    <p>In every column the best value is close to $0.065$ and clearly ahead of the runner-up. Together the columns give the key <b class="mono">FROST</b>.</p>
+
+    <h2>Step 3: Decrypt</h2>
+    <p>Apply $p_i = k_{i \bmod 5} - c_i \bmod 26$ with $k = \texttt{FROST}$:</p>
+    <pre class="code">M K K B P N R B P V ...     ciphertext
+F R O S T F R O S T ...     key (repeated)
+t h e r e s a n d y ...     plaintext = key - ciphertext</pre>
+    <p>Adding spaces and line breaks to the decrypted text gives:</p>
+    <div class="poem">
+      There sandy seems the golden sky<br>
+      And golden seems the sandy plain.<br>
+      No habitation meets the eye<br>
+      Unless in the horizon rim,<br>
+      Some halfway up the limestone wall,<br>
+      That spot of black is not a stain<br>
+      Or shadow, but a cavern hole,<br>
+      Where someone used to climb and crawl<br>
+      To rest from his besetting fears.<br>
+      I see the callus on his soul<br>
+      The disappearing last of him<br>
+      And of his race starvation slim,<br>
+      Oh, years ago – ten thousand years.
+      <div class="by">Robert Frost, <i>A Cliff Dwelling</i>. The key is the poet's name.</div>
+    </div>
+
+    <h3>Code</h3>
+<pre class="code">c = "MKKBPNRBPVNNKGBMKKMFUOKF..."   # full ciphertext without line breaks
+key = "FROST"
+
+# Beaufort: p = k - c (mod 26), the same operation as encryption
+print("".join(chr((ord(key[i % 5]) - ord(ch)) % 26 + ord("a"))
+              for i, ch in enumerate(c)))</pre>
+  </div>
+
+  <nav class="pager" id="pager"></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="../assets/tasks.js"></script>
+<script src="../assets/task.js"></script>
+</body>
+</html>
