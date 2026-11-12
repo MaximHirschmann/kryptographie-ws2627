@@ -37,7 +37,7 @@
     $$(x^e)^d = x^{ed} \equiv x \pmod N \quad \text{for all } x \in \mathbb{Z}_N. \quad \blacksquare$$
 
     <div class="box result"><span class="label">Result.</span> RSA decryption is correct for every $x \in \mathbb{Z}_N$. Elements not in $\mathbb{Z}_N^*$ are $0$ modulo one of the primes, where the equation holds trivially. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">Such $x$ are irrelevant in practice anyway: an $x$ with $\gcd(x, N) \notin \{1, N\}$ reveals a factor of $N$ via $\gcd(x, N)$, and a random $x$ is one with probability $\frac{p + q - 1}{N}$, which is negligible. The argument needs $N$ to be squarefree; it fails for $N = p^2$.</p>
+    <p class="note">Such $x$ are irrelevant in practice anyway: an $x$ with $\gcd(x, N) \notin \{1, N\}$ reveals a factor of $N$ via $\gcd(x, N)$, and a uniform $x\in\mathbb{Z}_N$ has a nontrivial gcd with probability $\frac{p+q-2}{N}$, which is negligible. The argument needs $N$ to be squarefree; it fails for $N = p^2$.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

@@ -27,8 +27,8 @@
     $$S_\tau = \sum_{i=0}^{25} q_i^2.$$
     <p>If $\tau$ is a multiple of $t$, every character of the stream was encrypted with the same permutation $\pi_1$. A permutation only <i>relabels</i> the letters, so the multiset of frequencies is the same as in English and</p>
     $$S_\tau = \sum_i q_i^2 \approx \sum_i p_{\pi_1^{-1}(i)}^2 = \sum_i p_i^2 \approx 0.065.$$
-    <p>If $\tau$ is not a multiple of $t$, the stream mixes several unrelated permutations, the frequencies are flattened and $S_\tau \approx \sum_i (1/26)^2 \approx 0.038$. The smallest $\tau$ with $S_\tau \approx 0.065$ is the period.</p>
-    <p><b>Kasiski also still works.</b> A word like "the" that occurs twice at the same position modulo $t$ is encrypted with the same permutations both times, so it gives the same ciphertext trigram. The distances between repeated trigrams are multiples of $t$.</p>
+    <p>If $\tau$ is not a multiple of $t$, the stream mixes $t/\gcd(t,\tau)$ key positions. Mixing many independent permutations tends to flatten the frequencies toward $S_\tau\approx1/26\approx0.038$, but a mixture of only a few permutations can remain quite non-uniform. Peaks near $0.065$ therefore suggest candidate periods; check all streams and the decrypted text, accounting for finite-sample fluctuations and the possibility that the key has a smaller effective period.</p>
+    <p><b>Kasiski also still works.</b> A word like "the" that occurs twice at the same position modulo $t$ is encrypted with the same permutations both times, so it gives the same ciphertext trigram. Repetitions caused by aligned plaintext fragments have distances divisible by $t$; accidental repetitions can occur at other distances.</p>
 
     <h2>Stage 2: break each stream</h2>
     <p>For $j = 1, \dots, t$, stream $j$ is $c_j, c_{j+t}, c_{j+2t}, \dots$, a mono-alphabetic substitution of every $t$-th plaintext letter under $\pi_j$.</p>
@@ -41,7 +41,7 @@
     <p>Each stream must be long enough for its letter frequencies to be close to English. With a mono-alphabetic cipher that needs a few hundred letters, and here it is needed <i>per stream</i>. So roughly $t$ times as much ciphertext is needed as for a single substitution cipher. The cipher is harder to break, but not secure.</p>
 
     <div class="box result"><span class="label">Result.</span> Find $t$ with the index of coincidence (it is invariant under permutations) or with Kasiski. Then attack each of the $t$ streams by frequency analysis, using bigrams across neighbouring streams to finish the permutations. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">With a known-plaintext attack it is even easier: every known plaintext letter at position $i$ reveals one value of $\pi_{i \bmod t}$ (compare <a href="03.html">Question 3</a>).</p>
+    <p class="note">With a known-plaintext attack it is even easier: every known letter pair in stream $j$ reveals one value of $\pi_j$ (compare <a href="03.html">Question 3</a>).</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

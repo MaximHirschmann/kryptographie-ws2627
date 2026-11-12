@@ -24,13 +24,13 @@
   </div>
 
   <div class="solution">
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>Scheme</th><th>EAV-secure</th><th>CPA-secure</th></tr>
       <tr><td>1. $\langle G(k) \oplus m_1, G(k+1) \oplus m_2 \rangle$</td><td>no (not in general)</td><td>no</td></tr>
       <tr><td>2. $\langle r, G(r) \oplus m \rangle$</td><td>no</td><td>no</td></tr>
       <tr><td>3. $m \oplus F_k(0^n)$</td><td><b>yes</b></td><td>no</td></tr>
       <tr><td>4. $\langle r, m_1 \oplus F_k(r), m_2 \oplus F_k(r+1) \rangle$</td><td><b>yes</b></td><td><b>yes</b></td></tr>
-    </table>
+    </table></div>
     <p class="note">General facts used: CPA security implies EAV security, and a <b>deterministic</b> scheme is never CPA-secure. The attacker asks the oracle for the encryption of $m_0$ and compares it with the challenge.</p>
 
     <h2>1. Not EAV-secure in general, not CPA-secure</h2>

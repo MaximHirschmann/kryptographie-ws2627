@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Question 6: Choosing keys uniformly</title>
 <style>
   :root {
@@ -29,6 +30,7 @@
   .labels { display: flex; gap: 2px; margin-top: 6px; font-size: 13px; color: var(--muted); }
   .labels span { text-align: center; }
   .arrow { font-size: 36px; color: var(--muted); text-align: center; }
+  .arrow-glyph { display: inline-block; }
   .arrow small { display: block; font-size: 12px; }
   .ticks { position: relative; height: 10px; margin-top: 4px; }
   .grid6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; height: 64px;
@@ -39,12 +41,12 @@
   .steps { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .step { border-top: 3px solid var(--line); padding-top: 10px; font-size: 14px; }
   .step b { display: block; font-size: 15px; margin-bottom: 2px; }
-  @media (max-width: 720px) { .row, .steps { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); } }
+  @media (max-width: 720px) { .row, .steps { grid-template-columns: 1fr; } .arrow-glyph { transform: rotate(90deg); } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Turning any key distribution into a uniform one</h1>
+  <h1>Turning rational key probabilities into a uniform choice</h1>
   <p class="sub">Copy each key in proportion to its probability, then pick a copy uniformly at random.</p>
 
   <div class="row">
@@ -61,7 +63,7 @@
       </div>
     </div>
 
-    <div class="arrow">→<small>N = 6<br>n<sub>k</sub> = N·Pr[K=k]</small></div>
+    <div class="arrow"><span class="arrow-glyph" aria-hidden="true">→</span><small>N = 6<br>n<sub>k</sub> = N·Pr[K=k]</small></div>
 
     <div class="card">
       <h2>New key space 𝒦′</h2>

@@ -40,8 +40,8 @@
     <p>$\mathcal{A}_{\mathsf{pre}}$ gets $(s, H^s(x))$ for uniform $x$, exactly as in its experiment, so $H^s(x') = H^s(x)$ with probability $\varepsilon$. $\mathcal{A}_2$ wins unless $x' = x$. We must show that $\Pr[x' = x]$ is negligible.</p>
     <p><b>Bounding $\Pr[x' = x]$.</b> $\mathcal{A}_{\mathsf{pre}}$ only sees $y$. Given $y$, the input $x$ is uniform over the pre-image set $H^{-1}(y)$, so $\Pr[x' = x \mid y] \le 1/|H^{-1}(y)|$. Call $x$ <i>lonely</i> if its pre-image set has at most $T$ elements. There are at most $2^{\ell}$ outputs, each with at most $T$ lonely pre-images, so</p>
     $$\Pr_x[x \text{ lonely}] \le \frac{T \cdot 2^{\ell}}{2^{\ell'}}, \qquad \Pr[x' = x] \le \frac{T \cdot 2^{\ell}}{2^{\ell'}} + \frac{1}{T}.$$
-    <p>Choose $T = 2^{(\ell' - \ell)/2}$: then $\Pr[x' = x] \le 2 \cdot 2^{-(\ell' - \ell)/2} \le 2 \cdot 2^{-n/2}$, which is negligible.</p>
-    $$\Pr[\mathsf{Hash\text{-}2pre}_{\mathcal{A}_2,H} = 1] \ge \varepsilon(n) - 2 \cdot 2^{-n/2}.$$
+    <p>Choose $T=2^{(\ell'-\ell)/2}$. Then $\Pr[x'=x]\le2\cdot2^{-(\ell'-\ell)/2}$, which is negligible whenever $\ell'-\ell=\omega(\log n)$. In particular, a gap of at least $n$ gives the bound $2\cdot2^{-n/2}$. Therefore</p>
+    $$\Pr[\mathsf{Hash\text{-}2pre}_{\mathcal{A}_2,H} = 1] \ge \varepsilon(n) - 2\cdot2^{-(\ell'-\ell)/2}.$$
     <p>If $H$ is second pre-image resistant, the left side is negligible, so $\varepsilon$ is negligible. <span class="qed">$\blacksquare$</span></p>
 
     <div class="box result"><span class="label">Result.</span> Collision resistance ⇒ second pre-image resistance ⇒ pre-image resistance. The first step is direct. The second needs enough compression, so that a found pre-image is almost never the original input. <span class="qed">$\blacksquare$</span></div>

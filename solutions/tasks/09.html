@@ -34,7 +34,7 @@
     <p class="note">In 2 and 3 we condition on $M = m$, so we read them for messages with $\Pr[M = m] \gt 0$. In general, $\Pr[C = c \mid M = m]$ means $\Pr[\mathsf{Enc}_K(m) = c]$. That value does not depend on the distribution of $M$, because $K$ is independent of $M$. Question 14 shows that messages with probability $0$ do not matter.</p>
 
     <h2>Proof that $1 \Rightarrow 2$</h2>
-    <p>This direction is left as an exercise in the script. Fix a distribution, a message $m$ with $\Pr[M = m] \gt 0$, and a ciphertext $c$.</p>
+    <p>This is the direction “Def. 1 ⇒ Def. 2” proved in the script. Fix a distribution, a message $m$ with $\Pr[M = m] \gt 0$, and a ciphertext $c$.</p>
     <p><b>Case $\Pr[C = c] \gt 0$.</b> By Bayes' theorem and then 1:</p>
     $$\Pr[C = c \mid M = m] = \frac{\Pr[M = m \mid C = c] \cdot \Pr[C = c]}{\Pr[M = m]} \overset{(1)}{=} \frac{\Pr[M = m] \cdot \Pr[C = c]}{\Pr[M = m]} = \Pr[C = c].$$
     <p><b>Case $\Pr[C = c] = 0$.</b> Then</p>

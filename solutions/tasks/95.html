@@ -22,7 +22,7 @@
     <h2>Part 1: secure in the random oracle model</h2>
     <p>Let $\mathcal{A}$ make $q_H$ queries to $H$ and $q_M$ queries to $\mathsf{Mac}_k$, and output $(m^*, t^*)$ with $m^*$ never MAC-queried. Since $|k| = n$ is fixed, the string $k \| m$ determines $k$ and $m$ uniquely.</p>
     <p>Let $\mathsf{KeyQuery}$ be the event that $\mathcal{A}$ queries $H$ on some string whose first $n$ bits are $k$.</p>
-    <p><b>$\Pr[\mathsf{KeyQuery}]$ is small.</b> As long as $\mathsf{KeyQuery}$ has not happened, every answer $\mathcal{A}$ sees is independent of $k$: MAC answers are $H(k \| m_i)$ at points $\mathcal{A}$ never queried itself, so they are fresh uniform strings; and $H$-answers at points not starting with $k$ are uniform and independent of $k$. So $k$ is uniform given $\mathcal{A}$'s view, and each $H$-query starts with $k$ with probability $2^{-n}$:</p>
+    <p><b>$\Pr[\mathsf{KeyQuery}]$ is small.</b> Couple the real game to a simulation with independent lazy-sampled hash answers and independent uniform MAC tags (cached for repeated messages). Before the first query with prefix $k$, this simulation and the real game agree. The simulated transcript is independent of $k$, so each of its at most $q_H$ candidate prefixes hits the uniform key with probability $2^{-n}$. The union bound gives</p>
     $$\Pr[\mathsf{KeyQuery}] \le q_H \cdot 2^{-n}.$$
     <p><b>Without $\mathsf{KeyQuery}$, forging means guessing.</b> The tag $t^*$ is valid iff $t^* = H(k \| m^*)$. This point was never queried: not as a MAC query ($m^*$ is new), and not as an $H$-query (that would be $\mathsf{KeyQuery}$). So $H(k \| m^*)$ is uniform and independent of $t^*$:</p>
     $$\Pr[\mathsf{Mac\text{-}forge} = 1] \le \Pr[\mathsf{KeyQuery}] + 2^{-n} \le \frac{q_H + 1}{2^n},$$

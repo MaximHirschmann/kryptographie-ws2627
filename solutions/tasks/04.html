@@ -34,15 +34,15 @@
     <h2>Vigenère cipher</h2>
     <p>Ask for the encryption of $m = \texttt{aa}\cdots\texttt{a}$. Then $c_x = 0 + k_{x \bmod t}$, so the ciphertext is the key repeated:</p>
     $$c = k_0 k_1 \cdots k_{t-1} k_0 k_1 \cdots$$
-    <div class="box result"><span class="label">Needed:</span> $t$ letters if the key length $t$ is known. If $t$ is unknown, ask for a longer string of $\texttt{a}$s. The smallest period of the ciphertext is $t$, and it becomes visible after about $2t$ letters.</div>
+    <div class="box result"><span class="label">Needed:</span> $t$ letters if the key length $t$ is known. If $t$ is unknown, ask for a longer string of $\texttt{a}$s. The observed repetitions suggest the effective period, which may be a proper divisor of the declared key length $t$. About $2t$ letters can reveal a candidate, but no fixed finite sample certifies an unbounded unknown period.</div>
 
     <h2>Comparison with the known-plaintext attack</h2>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>Cipher</th><th>Chosen plaintext</th><th>Known plaintext (Q3)</th></tr>
       <tr><td>Shift</td><td>1 letter: $\texttt{a}$</td><td>1 letter</td></tr>
       <tr><td>Substitution</td><td>25 letters: $\texttt{abc}\cdots\texttt{y}$</td><td>any text containing 25 different letters; can be <b>much</b> longer</td></tr>
-      <tr><td>Vigenère</td><td>$t$ letters: $\texttt{a}^t$ ($\approx 2t$ if $t$ unknown)</td><td>$t$ letters ($\approx 2t$ if $t$ unknown)</td></tr>
-    </table>
+      <tr><td>Vigenère</td><td>$t$ letters: $\texttt{a}^t$ if $t$ is known</td><td>$t$ letters if $t$ is known</td></tr>
+    </table></div>
     <p>For the shift and Vigenère ciphers, any letter reveals one key letter, so choosing the plaintext saves nothing: both attacks need the same amount of text. The difference shows up for the <b>substitution cipher</b>. With a known plaintext the attacker has to wait until rare letters such as <i>q</i>, <i>x</i> or <i>z</i> appear. With a chosen plaintext they ask for each letter exactly once, so 25 letters always suffice.</p>
     <p class="note">Choosing $\texttt{a} = 0$ just makes the ciphertext equal to the key. Any other known plaintext would also work, because $k = c - m$.</p>
   </div>

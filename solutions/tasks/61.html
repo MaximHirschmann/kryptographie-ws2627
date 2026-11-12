@@ -39,7 +39,7 @@
 
     <h2>Analysis</h2>
     <p><b>Case $b = 1$.</b> Then $c$ is an encryption of $m_1$ and $c_0$ an encryption of $m_0$ under the <b>same key</b>. If $c = c_0$, correctness would give $m_1 = \mathsf{Dec}_k(c) = \mathsf{Dec}_k(c_0) = m_0$. So $c \ne c_0$ always, and $\mathcal{A}$ outputs $1$: correct with probability $1$.</p>
-    <p><b>Case $b = 0$.</b> Then $c$ and $c_0$ are two independent encryptions of $m_0$ under $k$. Let $\delta := \Pr[c = c_0 \mid b = 0]$. $\mathsf{Enc}_k(m_0)$ takes values in a finite set (a terminating algorithm uses finitely many coins), so for each fixed $k$</p>
+    <p><b>Case $b = 0$.</b> Then $c$ and $c_0$ are two independent encryptions of $m_0$ under $k$. Let $\delta := \Pr[c = c_0 \mid b = 0]$. $\mathsf{Enc}_k(m_0)$ takes values in a finite set under a fixed polynomial runtime bound (and at worst a countable set for a general terminating probabilistic algorithm), so for each fixed $k$</p>
     $$\Pr[c = c_0 \mid k] = \sum_{x} \Pr[\mathsf{Enc}_k(m_0) = x]^2 \;\gt\; 0,$$
     <p>and therefore $\delta \gt 0$. $\mathcal{A}$ is correct in this case exactly when $c = c_0$.</p>
     $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] = \tfrac12 \cdot \delta + \tfrac12 \cdot 1 = \tfrac12 + \tfrac{\delta}{2} \;\gt\; \tfrac12.$$

@@ -28,7 +28,7 @@
       <tr><td>Enc</td><td>input $k$, $m \in \{0,1\}^{n/2}$: &nbsp; $r \leftarrow \{0,1\}^{n/2}$; &nbsp; output $c := F_k(r \,\|\, m)$</td></tr>
       <tr><td>Dec</td><td>input $k$, $c \in \{0,1\}^n$: &nbsp; compute $x := F_k^{-1}(c)$; &nbsp; output the last $n/2$ bits of $x$</td></tr>
     </table></div>
-    <p><b>Correctness:</b> $F_k^{-1}(F_k(r \| m)) = r \| m$, and its last $n/2$ bits are $m$. Decryption needs $F_k^{-1}$, which exists and is efficient because $F$ is a (strong) pseudorandom <i>permutation</i>.</p>
+    <p><b>Correctness:</b> $F_k^{-1}(F_k(r \| m)) = r \| m$, and its last $n/2$ bits are $m$. Decryption needs $F_k^{-1}$, which exists and is efficient because $F$ is a keyed permutation; strong PRP security is not needed here.</p>
 
     <h2>2. CPA security</h2>
     <p>By <a href="18.html">Question 18</a>, $F$ is also a pseudorandom function. Let $\mathcal{A}$ be a PPT adversary that makes at most $q(n)$ encryption queries.</p>

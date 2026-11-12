@@ -29,7 +29,11 @@
   </div>
 
   <div class="solution">
-    <h2>1. A scheme $\Pi$ that works: RSA</h2>
+    <h2>1. A scheme $\Pi$ satisfying the premise</h2>
+    <p>Choose a <b>CCA-secure public-key encryption scheme</b>, such as Cramer–Shoup with a suitable message encoding. It is also CPA-secure, so it meets the question’s premise. Assume the private-key scheme uses uniform $n$-bit keys, matching the random-oracle output.</p>
+    <p>Its CCA security lets a reduction decrypt altered first components. Replace the challenge’s encryption of $r^*$ by an encryption of $0^n$, while retaining special handling of queries with the exact challenge first component. Unless the adversary queries $H(r^*)$, the challenge key is an independent uniform string, and the remaining game reduces to the CCA security of $\Pi'$. In the replaced game $r^*$ is hidden and uniform, so guessing it in polynomially many random-oracle queries has negligible probability. This is the hashed-key version of the hybrid proof in <a href="88.html">Question 88</a>.</p>
+    <h3>The lecture’s RSA variant uses a different premise</h3>
+    <p><b>Textbook RSA itself is not CPA-secure</b>, so it is not an example satisfying the premise above. Nevertheless, its one-way trapdoor-permutation property yields a CCA-secure hashed-key hybrid in the random-oracle model, as follows.</p>
     <p>Take <b>plain RSA</b> as the inner scheme: $pk = (N, e)$, $c_1 := [r^e \bmod N]$ for a uniform $r \in \mathbb{Z}_N^*$, and $\mathsf{Dec}_{sk}(c_1) = [c_1^{\,d} \bmod N]$. The resulting scheme</p>
     $$\Pi^*:\quad \langle [r^e \bmod N],\ \mathsf{Enc}'_{H(r)}(m) \rangle$$
     <p>is <b>CCA-secure</b> if RSA-invert is hard relative to $\mathsf{GenRSA}$, $\Pi'$ is IND-CCA secure, and $H$ is modelled as a random oracle. This is exactly the theorem "Security against CCA" from the lecture (Mitschrift 18.2), with $H : \mathbb{Z}_N^* \to \{0,1\}^n$.</p>
@@ -37,7 +41,7 @@
     $$\Pr[\mathsf{succ}] \le \Pr[\mathsf{succ} \wedge \overline{\mathsf{query}}] + \Pr[\mathsf{query}].$$
     <ol>
       <li><b>$\Pr[\mathsf{succ} \wedge \overline{\mathsf{query}}] \le \frac12 + \mathsf{negl}(n)$</b>, by a reduction $\mathcal{A}'$ in $\mathsf{PrivK}^{\mathsf{cca}}_{\mathcal{A}',\Pi'}$. $\mathcal{A}'$ runs $\mathsf{GenRSA}$ itself, chooses $\hat r$, sets $\hat c_1 := [\hat r^e \bmod N]$ and lets $H(\hat r)$ be <i>implicitly</i> the challenger's unknown key $\hat k$. Its decryption oracle answers $\langle c_1, c_2 \rangle$ with $\mathsf{Dec}'(c_2)$ from its own CCA oracle if $c_1 = \hat c_1$, and otherwise decrypts $r := [c_1^{\,d} \bmod N]$ itself and uses $H(r)$.</li>
-      <li><b>$\Pr[\mathsf{query}] \le \mathsf{negl}(n)$</b>, by a reduction in RSA-invert that gets $\hat c_1$ and must find $\hat r = [\hat c_1^{\,d} \bmod N]$ <b>without $d$</b>. Here it answers decryption queries using a table of entries $(r, c_1, k)$: for an unknown $c_1$ it stores $(*, c_1, k)$ with a fresh $k \leftarrow \mathsf{Gen}'(1^n)$ and answers with $\mathsf{Dec}'_k(c_2)$. When $\mathcal{A}$ later queries $H(r)$ with $[r^e \bmod N] = c_1$, the placeholder $*$ is replaced by $r$ and the same $k$ is returned, so the answers stay consistent. If $\mathcal{A}$ ever queries $H(\hat r)$, the reduction finds $\hat r$ in its table and outputs it.</li>
+      <li><b>$\Pr[\mathsf{query}] \le \mathsf{negl}(n)$</b>, by a reduction in RSA-invert that gets $\hat c_1$ and must find $\hat r = [\hat c_1^{\,d} \bmod N]$ <b>without $d$</b>. Here it answers decryption queries using a table of entries $(r, c_1, k)$: for an unknown $c_1$ it stores $(*, c_1, k)$ with a fresh uniform $k\leftarrow\{0,1\}^n$ and answers with $\mathsf{Dec}'_k(c_2)$. When $\mathcal{A}$ later queries $H(r)$ with $[r^e \bmod N] = c_1$, the placeholder $*$ is replaced by $r$ and the same $k$ is returned, so the answers stay consistent. If $\mathcal{A}$ ever queries $H(\hat r)$, the reduction finds $\hat r$ in its table and outputs it.</li>
     </ol>
     <p><b>Why RSA works here:</b> the RSA function is a deterministic permutation, so every $c_1$ belongs to exactly one $r$, and the check $[r^e \bmod N] = c_1$ only needs the public key.</p>
     <p class="note">Any CCA-secure public-key scheme $\Pi$ (e.g. Cramer–Shoup) would also do, by the usual KEM/DEM composition.</p>
@@ -57,7 +61,7 @@
 
     <h3>Where the proof breaks down</h3>
     <ul>
-      <li><b>Simulating decryption queries.</b> A reduction to the security of $\Pi$ only has CPA access: it does not have $sk$ and gets no decryption oracle. For a query $\langle c_1', c_2' \rangle$ with $c_1' \ne c_1$ it would have to compute $\mathsf{Dec}_{sk}(c_1')$ to know which $H(r')$ to use. For RSA this can be done by checking $(r')^e = c_1'$ over the oracle queries. For a general, randomised CPA-secure $\Pi$ there is no way to test whether $c_1'$ encrypts a given $r'$.</li>
+      <li><b>Simulating decryption queries.</b> A reduction to the security of $\Pi$ only has CPA access: it does not have $sk$ and gets no decryption oracle. For a query $\langle c_1', c_2' \rangle$ with $c_1' \ne c_1$ it would have to compute $\mathsf{Dec}_{sk}(c_1')$ to know which $H(r')$ to use. For RSA, known $H$-queries can be matched using $(r')^e=c_1'$, and unknown values are handled by the pending-key table described above. For a general, randomised CPA-secure $\Pi$ there is no way to test whether $c_1'$ encrypts a given $r'$.</li>
       <li><b>Queries related to the challenge.</b> The reduction to $\Pi'$'s CCA security handles queries with the challenge key $H(r)$ only if they come with the <i>same</i> $c_1$. A different $c_1'$ that still decrypts to $r$ is exactly what the counterexample uses. Neither the CPA security of $\Pi$ nor the CCA security of $\Pi'$ rules this out.</li>
     </ul>
     <p class="note">Lesson: CCA security of the hybrid needs the key-encapsulation part to be non-malleable, e.g. CCA-secure itself, or uniquely checkable as with RSA in the random-oracle model.</p>

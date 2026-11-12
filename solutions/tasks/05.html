@@ -43,34 +43,34 @@ RXWSGCTKSCN</pre>
     <h2>Step 1: Find the period $t$</h2>
     <h3>Kasiski</h3>
     <p>The ciphertext has 331 letters. These 4-letter groups appear more than once:</p>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>Repeated group</th><th>Positions</th><th>Distance</th></tr>
       <tr><td class="mono">KKBP</td><td>1, 176</td><td>$175 = 5 \cdot 35$</td></tr>
       <tr><td class="mono">NYHO</td><td>40, 70</td><td>$30 = 5 \cdot 6$</td></tr>
       <tr><td class="mono">RVKF</td><td>61, 296</td><td>$235 = 5 \cdot 47$</td></tr>
-    </table>
+    </table></div>
     <p>$\gcd(175, 30, 235) = 5$, so the period is probably $t = 5$.</p>
 
     <h3>Index of coincidence</h3>
-    <p>To check this, split the ciphertext into $\tilde t$ columns for $\tilde t = 1, \dots, 10$ and average the index of coincidence over the columns. A value near $0.065$ means the columns look like English. A value near $0.038$ means they look random.</p>
-    <table class="data">
+    <p>To check this, split the ciphertext into $\tilde t$ columns for $\tilde t = 1,\dots,10$. In a column of $L>1$ letters with counts $N_i$, use the finite-sample estimate $\widehat S=\sum_iN_i(N_i-1)/(L(L-1))$, then average over the columns. This is the pair-count correction to the script’s $\sum_iq_i^2$ statistic. Values near $0.065$ suggest English-like frequencies; values near $0.038$ suggest a more uniform distribution.</p>
+    <div class="table-scroll"><table class="data">
       <tr><th>$\tilde t$</th><td>1</td><td>2</td><td>3</td><td>4</td><td><b>5</b></td><td>6</td><td>7</td><td>8</td><td>9</td><td><b>10</b></td></tr>
       <tr><th>IC</th><td>.045</td><td>.044</td><td>.046</td><td>.041</td><td style="background:var(--ok-soft)"><b>.069</b></td><td>.047</td><td>.048</td><td>.042</td><td>.040</td><td style="background:var(--ok-soft)"><b>.074</b></td></tr>
-    </table>
-    <p>Only $5$ and its multiple $10$ give English-like values, which confirms $t = 5$.</p>
+    </table></div>
+    <p>The peaks at $5$ and its multiple $10$ support $t=5$; the readable decryption below confirms that choice.</p>
 
     <h2>Step 2: Break each column</h2>
     <p>Column $i$ contains the letters $c_i, c_{i+5}, c_{i+10}, \dots$. Let $q_0, \dots, q_{25}$ be the frequencies of the negated letters $-c$ in that column. As in the script, for each candidate $k$ compare them with the English letter probabilities $p_0, \dots, p_{25}$:</p>
     $$I_k = \sum_{j=0}^{25} p_j \cdot q_{j - k}$$
     <p>The correct key letter gives $I_k \approx 0.065$:</p>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>Column $i$</th><th>Best $k_i$</th><th>$I_{k_i}$</th><th>Runner-up</th></tr>
       <tr class="hit"><td>0</td><td>F (5)</td><td>0.061</td><td>U, 0.049</td></tr>
       <tr class="hit"><td>1</td><td>R (17)</td><td>0.067</td><td>D, 0.051</td></tr>
       <tr class="hit"><td>2</td><td>O (14)</td><td>0.070</td><td>D, 0.048</td></tr>
       <tr class="hit"><td>3</td><td>S (18)</td><td>0.065</td><td>O, 0.046</td></tr>
       <tr class="hit"><td>4</td><td>T (19)</td><td>0.071</td><td>X, 0.048</td></tr>
-    </table>
+    </table></div>
     <p>In every column the best value is close to $0.065$ and clearly ahead of the runner-up. Together the columns give the key <b class="mono">FROST</b>.</p>
 
     <h2>Step 3: Decrypt</h2>

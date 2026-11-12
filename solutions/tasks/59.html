@@ -45,7 +45,9 @@
     <p>$\mathcal{A}$ runs in polynomial time because padding takes $O(\ell(n))$ steps. <span class="qed">$\blacksquare$</span></p>
 
     <div class="box result"><span class="label">Result.</span> Pad every message to the fixed length $\ell(n)$ (with $1\,0^*$ so it can be removed) and encrypt with $\Pi$. Since all padded messages have the same length, the restriction to equal-length messages disappears. This costs one bit of message length. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">The price is efficiency: a 1-bit message produces a ciphertext as long as one for an $\ell(n)$-bit message. This is unavoidable if lengths must be hidden.</p>
+    <h2>Keeping the entire original message space</h2>
+    <p>To include messages of length exactly $\ell(n)$ as well, assume $\ell(n)\ge1$ and generate two independent keys $k_1,k_2$. Encode $m$ as $m\|1\|0^{2\ell(n)-|m|-1}$, split it into two $\ell(n)$-bit blocks $u,v$, and send $\langle\mathsf{Enc}_{k_1}(u),\mathsf{Enc}_{k_2}(v)\rangle$. Decrypt both blocks and remove the delimiter padding. Two hybrid steps, one for each independent key, establish security for arbitrary challenge lengths up to $\ell(n)$ using only the original scheme’s EAV security. Reusing one key for both blocks would require a stronger security assumption.</p>
+    <p class="note">Padding to a fixed bound trades bandwidth for length hiding. Correctness requires enough distinct ciphertexts to represent every allowed message; it does not require each individual ciphertext to have the same length.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

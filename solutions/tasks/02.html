@@ -46,10 +46,10 @@
     $$k'_{x+st} - k'_x = s \bmod 26.$$
     <p>So the two copies are encrypted the same way only if $s \equiv 0 \pmod{26}$, that is, only if $d$ is a multiple of $26t$.</p>
 
-    <div class="box result"><span class="label">Effect.</span> The scheme is really an ordinary Vigenère cipher with the longer key $k'_0, \dots, k'_{26t-1}$ of period $26t$, because $\lfloor (x + 26t)/t \rfloor = \lfloor x/t \rfloor + 26$. Kasiski's attack is not prevented, but:
+    <div class="box result"><span class="label">Effect.</span> The scheme is really an ordinary Vigenère cipher with the longer key $k'_0, \dots, k'_{26t-1}$ with $26t$ as a period (not necessarily the fundamental period), because $\lfloor (x + 26t)/t \rfloor = \lfloor x/t \rfloor + 26$. Kasiski's attack is not prevented, but:
       <ul>
-        <li>repetitions now appear only at distances that are multiples of $26t$ instead of $t$, so the attacker needs about 26 times more ciphertext before such repetitions occur;</li>
-        <li>if the attacker does find them, Kasiski gives the period $26t$, not $t$. Each of the $26t$ columns then has 26 times fewer letters, which makes frequency analysis on the columns much harder.</li>
+        <li>for equal fragments whose starting positions agree modulo $t$, matching ciphertext now requires a distance divisible by $26t$. Accidental repetitions and special keys can produce other distances;</li>
+        <li>Kasiski can suggest $26t$ or a divisor/multiple rather than revealing $t$ directly. Splitting into $26t$ columns leaves fewer samples per column; there is no universal factor-26 bound on the ciphertext required.</li>
       </ul>
     </div>
 
@@ -57,8 +57,8 @@
     <p>The modification is public; only the key is secret. So for each guess $\tilde t = 1, 2, 3, \dots$ the attacker can <b>undo the block counter</b> and test whether an ordinary Vigenère cipher with period $\tilde t$ remains:</p>
     $$c'_x := c_x - \lfloor x / \tilde t \rfloor \bmod 26.$$
     <p>If $\tilde t = t$, then $c'_x = m_x + k_{x \bmod t}$. This is a normal Vigenère ciphertext with period $t$, and the index-of-coincidence test from the script recognises it. Split $c'$ into the columns $C_i = \{c'_i, c'_{i+t}, c'_{i+2t}, \dots\}$ and compute the letter frequencies $q_0, \dots, q_{25}$ of each column:</p>
-    $$S = \sum_{i=0}^{25} q_i^2 \approx \begin{cases} 0.065 & \text{if } \tilde t = t \text{ (each column is an English text shifted by } k_i) \\ 0.038 & \text{otherwise (letters look uniformly random)} \end{cases}$$
-    <p>Choose the smallest $\tilde t$ for which the average $S$ is close to $0.065$. After that, solve each column $C_i$ as a shift cipher, as in the script, to get $k_i$.</p>
+    $$S = \sum_{i=0}^{25} q_i^2 \approx \begin{cases} 0.065 & \text{if } \tilde t = t \text{ (each column is an English text shifted by } k_i) \\ \text{variable} & \text{for a wrong guess; mixtures need not be uniform} \end{cases}$$
+    <p>Use peaks near $0.065$ as candidate periods, then check all columns and the resulting plaintext. The test is statistical, not a guarantee for every key or finite text. For example, $t=3$ and $k=(0,9,18)$ give $k'_x=9x\bmod26$, whose fundamental period is $26$, although $26t=78$ is also a period.</p>
     <p class="note">Put another way: inside column $i$, consecutive letters are shifted by $k_i, k_i + 1, k_i + 2, \dots$. Subtracting $0, 1, 2, \dots$ from the column's letters makes the shift constant again. That is exactly what $c'_x$ does.</p>
   </div>
 

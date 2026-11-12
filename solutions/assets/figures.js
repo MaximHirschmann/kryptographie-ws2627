@@ -164,6 +164,13 @@
     try {
       const spec = JSON.parse(src.textContent);
       const svg = spec.type === "flow" ? renderFlow(spec) : renderGrid(spec);
+      const caption = fig.querySelector("figcaption");
+      if (caption) {
+        if (!caption.id) caption.id = `diagram-caption-${svg.dataset.uid}`;
+        svg.setAttribute("aria-labelledby", caption.id);
+      } else {
+        svg.setAttribute("aria-label", spec.label || "Cryptographic construction diagram");
+      }
       fig.insertBefore(svg, fig.querySelector("figcaption"));
     } catch (e) {
       fig.insertAdjacentHTML("afterbegin", `<p class="note">Figure could not be rendered: ${e.message}</p>`);

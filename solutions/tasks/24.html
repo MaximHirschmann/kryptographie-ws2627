@@ -24,16 +24,16 @@
     <h2>1. CBC, OFB and CTR are not CCA-secure</h2>
     <p>In the CCA game, the adversary may ask the decryption oracle about any ciphertext <i>except the challenge itself</i>. All three modes are <b>malleable</b>: changing one bit of the ciphertext changes the plaintext in a predictable way. So the attacker modifies the challenge slightly, has it decrypted, and undoes the change.</p>
     <p>Use single-block messages $m_0 = 0^n$ and $m_1 = 1^n$, and let $\delta := 0^{n-1}1$. The challenge is $\langle c_0, c_1 \rangle$, where $c_0$ is the $IV$ or counter.</p>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>Mode</th><th>Decryption query</th><th>Answer</th></tr>
       <tr><td>CBC</td><td>$\langle c_0 \oplus \delta,\ c_1 \rangle$</td><td>$F_k^{-1}(c_1) \oplus c_0 \oplus \delta = m_b \oplus \delta$</td></tr>
       <tr><td>OFB</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$c_1 \oplus \delta \oplus F_k(c_0) = m_b \oplus \delta$</td></tr>
       <tr><td>CTR</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$c_1 \oplus \delta \oplus F_k(c_0 + 1) = m_b \oplus \delta$</td></tr>
-    </table>
+    </table></div>
     <p>In each case the query differs from the challenge, so it is allowed. The attacker computes $m_b = \text{answer} \oplus \delta$ and outputs $b$. It wins with probability $1$. The attack uses no property of $F$, so it works <b>for every $F$</b>, even a truly random permutation. <span class="qed">$\blacksquare$</span></p>
 
     <h2>2. Integrity</h2>
-    <p><b>No.</b> The modes only provide <i>confidentiality</i> (CPA security). They do not protect integrity:</p>
+    <p><b>No.</b> CBC, OFB and CTR can provide CPA confidentiality with the appropriate primitive and IV/nonce rules. ECB is not even secure for general multi-block messages against eavesdropping. They do not protect integrity:</p>
     <ul>
       <li><b>Every string decrypts.</b> Decryption never rejects, so the receiver cannot tell a forged or modified ciphertext from a real one.</li>
       <li><b>Bit flipping (OFB, CTR):</b> flipping bit $j$ of $c_i$ flips exactly bit $j$ of $m_i$. If the attacker knows part of the plaintext, they can change it to anything, e.g. "pay 100" becomes "pay 900".</li>

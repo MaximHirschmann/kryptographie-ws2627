@@ -34,7 +34,7 @@
     <div class="box claim"><span class="label">Definition.</span> A key-exchange protocol $\Pi$ is <b>secure in the presence of an eavesdropper</b> if for all PPT adversaries $\mathcal{A}$ there is a negligible function $\mathsf{negl}$ such that
     $$\Pr\big[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1\big] \le \tfrac12 + \mathsf{negl}(n).$$</div>
     <p><b>Correctness</b> (implicit): both parties output the same key $k$, always or except with negligible probability.</p>
-    <p class="note">The adversary does not merely have to <i>compute</i> the key: it must not even be able to <i>distinguish</i> the key from a random string. Only then can the key safely be used in a private-key scheme. Diffie–Hellman satisfies this definition if the DDH problem is hard. The protocol in <a href="45.html">Question 45</a> does not.</p>
+    <p class="note">The adversary does not merely have to <i>compute</i> the key: it must not even be able to <i>distinguish</i> the key from a random string. Only then can the key safely be used in a private-key scheme. Raw Diffie–Hellman satisfies the corresponding experiment with a uniform <i>group element</i> as the random key under DDH. To obtain the bit-string experiment above, specify a key-derivation step and its assumptions; a group-element encoding is not automatically a uniform $n$-bit string. The protocol in <a href="45.html">Question 45</a> does not.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

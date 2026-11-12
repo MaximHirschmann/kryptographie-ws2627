@@ -20,13 +20,13 @@
   </div>
 
   <div class="solution">
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>Mode</th><th>Encryption</th><th>Decryption</th><th>Parallel decryption?</th></tr>
       <tr><td><b>ECB</b></td><td>$c_i = F_k(m_i)$</td><td>$m_i = F_k^{-1}(c_i)$</td><td><b>yes</b></td></tr>
       <tr><td><b>CBC</b></td><td>$c_0 = IV$, $c_i = F_k(c_{i-1} \oplus m_i)$</td><td>$m_i = F_k^{-1}(c_i) \oplus c_{i-1}$</td><td><b>yes</b></td></tr>
       <tr><td><b>OFB</b></td><td>$b_0 = IV$, $b_i = F_k(b_{i-1})$, $c_i = m_i \oplus b_i$</td><td>$b_0 = c_0 = IV$, $b_i = F_k(b_{i-1})$, $m_i = c_i \oplus b_i$</td><td><b>no</b> (but the $b_i$ can be precomputed)</td></tr>
       <tr><td><b>CTR</b></td><td>$c_0 = ctr$, $c_i = m_i \oplus F_k(ctr + i)$</td><td>$m_i = c_i \oplus F_k(c_0 + i)$</td><td><b>yes</b></td></tr>
-    </table>
+    </table></div>
 
     <h2>Explanation</h2>
     <ul>

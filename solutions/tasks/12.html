@@ -63,7 +63,7 @@
       <li>Vigenère was broken because the key is shorter than the text and repeats, so every $t$-th letter shares a shift. If the key is as long as the message and used once, there is no period and each column has a single letter.</li>
       <li>Known- and chosen-plaintext attacks reveal the key, but a key that is never used again protects nothing. Perfect secrecy is about one ciphertext.</li>
     </ul>
-    <p>Perfect secrecy is only possible if $|\mathcal{K}| \ge |\mathcal{M}|$ (script <a href="../script.html#thm-key-length">Theorem 6</a>). The attacks work exactly when this fails: long messages with short keys.</p>
+    <p>Perfect secrecy requires $|\mathcal{K}| \ge |\mathcal{M}|$ (script <a href="../script.html#thm-key-length">key-length theorem</a>). Violating this inequality proves insecurity, but satisfying it does not prove secrecy: <a href="13.html">Question 13</a> gives counterexamples. The restricted message spaces above satisfy the stronger distributional condition.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

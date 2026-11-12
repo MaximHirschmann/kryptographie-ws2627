@@ -44,6 +44,7 @@
     <p>So it is collision resistant. <span class="qed">$\blacksquare$</span></p>
 
     <h2>(d) No IV, start from $x_1$: collision resistant</h2>
+    <p>For this variant define at least one padded data block, even for the empty input: $B:=\max(1,\lceil L/n\rceil)$, with $x_1=0^n$ when $L=0$. Otherwise “start from $x_1$” would be undefined on the empty message.</p>
     <p>Again, if $L \ne L'$, the final inputs $(z_B \| L) \ne (z'_{B'} \| L')$ collide under $h^s$. If $L = L'$, then $B = B'$ and the backward argument runs from $z_{B+1}$ down to $i = 2$. If no collision is found, all inputs for $i \ge 2$ are equal: $x_i = x'_i$ for $i \ge 2$ and $z_1 = z'_1$, i.e. $x_1 = x'_1$. Then the padded messages are equal, and with $L = L'$ also $x = x'$, a contradiction. So it is collision resistant. <span class="qed">$\blacksquare$</span></p>
     <p class="note">The fixed IV in Merkle–Damgård only saves one block; with the length block at the end it is not needed for collision resistance.</p>
 

@@ -19,7 +19,7 @@
   </div>
 
   <div class="solution">
-    <div class="box claim"><span class="label">Claim.</span> If $t(n) \le c \log n$ for some constant $c$ and all large $n$, then $\Pi$ is not existentially unforgeable.</div>
+    <div class="box claim"><span class="label">Claim.</span> If $t(n) \le c \log n$ for some constant $c$ for infinitely many $n$, then $\Pi$ is not existentially unforgeable.</div>
 
     <h2>Attack: guess the tag</h2>
     <div class="algo"><table>
@@ -31,8 +31,8 @@
     <p>By correctness, the real tag $\mathsf{Mac}_k(m)$ always verifies. It is one of the $2^{t(n)}$ strings of length $t(n)$. Even if $\mathsf{Mac}$ is randomised, summing over the possible tags $\tau$:</p>
     $$\Pr[\mathsf{Vrfy}_k(m, t) = 1] \ \ge\ \sum_{\tau} \Pr[\mathsf{Mac}_k(m) = \tau] \cdot \Pr[t = \tau] = 2^{-t(n)} \ge 2^{-c \log n} = \frac{1}{n^c}.$$
     <p>So $\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n) = 1] \ge n^{-c}$, which is not negligible (<a href="17.html">Question 17</a>, 4b). Hence $\Pi$ is not secure. <span class="qed">$\blacksquare$</span></p>
-    <p>By contraposition, a secure MAC needs $t(n) = \omega(\log n)$: for every constant $c$, $t(n) \gt c \log n$ for all large $n$. Otherwise $2^{-t(n)}$ is at least an inverse polynomial.</p>
-    <p class="note">In practice this is why tags are at least 64–128 bits long. A 16-bit tag can be guessed with probability $2^{-16}$ per try.</p>
+    <p>By contraposition, a secure MAC needs $t(n) = \omega(\log n)$: for every constant $c$, $t(n) \gt c \log n$ for all large $n$. If this eventual bound failed, some constant $c$ would satisfy $t(n)\le c\log n$ for infinitely many $n$. The same uniform tag-guessing adversary would then succeed with probability at least $n^{-c}$ on that infinite subsequence, which is enough to violate negligibility.</p>
+    <p class="note">The asymptotic statement does not prescribe a fixed practical tag length. For a fixed $t$-bit tag with one valid value, a random guess succeeds with probability $2^{-t}$ per attempt; the number of attempts matters as well.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

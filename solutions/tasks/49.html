@@ -32,11 +32,12 @@
   </div>
 
   <div class="solution">
-    <p class="note">How to read the schemas. The left column is the reduction's <b>own challenger</b>: $\mathsf{PubK}^{\mathsf{eav}}$ for $\Pi$ in case 1, $\mathsf{PrivK}^{\mathsf{eav}}$ for $\Pi'$ in case 3. The middle is the reduction itself; boxes 2 and 7 are its internal computations. The right column is $\mathcal{A}^{hy}$, which the reduction runs as a subroutine. Steps are in the order 1 to 10.</p>
+    <p><b>Key-distribution convention.</b> As in the question, assume $\mathsf{Gen}'(1^n)$ samples a uniform $n$-bit key. If it uses a different distribution, the hybrid encryption algorithm must sample $k\leftarrow\mathsf{Gen}'(1^n)$ as well; the reduction must match that distribution.</p>
+<p><b>How to read the schemas.</b> The left column is the reduction’s own challenger: $\mathsf{PubK}^{\mathsf{eav}}$ for $\Pi$ in case 1, $\mathsf{PrivK}^{\mathsf{eav}}$ for $\Pi'$ in case 3. The middle is the reduction; boxes 2 and 7 are its internal computations. The right column is $\mathcal{A}^{hy}$, run as a subroutine. Steps are in the order 1 to 10.</p>
 
     <h2>Case 1: $\mathcal{A}_1$ attacks $\Pi$ in $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}_1,\Pi}(n)$</h2>
     <p>Goal: show $\langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle \approx \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle$. $\mathcal{A}_1$ uses its <b>challenge</b> to encrypt either the real key $k$ or $0^n$.</p>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>#</th><th>Where</th><th>Content</th></tr>
       <tr><td>1</td><td>Challenger $\to \mathcal{A}_1$</td><td>Challenger runs $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ and gives $pk$ to $\mathcal{A}_1$.</td></tr>
       <tr><td>2</td><td>$\mathcal{A}_1$ (internal)</td><td>Choose $k \leftarrow \{0,1\}^n$ uniformly.</td></tr>
@@ -48,7 +49,7 @@
       <tr><td>8</td><td>$\mathcal{A}_1 \to \mathcal{A}^{hy}$</td><td>Give the challenge ciphertext $\langle c_1, c_2 \rangle$.</td></tr>
       <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}_1$</td><td>$\mathcal{A}^{hy}$ outputs a bit $b''$.</td></tr>
       <tr><td>10</td><td>$\mathcal{A}_1 \to$ challenger</td><td>Output $b' := b''$.</td></tr>
-    </table>
+    </table></div>
     <p><b>Analysis.</b> If $b = 0$, $\mathcal{A}^{hy}$ sees exactly $\langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle$, a real $\Pi^{hy}$-encryption of $m_0$. If $b = 1$, it sees $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle$. Hence</p>
     $$
     \begin{aligned}
@@ -62,7 +63,7 @@
 
     <h2>Case 3: $\mathcal{A}'$ attacks $\Pi'$ in $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n)$</h2>
     <p>Goal: show $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle \approx \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_1) \rangle$. Now the private key $k$ is <b>hidden inside the challenger</b>. $\mathcal{A}'$ does not need it, because the public-key part only encrypts $0^n$.</p>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>#</th><th>Where</th><th>Content</th></tr>
       <tr><td>1</td><td>Challenger $\to \mathcal{A}'$</td><td>Challenger runs $k \leftarrow \mathsf{Gen}'(1^n)$ (kept secret) and starts $\mathcal{A}'(1^n)$.</td></tr>
       <tr><td>2</td><td>$\mathcal{A}'$ (internal)</td><td>Run $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ itself.</td></tr>
@@ -74,7 +75,7 @@
       <tr><td>8</td><td>$\mathcal{A}' \to \mathcal{A}^{hy}$</td><td>Give the challenge ciphertext $\langle c_1, c_2 \rangle$.</td></tr>
       <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}'$</td><td>$\mathcal{A}^{hy}$ outputs a bit $b''$.</td></tr>
       <tr><td>10</td><td>$\mathcal{A}' \to$ challenger</td><td>Output $b' := b''$.</td></tr>
-    </table>
+    </table></div>
     <p><b>Analysis.</b> $\mathcal{A}^{hy}$ sees exactly $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_b) \rangle$ with $\mathcal{A}'$'s challenge bit $b$, so $\mathcal{A}'$ wins exactly when $\mathcal{A}^{hy}$ guesses $b$:</p>
     $$\Pr\big[\mathcal{A}^{hy} \text{ guesses } b \text{ in the bottom row}\big] = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
 

@@ -69,8 +69,11 @@ body.script {
 .remark-tag { font-style: italic; }
 .small { font-size: 15px; color: #444; }
 table.plain { border-collapse: collapse; margin: 12px auto; font-size: 16px; }
+.table-scroll { max-width: 100%; overflow-x: auto; }
 table.plain td, table.plain th { border: 1px solid #bbb; padding: 4px 10px; text-align: left; }
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+/* Preserve accessible MathML without letting it widen the visible page. */
+.katex .katex-mathml { left: 0; top: 0; }
 
 /* Compact, static diagrams for the classical ciphers. */
 .cipher-figure {
@@ -101,7 +104,7 @@ table.plain td, table.plain th { border: 1px solid #bbb; padding: 4px 10px; text
   .paper .back, .anchor { display: none; }
   .paper h2 { break-before: page; }
   .env, .game, .alg { break-inside: avoid; }
-  .game, .alg { overflow: visible; }
+  .game, .alg, .table-scroll, .katex-display { overflow: visible; }
   a { color: inherit; }
   .cipher-figure__diagram { overflow: visible; }
   .cipher-figure--vigenere svg { min-width: 0; }

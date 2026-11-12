@@ -1,31 +1,17 @@
-1.
+Question 1: formal cipher definitions (A = 0, ..., Z = 25).
+See solutions/tasks/01.html for the full solution and examples.
 
-mono-alphabetic:
+Mono-alphabetic substitution:
+  Let Sigma = {0, ..., 25}. There are l = 26! permutations of Sigma;
+  l is the number of permutations, not the alphabet size.
+  Gen: choose k uniformly from {0, ..., l - 1}, indexing a permutation pi_k.
+  Enc: for each position i, c_i := pi_k(m_i).
+  Dec: for each position i, m_i := pi_k^{-1}(c_i).
 
-gen: k in {0, 1, l-1} | l is the length of the alphabet
+Vigenere with declared key length n >= 1:
+  Gen: choose each k_i independently and uniformly from {0, ..., 25}.
+  Enc: c_i := (m_i + k_{i mod n}) mod 26.
+  Dec: m_i := (c_i - k_{i mod n}) mod 26.
 
-enc: c = pi_k (m)
-
-dec: m = pi_k ^-1 (c)
-
-
-vigenère:
-
-gen: 
-
-    for i = 0 to n − 1 do
-    ki ← Gen_mono
-    output k0, . . . , kn−1
-
-enc: 
-
-    input k0, . . . , kn−1 ∈ K, m ∈ M∗
-    for i = 0 to |m| − 1 do
-        ci ∶= pi_k_(i mod n) (m_i)
-    output c0, . . . , c|m|−1
-
-dec: 
-    input k0, . . . , kn−1 ∈ K, c ∈ C
-
-    for i = 0 to |c| - 1 do 
-        m_i := pi_k_(i mod n)^-1 (c_i)
+Choosing arbitrary permutations at each key position instead of shifts gives
+a general polyalphabetic substitution cipher, not the standard Vigenere cipher.

@@ -23,18 +23,18 @@
     <p>To compute $x^e \bmod N$, square-and-multiply goes through the bits of $e$ from the top: for each bit after the first it <b>squares</b>, and for each further $1$-bit it also <b>multiplies</b> by $x$. With $\|e\|$ the bit length and $\mathrm{wt}(e)$ the number of $1$-bits:</p>
     $$\#\text{modular multiplications} = (\|e\| - 1) + (\mathrm{wt}(e) - 1).$$
 
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>$e$</th><th>binary</th><th>squarings</th><th>multiplications</th><th>total</th></tr>
       <tr><td>$3$</td><td><code>11</code></td><td>1</td><td>1</td><td>2</td></tr>
-      <tr><td>$2^{16}+1 = 65537$</td><td><code>1 0000000000000000 1</code></td><td>16</td><td>1</td><td>17</td></tr>
+      <tr><td>$2^{16}+1 = 65537$</td><td><code>1 000000000000000 1</code></td><td>16</td><td>1</td><td>17</td></tr>
       <tr><td>random 17-bit $e$</td><td>about half the bits set</td><td>16</td><td>$\approx 8$</td><td>$\approx 24$</td></tr>
       <tr><td>random $e$ with $\|e\| \approx \|N\| = 2048$</td><td></td><td>2047</td><td>$\approx 1024$</td><td>$\approx 3000$</td></tr>
-    </table>
+    </table></div>
 
     <h2>Why it matters</h2>
     <ul>
-      <li><b>Speed:</b> $3$ and $65537$ have only two $1$-bits, which minimizes the multiplications for their length. Compared with a "random" $e$ of the same length, about $\mathrm{wt}(e)/2$ multiplications are saved. Compared with a random full-size $e$, encryption and signature verification become roughly 100 times faster.</li>
-      <li><b>Security is not hurt</b>: the hardness of RSA rests on the secret $d$ and the factorization of $N$. $e$ is public anyway, and $d = e^{-1} \bmod \phi(N)$ is still a large random-looking number. (Small $d$ would be dangerous, small $e$ is not.)</li>
+      <li><b>Speed:</b> $3$ and $65537$ have only two $1$-bits, which minimizes the multiplications for their length. Compared with a "random" $e$ of the same length, $\mathrm{wt}(e)-2$ multiplications are saved. Compared with a random full-size $e$, encryption and signature verification become roughly 100 times faster.</li>
+      <li><b>Security assumptions:</b> the RSA assumption must hold for the chosen exponent and key-generation distribution. A small public exponent does not by itself recover $d$, but textbook RSA remains insecure and small exponents admit the attacks below. Security does not follow merely from $e$ being public.</li>
       <li><b>Fixed $e$ for everyone:</b> one can choose $p, q$ with $\gcd(e, p-1) = \gcd(e, q-1) = 1$ and can then hard-code $e$.</li>
     </ul>
 

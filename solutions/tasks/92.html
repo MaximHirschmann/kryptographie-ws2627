@@ -29,7 +29,7 @@
     $$\mathsf{Vrfy}_{(N,e)}(m, \sigma) = 1 \iff \sigma^e \equiv \mathsf{enc}(m) \pmod N.$$
 
     <h2>(b) No-message attack</h2>
-    <p>Against textbook RSA, the forger picks any $\sigma$ and outputs the message $m := \sigma^e \bmod N$. With an encoding, the forger needs $\sigma^e \bmod N$ to be a valid encoding $\mathsf{enc}(m)$ of some message. If the image of $\mathsf{enc}$ is a <b>sparse</b> set (e.g. it has a fixed structure such as many zero bits or redundancy), a random $\sigma^e$ lands in it only with negligible probability. For example, if $\mathsf{enc}$ forces 100 fixed bits, the chance is about $2^{-100}$.</p>
+    <p>Against textbook RSA, the forger picks any $\sigma$ and outputs the message $m := \sigma^e \bmod N$. With an encoding, the forger needs $\sigma^e \bmod N$ to be a valid encoding $\mathsf{enc}(m)$ of some message. If the image of $\mathsf{enc}$ is a <b>sparse</b> set (e.g. it has a fixed structure such as many zero bits or redundancy), a random $\sigma^e$ lands in it with small probability, negligible only if the redundancy grows sufficiently with the security parameter. For example, if $\mathsf{enc}$ forces 100 fixed bits, the chance is about $2^{-100}$.</p>
 
     <h2>Key observation for (c) and (d)</h2>
     <p>In both cases $\mathsf{enc}$ is <b>multiplication by a constant</b> (as integers):</p>

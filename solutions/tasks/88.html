@@ -44,7 +44,7 @@
     <h3>Game 1 is hard to win (CCA security of $\Pi'$)</h3>
     <p>In Game 1, $c_1^*$ no longer contains $k^*$. Reduction $\mathcal{C}$ against $\Pi'$ (whose challenger holds $k^*$):</p>
     <ul>
-      <li>Generate $(pk, sk)$ and $c_1^* \leftarrow \mathsf{Enc}_{pk}(0^n)$ itself.</li>
+      <li>Generate $(pk, sk)$ itself. Before the challenge, answer all decryption queries with $sk$, exactly as in the real experiment. Sample $c_1^*\leftarrow\mathsf{Enc}_{pk}(0^n)$ only when the challenge messages arrive; the special handling below applies after the challenge.</li>
       <li>Decryption query $(c_1, c_2)$: if $c_1 \ne c_1^*$, decrypt completely with $sk$; if $c_1 = c_1^*$, then $c_2 \ne c_2^*$ (otherwise the query is the challenge), so ask the $\Pi'$ decryption oracle for $\mathsf{Dec}'_{k^*}(c_2)$, which is allowed.</li>
       <li>Forward $m_0, m_1$ as $\mathcal{C}$'s challenge, receive $c_2^*$, give $\langle c_1^*, c_2^* \rangle$ to $\mathcal{A}$, and output $\mathcal{A}$'s guess.</li>
     </ul>

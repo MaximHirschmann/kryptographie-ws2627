@@ -35,15 +35,15 @@
     <p>With key $k = (k_0, \dots, k_{t-1})$ we have $c_x = m_x + k_{x \bmod t}$, so every pair gives one key letter:</p>
     $$k_{x \bmod t} = c_x - m_x \bmod 26.$$
     <p>Any $t$ consecutive letters cover every residue $x \bmod t$ once and therefore give the whole key.</p>
-    <div class="box result"><span class="label">Needed:</span> $t$ letters of known plaintext if the key length $t$ is known. If $t$ is unknown, compute $c_x - m_x$ for every position; this sequence is the key repeated. About $2t$ letters show the first repetition and therefore $t$.</div>
+    <div class="box result"><span class="label">Needed:</span> $t$ letters of known plaintext if the key length $t$ is known. If $t$ is unknown, compute $c_x - m_x$ for every position; this sequence is the key repeated. About $2t$ letters can suggest a repeated block, but cannot certify an unknown period without an upper bound. A keyword may itself repeat a shorter word, so only its effective period is observable.</div>
 
     <h2>Summary</h2>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>Cipher</th><th>Key from one pair of letters</th><th>Known plaintext needed</th></tr>
       <tr><td>Shift</td><td>$k = c - m$</td><td>1 letter</td></tr>
       <tr><td>Substitution</td><td>$\pi_k(m_x) = c_x$</td><td>text with 25 different letters</td></tr>
-      <tr><td>Vigenère</td><td>$k_{x \bmod t} = c_x - m_x$</td><td>$t$ letters ($\approx 2t$ if $t$ unknown)</td></tr>
-    </table>
+      <tr><td>Vigenère</td><td>$k_{x \bmod t} = c_x - m_x$</td><td>$t$ letters if $t$ is known; otherwise infer and check a candidate period</td></tr>
+    </table></div>
     <p>In every case the attacker only has to solve one simple equation per letter, without any search or statistics. That is why these attacks are trivial.</p>
   </div>
 

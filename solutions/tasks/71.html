@@ -38,17 +38,17 @@
 
     <h2>(b) Three more weak keys</h2>
     <p>The argument only needed that <b>both registers are constant</b>, i.e. all-zero or all-one, since rotation leaves them unchanged. That gives four combinations:</p>
-    <table class="data">
+    <div class="table-scroll"><table class="data">
       <tr><th>$C_0$</th><th>$D_0$</th><th>Key with parity bits (hex)</th></tr>
       <tr><td>$0^{28}$</td><td>$0^{28}$</td><td><code>01 01 01 01 01 01 01 01</code></td></tr>
       <tr><td>$1^{28}$</td><td>$1^{28}$</td><td><code>FE FE FE FE FE FE FE FE</code></td></tr>
       <tr><td colspan="2">one all-zero, the other all-one</td><td><code>1F 1F 1F 1F 0E 0E 0E 0E</code> and <code>E0 E0 E0 E0 F1 F1 F1 F1</code></td></tr>
-    </table>
+    </table></div>
     <p>(In the 64-bit form every 8th bit is a parity bit, which is why the bytes are not simply <code>00</code>/<code>FF</code>. $PC\text{-}1$ scatters the key bits, so the two mixed keys are not the obvious "half zeros, half ones" strings.)</p>
     <p>In each case all 16 sub-keys are equal, so the same argument gives $\mathsf{DES}_k \circ \mathsf{DES}_k = \mathrm{id}$.</p>
 
     <h2>(c) Is this a serious vulnerability?</h2>
-    <p><b>No.</b> A uniformly random key is weak with probability $4/2^{56} = 2^{-54}$, which is negligible. Implementations can also simply reject these four keys when generating a key. They matter only when keys are not chosen at random, e.g. if an attacker can choose or influence the key, or when DES is used as a building block whose key is derived from data, as in <a href="75.html">Question 75</a>.</p>
+    <p><b>No.</b> A uniformly random key is weak with probability $4/2^{56} = 2^{-54}$, which is extremely small. DES has a fixed key length, so “negligible” here would be informal, not the asymptotic definition from Question 17. Implementations can also simply reject these four keys when generating a key. They matter only when keys are not chosen at random, e.g. if an attacker can choose or influence the key, or when DES is used as a building block whose key is derived from data, as in <a href="75.html">Question 75</a>.</p>
 
     <div class="box result"><span class="label">Result.</span> Keys whose two key-schedule registers are constant give 16 identical sub-keys, so $\mathsf{DES}_k$ is its own inverse. There are exactly four such keys. They are dangerous when used, but a random key hits one with probability $2^{-54}$. <span class="qed">$\blacksquare$</span></div>
     <p class="note">There are also 6 pairs of <i>semi-weak keys</i> with $\mathsf{DES}_{k_1} = \mathsf{DES}_{k_2}^{-1}$, where the registers have alternating patterns like $0101\ldots$.</p>

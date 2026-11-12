@@ -19,9 +19,8 @@
   </div>
 
   <div class="solution">
-    <h2>Step 1: few candidates for $\phi(N)$</h2>
-    <p>$3d \equiv 1 \pmod{\phi(N)}$ means $3d - 1 = t \cdot \phi(N)$ for an integer $t \ge 1$ (since $3d - 1 \gt 0$).</p>
-    <p>As an RSA exponent, $d$ is reduced: $0 \lt d \lt \phi(N)$. Then</p>
+    <h2>Step 1: few candidates for a reduced RSA exponent</h2>
+    <p>First consider the usual RSA convention that $d$ is reduced: $0\lt d\lt\phi(N)$. The congruence $3d\equiv1\pmod{\phi(N)}$ then gives $3d-1=t\phi(N)$ for an integer $t\ge1$. Thus</p>
     $$t = \frac{3d - 1}{\phi(N)} \lt \frac{3\phi(N)}{\phi(N)} = 3, \qquad \text{so } t \in \{1, 2\}.$$
     <p>The candidates are $\phi(N) \in \{\,3d - 1,\ (3d-1)/2\,\}$ (the second only if $3d - 1$ is even).</p>
     <p class="note">If we only know $0 \lt d \lt N$: since $p, q \ge 2$ are distinct, $\phi(N)/N = (1 - \frac1p)(1 - \frac1q) \ge \frac12 \cdot \frac23 = \frac13$. Then $t \lt 3N/\phi(N) \le 9$, so at most 8 candidates $t \in \{1, \dots, 8\}$. Still constant.</p>
@@ -36,7 +35,11 @@
     <p><b>Correctness.</b> For the right candidate, $X^2 - (p+q)X + pq = (X - p)(X - q)$, so the roots are $p$ and $q$. A wrong candidate either fails a check, or still produces integers with $p'q' = N$ and $1 \lt q' \lt p'$; since $N = pq$ has only one such factorization, that output is correct too.</p>
     <p><b>Running time.</b> At most 2 (or 8) candidates, each needing a constant number of arithmetic operations on $O(\log N)$-bit numbers plus an integer square root. That is polynomial in $\log N$.</p>
 
-    <div class="box result"><span class="label">Result.</span> $3d - 1$ is a small multiple of $\phi(N)$, so $\phi(N)$ is one of a constant number of candidates. From $\phi(N)$ and $N$, the factors are the roots of $X^2 - (N - \phi(N) + 1)X + N$. Knowing the private exponent $d$ is as good as knowing the factorization. <span class="qed">$\blacksquare$</span></div>
+    <h2>If the supplied $d$ is not reduced</h2>
+    <p>The question only gives an integer satisfying the congruence; it does not guarantee $d&lt;N$. Set $M:=|3d-1|$, a nonzero multiple of $\phi(N)$, and factor $N$ using this known multiple. Handle even $N$ immediately. For odd $N$, write $M=2^s u$ with $u$ odd and sample $a\leftarrow\{1,\dots,N-1\}$. If $\gcd(a,N)>1$, this already gives a factor. Otherwise compute $v=a^u\bmod N$ and square it at most $s$ times. If $v^2=1\bmod N$ while $v\notin\{1,-1\}$, output $\gcd(v-1,N)$ and its complementary factor; if no such value occurs, retry with a fresh $a$.</p>
+    <p>Because $M$ is a multiple of both $p-1$ and $q-1$, the chain ends at $1$. For a uniform unit $a$, the two CRT components of $a^u$ have orders that are powers of two; these orders differ with probability at least $1/2$. Then the chain contains a nontrivial square root of $1$. Thus the algorithm succeeds in expected polynomial time in $\log N+\log(|d|+1)$. The short candidate-list proof applies under the reduced-exponent convention; this randomized method covers arbitrary input $d$.</p>
+
+    <div class="box result"><span class="label">Result.</span> For a reduced exponent $d$, $3d-1$ gives a constant-size candidate list for $\phi(N)$. Each candidate yields a quadratic whose roots can be checked as factors of $N$. For arbitrary $d$, the known multiple $|3d-1|$ gives an expected polynomial-time factoring algorithm. <span class="qed">$\blacksquare$</span></div>
     <p class="note">This generalizes to every $e$: $ed - 1$ is a multiple of $\phi(N)$, and a randomized algorithm factors $N$ from any multiple of $\phi(N)$. So one must never reuse a modulus $N$ with different key pairs.</p>
   </div>
 
