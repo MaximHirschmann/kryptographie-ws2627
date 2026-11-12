@@ -59,6 +59,7 @@ body.script {
 .game, .alg {
   margin: 14px auto; padding: 10px 18px; width: fit-content; max-width: 100%;
   border: 1px solid #bbb; border-radius: 2px;
+  box-sizing: border-box; overflow-x: auto;
 }
 .game .gtitle { font-weight: bold; margin-bottom: 4px; }
 .game ol { margin: 0; padding-left: 1.6em; }
@@ -71,10 +72,37 @@ table.plain { border-collapse: collapse; margin: 12px auto; font-size: 16px; }
 table.plain td, table.plain th { border: 1px solid #bbb; padding: 4px 10px; text-align: left; }
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
 
+/* Compact, static diagrams for the classical ciphers. */
+.cipher-figure {
+  --cipher-highlight: #b9dde7;
+  margin: 20px auto;
+  max-width: 540px;
+  color: inherit;
+  break-inside: avoid;
+}
+.cipher-figure__diagram { overflow-x: auto; }
+.cipher-figure svg { display: block; width: 100%; height: auto; }
+.cipher-figure text { fill: currentColor; dominant-baseline: middle; font-family: system-ui, sans-serif; }
+.cipher-letter { font-size: 24px; }
+.cipher-label { font-size: 14px; }
+.cipher-number { font-size: 13px; }
+.cipher-cell { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.cipher-cell--selected { fill: var(--cipher-highlight); }
+.cipher-arrow { fill: none; stroke: currentColor; stroke-width: 1.8; }
+.cipher-context { opacity: .28; }
+.cipher-cell.cipher-context, .cipher-arrow.cipher-context { stroke-dasharray: 3 4; }
+.cipher-divider { fill: none; stroke: currentColor; stroke-width: 1; stroke-dasharray: 3 5; opacity: .3; }
+.cipher-figure figcaption { margin-top: 8px; font-size: 14px; text-align: center; }
+.cipher-figure--vigenere { max-width: 660px; }
+.cipher-figure--vigenere svg { min-width: 460px; }
+
 @media print {
   .paper { max-width: none; padding: 0; }
   .paper .back, .anchor { display: none; }
   .paper h2 { break-before: page; }
   .env, .game, .alg { break-inside: avoid; }
+  .game, .alg { overflow: visible; }
   a { color: inherit; }
+  .cipher-figure__diagram { overflow: visible; }
+  .cipher-figure--vigenere svg { min-width: 0; }
 }

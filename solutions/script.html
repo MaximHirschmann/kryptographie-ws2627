@@ -6,6 +6,7 @@
 <title>Modern Cryptography — Lecture Script</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <link rel="stylesheet" href="assets/script.css">
+<link rel="stylesheet" href="assets/script-visuals.css">
 </head>
 <body class="script">
 <div class="paper">
@@ -54,7 +55,45 @@ $$\mathcal{C} = \{\, c \mid c = \mathsf{Enc}_k(m;r) \text{ for some } (k, m, r) 
   <li>Why $|\mathcal{M}| \gt 1$? With only one possible message there is nothing to hide; the receiver knows the message in advance.</li>
 </ul>
 <p>Formally, algorithms are (probabilistic) Turing machines; a probabilistic machine has an additional tape filled with uniformly random bits.</p>
+<figure class="lecture-visual" id="fig-encryption-inputs">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 311" role="img" aria-labelledby="encryption-inputs-title encryption-inputs-desc">
+<title id="encryption-inputs-title">Where the key and randomness enter</title>
+<desc id="encryption-inputs-desc">The key is shared by encryption and decryption. Encryption also receives fresh random coins. Only the ciphertext travels between the two algorithms.</desc>
+<defs>
+<marker id="encryption-inputs-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<rect x="225" y="10" width="190" height="44" rx="4" class="v-box v-highlight"/>
+<text x="320.0" y="32.0" text-anchor="middle" class="v-text">Gen → shared key k</text>
+<rect x="15" y="100" width="140" height="56" rx="4" class="v-box"/>
+<text x="85.0" y="128.0" text-anchor="middle" class="v-text">plaintext m</text>
+<rect x="235" y="100" width="170" height="56" rx="4" class="v-box"/>
+<text x="320.0" y="128.0" text-anchor="middle" class="v-text">Encₖ(m; r)</text>
+<rect x="485" y="100" width="140" height="56" rx="4" class="v-box v-highlight"/>
+<text x="555.0" y="128.0" text-anchor="middle" class="v-text">ciphertext c</text>
+<polyline points="156,128 232,128" class="v-line" marker-end="url(#encryption-inputs-arrow)"/>
+<polyline points="407,128 482,128" class="v-line" marker-end="url(#encryption-inputs-arrow)"/>
+<polyline points="280,55 280,97" class="v-line" marker-end="url(#encryption-inputs-arrow)"/>
+<text x="148" y="65" text-anchor="middle" class="v-small">fresh coins r</text>
+<polyline points="192,65 215,65 215,112 232,112" class="v-line" marker-end="url(#encryption-inputs-arrow)"/>
+<rect x="235" y="210" width="170" height="56" rx="4" class="v-box"/>
+<text x="320.0" y="238.0" text-anchor="middle" class="v-text">Decₖ(c)</text>
+<rect x="15" y="210" width="140" height="56" rx="4" class="v-box"/>
+<text x="85.0" y="238.0" text-anchor="middle" class="v-text">recovered m</text>
+<polyline points="555,157 555,238 408,238" class="v-line" marker-end="url(#encryption-inputs-arrow)"/>
+<polyline points="233,238 158,238" class="v-line" marker-end="url(#encryption-inputs-arrow)"/>
+<polyline points="415,32 450,32 450,193 320,193 320,207" class="v-line v-dashed" marker-end="url(#encryption-inputs-arrow)"/>
+<text x="320" y="291" text-anchor="middle" class="v-small">Correctness: decrypting any honestly generated ciphertext recovers m.</text>
+</svg>
+</div>
+<figcaption>The key is shared in advance. Random coins choose the ciphertext; decryption needs the key and ciphertext.</figcaption>
+</figure>
 </section>
+
+
+
 
 <section class="sub" id="sec-kerckhoffs">
 <h3>Keys and Kerckhoffs' Principle</h3>
@@ -73,6 +112,16 @@ $$\mathcal{C} = \{\, c \mid c = \mathsf{Enc}_k(m;r) \text{ for some } (k, m, r) 
 
 <section class="sub" id="sec-attack-models">
 <h3>Attack Models</h3>
+<figure class="lecture-visual" id="fig-attack-ladder">
+<div class="lecture-visual__canvas"><table>
+<tr><th>Access grows ↓</th><th>What becomes available</th></tr>
+<tr><td>Ciphertext-only</td><td>Observe encrypted messages</td></tr>
+<tr><td>↓ Known-plaintext</td><td>Also know some matching plaintexts</td></tr>
+<tr><td>↓ Chosen-plaintext</td><td>Choose messages to be encrypted</td></tr>
+<tr><td>↓ Chosen-ciphertext</td><td>Also request decryptions, subject to game restrictions</td></tr>
+</table></div>
+<figcaption>Each step grants more access. A security claim must specify the adversary’s capabilities.</figcaption>
+</figure>
 <p>What the adversary has (besides knowledge of the scheme) and what it obtains, in increasing order of power:</p>
 <table class="plain">
 <tr><th>Attack</th><th>The adversary has / obtains</th></tr>
@@ -97,6 +146,38 @@ $$\mathcal{C} = \{\, c \mid c = \mathsf{Enc}_k(m;r) \text{ for some } (k, m, r) 
 <tr><td>$\mathsf{Dec}$</td><td>input $k$, $c$: $m_i := (c_i - k) \bmod 26$; output $m$</td></tr>
 </table></div>
 <p>Correctness: $((m_i + k) - k) \bmod 26 = m_i$. <b>Caesar's cipher</b> is the special case with the fixed shift $k = 3$; it has no key at all and is broken as soon as the method is known.</p>
+<figure class="cipher-figure" id="shift-cipher-demo">
+<div class="cipher-figure__diagram">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 220" role="img" aria-labelledby="shift-title shift-desc">
+<title id="shift-title">A shift of three letters</title>
+<desc id="shift-desc">A maps to D, B maps to E and C maps to F under key k = 3.</desc>
+<defs><marker id="shift-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="currentColor"/></marker></defs>
+<text x="78" y="16" class="cipher-label" text-anchor="start">plaintext</text>
+<text x="78" y="210" class="cipher-label" text-anchor="start">ciphertext</text>
+<text x="34" y="111" class="cipher-label" text-anchor="middle">k = 3</text>
+<rect x="78" y="28" width="50" height="42" class="cipher-cell"/><text x="103.0" y="50.0" class="cipher-letter" text-anchor="middle">A</text>
+<rect x="78" y="152" width="50" height="42" class="cipher-cell cipher-context"/><text x="103.0" y="174.0" class="cipher-letter cipher-context" text-anchor="middle">A</text>
+<rect x="128" y="28" width="50" height="42" class="cipher-cell cipher-cell--selected"/><text x="153.0" y="50.0" class="cipher-letter" text-anchor="middle">B</text>
+<rect x="128" y="152" width="50" height="42" class="cipher-cell cipher-context"/><text x="153.0" y="174.0" class="cipher-letter cipher-context" text-anchor="middle">B</text>
+<rect x="178" y="28" width="50" height="42" class="cipher-cell"/><text x="203.0" y="50.0" class="cipher-letter" text-anchor="middle">C</text>
+<rect x="178" y="152" width="50" height="42" class="cipher-cell cipher-context"/><text x="203.0" y="174.0" class="cipher-letter cipher-context" text-anchor="middle">C</text>
+<rect x="228" y="28" width="50" height="42" class="cipher-cell cipher-context"/><text x="253.0" y="50.0" class="cipher-letter cipher-context" text-anchor="middle">D</text>
+<rect x="228" y="152" width="50" height="42" class="cipher-cell"/><text x="253.0" y="174.0" class="cipher-letter" text-anchor="middle">D</text>
+<rect x="278" y="28" width="50" height="42" class="cipher-cell cipher-context"/><text x="303.0" y="50.0" class="cipher-letter cipher-context" text-anchor="middle">E</text>
+<rect x="278" y="152" width="50" height="42" class="cipher-cell cipher-cell--selected"/><text x="303.0" y="174.0" class="cipher-letter" text-anchor="middle">E</text>
+<rect x="328" y="28" width="50" height="42" class="cipher-cell cipher-context"/><text x="353.0" y="50.0" class="cipher-letter cipher-context" text-anchor="middle">F</text>
+<rect x="328" y="152" width="50" height="42" class="cipher-cell"/><text x="353.0" y="174.0" class="cipher-letter" text-anchor="middle">F</text>
+<text x="58" y="50" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<text x="403" y="50" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<text x="58" y="175" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<text x="403" y="175" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<path d="M 103 71 C 103 108, 253 114, 253 150" class="cipher-arrow" marker-end="url(#shift-arrow)" data-plain="A" data-cipher="D"/>
+<path d="M 153 71 C 153 108, 303 114, 303 150" class="cipher-arrow" marker-end="url(#shift-arrow)" data-plain="B" data-cipher="E"/>
+<path d="M 203 71 C 203 108, 353 114, 353 150" class="cipher-arrow" marker-end="url(#shift-arrow)" data-plain="C" data-cipher="F"/>
+</svg>
+</div>
+<figcaption><i>k</i> = 3: every letter moves three positions forward.</figcaption>
+</figure>
 <p><b>Brute force.</b> The shift cipher has only 26 keys. Decrypting with all of them and picking the candidate that makes sense breaks it immediately.</p>
 <div class="env prin" id="prin-key-space" data-title="Sufficient key space">
 <p>The key space must be so large that trying all keys (exhaustive search) is infeasible. Today this means at least about $2^{80}$, in practice $2^{128}$ keys or more.</p>
@@ -114,6 +195,40 @@ $$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
 <tr><td>$\mathsf{Enc}$</td><td>$c_i := \pi(m_i)$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>$m_i := \pi^{-1}(c_i)$</td></tr>
 </table></div>
+<figure class="cipher-figure" id="substitution-cipher-diagram">
+<div class="cipher-figure__diagram">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 220" role="img" aria-labelledby="substitution-title substitution-desc">
+<title id="substitution-title">A fixed substitution permutation</title>
+<desc id="substitution-desc">One example permutation maps A to D, B to F, C to A, D to E, E to B and F to C. The mapping is reused at every position.</desc>
+<defs><marker id="substitution-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="currentColor"/></marker></defs>
+<text x="78" y="16" class="cipher-label" text-anchor="start">plaintext</text>
+<text x="78" y="210" class="cipher-label" text-anchor="start">ciphertext</text>
+<rect x="78" y="28" width="50" height="42" class="cipher-cell"/><text x="103.0" y="50.0" class="cipher-letter" text-anchor="middle">A</text>
+<rect x="78" y="152" width="50" height="42" class="cipher-cell cipher-context"/><text x="103.0" y="174.0" class="cipher-letter cipher-context" text-anchor="middle">A</text>
+<rect x="128" y="28" width="50" height="42" class="cipher-cell cipher-cell--selected"/><text x="153.0" y="50.0" class="cipher-letter" text-anchor="middle">B</text>
+<rect x="128" y="152" width="50" height="42" class="cipher-cell cipher-context"/><text x="153.0" y="174.0" class="cipher-letter cipher-context" text-anchor="middle">B</text>
+<rect x="178" y="28" width="50" height="42" class="cipher-cell cipher-context"/><text x="203.0" y="50.0" class="cipher-letter cipher-context" text-anchor="middle">C</text>
+<rect x="178" y="152" width="50" height="42" class="cipher-cell cipher-context"/><text x="203.0" y="174.0" class="cipher-letter cipher-context" text-anchor="middle">C</text>
+<rect x="228" y="28" width="50" height="42" class="cipher-cell cipher-context"/><text x="253.0" y="50.0" class="cipher-letter cipher-context" text-anchor="middle">D</text>
+<rect x="228" y="152" width="50" height="42" class="cipher-cell"/><text x="253.0" y="174.0" class="cipher-letter" text-anchor="middle">D</text>
+<rect x="278" y="28" width="50" height="42" class="cipher-cell cipher-context"/><text x="303.0" y="50.0" class="cipher-letter cipher-context" text-anchor="middle">E</text>
+<rect x="278" y="152" width="50" height="42" class="cipher-cell cipher-context"/><text x="303.0" y="174.0" class="cipher-letter cipher-context" text-anchor="middle">E</text>
+<rect x="328" y="28" width="50" height="42" class="cipher-cell cipher-context"/><text x="353.0" y="50.0" class="cipher-letter cipher-context" text-anchor="middle">F</text>
+<rect x="328" y="152" width="50" height="42" class="cipher-cell cipher-cell--selected"/><text x="353.0" y="174.0" class="cipher-letter" text-anchor="middle">F</text>
+<text x="58" y="50" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<text x="403" y="50" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<text x="58" y="175" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<text x="403" y="175" class="cipher-label cipher-context" text-anchor="middle">…</text>
+<path d="M 203 71 C 203 108, 103 114, 103 150" class="cipher-arrow cipher-context" marker-end="url(#substitution-arrow)" data-plain="C" data-cipher="A"/>
+<path d="M 253 71 C 253 108, 303 114, 303 150" class="cipher-arrow cipher-context" marker-end="url(#substitution-arrow)" data-plain="D" data-cipher="E"/>
+<path d="M 303 71 C 303 108, 153 114, 153 150" class="cipher-arrow cipher-context" marker-end="url(#substitution-arrow)" data-plain="E" data-cipher="B"/>
+<path d="M 353 71 C 353 108, 203 114, 203 150" class="cipher-arrow cipher-context" marker-end="url(#substitution-arrow)" data-plain="F" data-cipher="C"/>
+<path d="M 103 71 C 103 108, 253 114, 253 150" class="cipher-arrow" marker-end="url(#substitution-arrow)" data-plain="A" data-cipher="D"/>
+<path d="M 153 71 C 153 108, 353 114, 353 150" class="cipher-arrow" marker-end="url(#substitution-arrow)" data-plain="B" data-cipher="F"/>
+</svg>
+</div>
+<figcaption>An example permutation: A → D, B → F. The same mapping is used at every position.</figcaption>
+</figure>
 <p>Correctness: $\pi^{-1}(\pi(m_i)) = m_i$. The key space has $26! \approx 2^{88}$ elements, so brute force is out of the question. Nevertheless the cipher is weak: each plaintext letter is always mapped to the <i>same</i> ciphertext letter, so letter frequencies survive. The most frequent ciphertext letter is probably $\pi(\texttt{e})$, and so on; frequent bigrams ($\texttt{th}$, $\texttt{he}$) and words fix the rest. A few hundred letters of English text usually suffice.</p>
 <p><b>Lesson:</b> a large key space is <b>necessary but not sufficient</b> for security.</p>
 <p class="small">Frequency analysis assumes "typical" text. Texts written to avoid certain letters (there are novels without a single <i>e</i>) show that classical cryptanalysis relies on assumptions about the message distribution, which is exactly what modern definitions make explicit.</p>
@@ -133,12 +248,85 @@ $$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
 <tr><td>$\mathsf{Dec}$</td><td>for $i = 0, \dots, |c|-1$: $m_i := (c_i - k_{i \bmod t}) \bmod 26$; output $m$</td></tr>
 </table></div>
 <p>Example with key <code>cafe</code> = $(2, 0, 5, 4)$:</p>
-<table class="plain">
-<tr><td>plaintext</td><td><code>tellhimaboutme</code></td></tr>
-<tr><td>key (repeated)</td><td><code>cafecafecafeca</code></td></tr>
-<tr><td>ciphertext</td><td><code>VEQPJIREDOZXOE</code></td></tr>
-</table>
-<p>The two <code>l</code> become <code>Q</code> and <code>P</code>, and <code>E</code> arises from both <code>e</code> and <code>a</code>: the frequencies are smoothed out.</p>
+<figure class="cipher-figure cipher-figure--vigenere" id="vigenere-cipher-diagram">
+<div class="cipher-figure__diagram">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 230" role="img" aria-labelledby="vigenere-title vigenere-desc">
+<title id="vigenere-title">Vigenère with the repeating key cafe</title>
+<desc id="vigenere-desc">The plaintext tellhima, repeated key cafecafe and ciphertext VEQPJIRE are aligned by position. The two l letters use key letters f and e, shifts 5 and 4, and become Q and P.</desc>
+<defs><marker id="vigenere-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="currentColor"/></marker></defs>
+<text x="4" y="47" class="cipher-label" text-anchor="start">plaintext</text>
+<text x="4" y="112" class="cipher-label" text-anchor="start">key</text>
+<text x="4" y="195" class="cipher-label" text-anchor="start">ciphertext</text>
+<rect x="122" y="26" width="48" height="40" class="cipher-cell"/><text x="146.0" y="47.0" class="cipher-letter" text-anchor="middle">t</text>
+<rect x="122" y="94" width="48" height="48" class="cipher-cell"/>
+<text x="146" y="109" class="cipher-letter" text-anchor="middle">c</text>
+<text x="146" y="130" class="cipher-number" text-anchor="middle">+2</text>
+<rect x="122" y="174" width="48" height="40" class="cipher-cell"/><text x="146.0" y="195.0" class="cipher-letter" text-anchor="middle">V</text>
+<path d="M 146 68 L 146 91" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<path d="M 146 144 L 146 171" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="t" data-key="c" data-cipher="V"/>
+<rect x="170" y="26" width="48" height="40" class="cipher-cell"/><text x="194.0" y="47.0" class="cipher-letter" text-anchor="middle">e</text>
+<rect x="170" y="94" width="48" height="48" class="cipher-cell"/>
+<text x="194" y="109" class="cipher-letter" text-anchor="middle">a</text>
+<text x="194" y="130" class="cipher-number" text-anchor="middle">+0</text>
+<rect x="170" y="174" width="48" height="40" class="cipher-cell"/><text x="194.0" y="195.0" class="cipher-letter" text-anchor="middle">E</text>
+<path d="M 194 68 L 194 91" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<path d="M 194 144 L 194 171" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="e" data-key="a" data-cipher="E"/>
+<rect x="218" y="26" width="48" height="40" class="cipher-cell cipher-cell--selected"/><text x="242.0" y="47.0" class="cipher-letter" text-anchor="middle">l</text>
+<rect x="218" y="94" width="48" height="48" class="cipher-cell cipher-cell--selected"/>
+<text x="242" y="109" class="cipher-letter" text-anchor="middle">f</text>
+<text x="242" y="130" class="cipher-number" text-anchor="middle">+5</text>
+<rect x="218" y="174" width="48" height="40" class="cipher-cell cipher-cell--selected"/><text x="242.0" y="195.0" class="cipher-letter" text-anchor="middle">Q</text>
+<path d="M 242 68 L 242 91" class="cipher-arrow" marker-end="url(#vigenere-arrow)"/>
+<path d="M 242 144 L 242 171" class="cipher-arrow" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="l" data-key="f" data-cipher="Q"/>
+<rect x="266" y="26" width="48" height="40" class="cipher-cell cipher-cell--selected"/><text x="290.0" y="47.0" class="cipher-letter" text-anchor="middle">l</text>
+<rect x="266" y="94" width="48" height="48" class="cipher-cell cipher-cell--selected"/>
+<text x="290" y="109" class="cipher-letter" text-anchor="middle">e</text>
+<text x="290" y="130" class="cipher-number" text-anchor="middle">+4</text>
+<rect x="266" y="174" width="48" height="40" class="cipher-cell cipher-cell--selected"/><text x="290.0" y="195.0" class="cipher-letter" text-anchor="middle">P</text>
+<path d="M 290 68 L 290 91" class="cipher-arrow" marker-end="url(#vigenere-arrow)"/>
+<path d="M 290 144 L 290 171" class="cipher-arrow" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="l" data-key="e" data-cipher="P"/>
+<rect x="326" y="26" width="48" height="40" class="cipher-cell"/><text x="350.0" y="47.0" class="cipher-letter" text-anchor="middle">h</text>
+<rect x="326" y="94" width="48" height="48" class="cipher-cell"/>
+<text x="350" y="109" class="cipher-letter" text-anchor="middle">c</text>
+<text x="350" y="130" class="cipher-number" text-anchor="middle">+2</text>
+<rect x="326" y="174" width="48" height="40" class="cipher-cell"/><text x="350.0" y="195.0" class="cipher-letter" text-anchor="middle">J</text>
+<path d="M 350 68 L 350 91" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<path d="M 350 144 L 350 171" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="h" data-key="c" data-cipher="J"/>
+<rect x="374" y="26" width="48" height="40" class="cipher-cell"/><text x="398.0" y="47.0" class="cipher-letter" text-anchor="middle">i</text>
+<rect x="374" y="94" width="48" height="48" class="cipher-cell"/>
+<text x="398" y="109" class="cipher-letter" text-anchor="middle">a</text>
+<text x="398" y="130" class="cipher-number" text-anchor="middle">+0</text>
+<rect x="374" y="174" width="48" height="40" class="cipher-cell"/><text x="398.0" y="195.0" class="cipher-letter" text-anchor="middle">I</text>
+<path d="M 398 68 L 398 91" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<path d="M 398 144 L 398 171" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="i" data-key="a" data-cipher="I"/>
+<rect x="422" y="26" width="48" height="40" class="cipher-cell"/><text x="446.0" y="47.0" class="cipher-letter" text-anchor="middle">m</text>
+<rect x="422" y="94" width="48" height="48" class="cipher-cell"/>
+<text x="446" y="109" class="cipher-letter" text-anchor="middle">f</text>
+<text x="446" y="130" class="cipher-number" text-anchor="middle">+5</text>
+<rect x="422" y="174" width="48" height="40" class="cipher-cell"/><text x="446.0" y="195.0" class="cipher-letter" text-anchor="middle">R</text>
+<path d="M 446 68 L 446 91" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<path d="M 446 144 L 446 171" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="m" data-key="f" data-cipher="R"/>
+<rect x="470" y="26" width="48" height="40" class="cipher-cell"/><text x="494.0" y="47.0" class="cipher-letter" text-anchor="middle">a</text>
+<rect x="470" y="94" width="48" height="48" class="cipher-cell"/>
+<text x="494" y="109" class="cipher-letter" text-anchor="middle">e</text>
+<text x="494" y="130" class="cipher-number" text-anchor="middle">+4</text>
+<rect x="470" y="174" width="48" height="40" class="cipher-cell"/><text x="494.0" y="195.0" class="cipher-letter" text-anchor="middle">E</text>
+<path d="M 494 68 L 494 91" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<path d="M 494 144 L 494 171" class="cipher-arrow cipher-context" marker-end="url(#vigenere-arrow)"/>
+<g data-plain="a" data-key="e" data-cipher="E"/>
+<path d="M 320 19 L 320 218" class="cipher-divider"/>
+</svg>
+</div>
+<figcaption>The key <code>cafe</code> repeats. The two <code>l</code>s use different shifts and become <code>Q</code> and <code>P</code>.</figcaption>
+</figure>
+<p>In the example, <code>E</code> also arises from both <code>e</code> and <code>a</code>: the frequencies are smoothed out.</p>
 
 <p><b>Attack with known period $t$.</b> For $j = 0, \dots, t-1$ let $C_j = c_j c_{j+t} c_{j+2t} \cdots$ be the $j$-th <i>stream</i>. All letters of $C_j$ were shifted by the same $k_j$, so each stream is a shift cipher with English letter statistics: compute $I_0, \dots, I_{25}$ for each stream and recover $k_j$. This takes $26 \cdot t$ steps instead of $26^t$.</p>
 <p><b>Finding the period.</b></p>
@@ -220,6 +408,23 @@ $$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
   <li>Show that $\mathcal{A}'$ violates $X$ with a probability related to $\varepsilon(n)$ (e.g. $\varepsilon(n)$, or $\varepsilon(n)/q(n)$ for a polynomial $q$).</li>
 </ol>
 <p>Hence if $X$ holds, $\varepsilon(n)$ must be negligible. We say we <i>reduce</i> the problem in assumption $X$ to breaking $Y$.</p>
+
+<figure class="lecture-visual" id="fig-reduction"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 210" role="img" aria-labelledby="reduction-title reduction-desc">
+<title id="reduction-title">A security reduction</title><desc id="reduction-desc">The reduction receives a hard instance, simulates the scheme for an adversary, and turns its break into a solution.</desc>
+<defs><marker id="reduction-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="170" y="22" width="320" height="166" rx="3" class="v-boundary"/>
+<text x="330" y="44.0" text-anchor="middle" class="v-text">Reduction A′ / simulator</text>
+<rect x="251" y="79" width="158" height="52" rx="3" class="v-box v-highlight"/>
+<text x="330.0" y="95.5" text-anchor="middle" class="v-text">Adversary A</text>
+<text x="330.0" y="114.5" text-anchor="middle" class="v-text">breaks scheme Y</text>
+<polyline points="14,104 168,104" class="v-line" marker-end="url(#reduction-arrow)"/>
+<text x="91.0" y="93.0" text-anchor="middle" class="v-small">hard instance X</text>
+<polyline points="492,104 646,104" class="v-line" marker-end="url(#reduction-arrow)"/>
+<text x="569.0" y="93.0" text-anchor="middle" class="v-small">solution to X</text>
+<text x="330" y="160.0" text-anchor="middle" class="v-small">A′ provides A with its game and oracles.</text>
+</svg></div>
+<figcaption>A successful attack becomes a subroutine for solving the assumed-hard problem.</figcaption></figure>
 </section>
 </section>
 
@@ -251,6 +456,58 @@ $$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
 </div>
 <div class="proof"><p>$|\Pr[A] - \Pr[B]| = |\Pr[A \land F] + \Pr[A \land \overline{F}] - \Pr[B \land F] - \Pr[B \land \overline{F}]| = |\Pr[A \land F] - \Pr[B \land F]| \le \Pr[F]$, since both terms lie in $[0, \Pr[F]]$.</p></div>
 <p>This lemma is used constantly: "the two games only differ if a <i>bad event</i> happens (a repeated nonce, a collision, a query to a certain point), and that event is unlikely".</p>
+
+<figure class="lecture-visual" id="fig-conditioning"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 175" role="img" aria-labelledby="conditioning-title conditioning-desc">
+<title id="conditioning-title">Conditioning restricts the sample space</title><desc id="conditioning-desc">Twenty equally likely outcomes include ten in E and four in E intersect F. Conditioning on E leaves four out of ten.</desc>
+<defs><marker id="conditioning-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<circle cx="25" cy="37" r="8" class="v-box v-highlight"/>
+<text x="25" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="53" cy="37" r="8" class="v-box v-highlight"/>
+<text x="53" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="81" cy="37" r="8" class="v-box v-highlight"/>
+<text x="81" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="109" cy="37" r="8" class="v-box v-highlight"/>
+<text x="109" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="137" cy="37" r="8" class="v-box"/>
+<text x="137" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="165" cy="37" r="8" class="v-box"/>
+<text x="165" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="193" cy="37" r="8" class="v-box"/>
+<text x="193" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="221" cy="37" r="8" class="v-box"/>
+<text x="221" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="249" cy="37" r="8" class="v-box"/>
+<text x="249" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="277" cy="37" r="8" class="v-box"/>
+<text x="277" y="37.0" text-anchor="middle" class="v-text"></text>
+<circle cx="25" cy="69" r="8" class="v-box"/>
+<text x="25" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="53" cy="69" r="8" class="v-box"/>
+<text x="53" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="81" cy="69" r="8" class="v-box"/>
+<text x="81" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="109" cy="69" r="8" class="v-box"/>
+<text x="109" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="137" cy="69" r="8" class="v-box"/>
+<text x="137" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="165" cy="69" r="8" class="v-box"/>
+<text x="165" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="193" cy="69" r="8" class="v-box"/>
+<text x="193" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="221" cy="69" r="8" class="v-box"/>
+<text x="221" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="249" cy="69" r="8" class="v-box"/>
+<text x="249" y="69.0" text-anchor="middle" class="v-text"></text>
+<circle cx="277" cy="69" r="8" class="v-box"/>
+<text x="277" y="69.0" text-anchor="middle" class="v-text"></text>
+<rect x="11" y="20" width="278" height="34" rx="3" class="v-boundary"/>
+<text x="315" y="37.0" text-anchor="start" class="v-small">E: 10 outcomes</text>
+<text x="315" y="69.0" text-anchor="start" class="v-small">Outside E: 10</text>
+<text x="280" y="115.0" text-anchor="middle" class="v-text">P(E ∩ F) = 4/20;    P(E) = 10/20</text>
+<text x="280" y="150.0" text-anchor="middle" class="v-text">P(F | E) = 4/10</text>
+</svg></div>
+<figcaption>Twenty equally likely outcomes. The four shaded points are E ∩ F; conditioning keeps only the ten points in E.</figcaption></figure>
 </section>
 
 <section class="chapter" id="sec-perfect">
@@ -264,6 +521,50 @@ $$I_j = \sum_{i=0}^{25} p_i \, q_{i+j \bmod 26}.$$
 $$\Pr[M = m \mid C = c] = \Pr[M = m].$$
 </div>
 <p>The a-posteriori probability of each message (after seeing $c$) equals its a-priori probability: the ciphertext tells the adversary nothing new. The condition $\Pr[C = c] \gt 0$ only avoids conditioning on an impossible event. Equivalently: $M$ and $C$ are independent random variables.</p>
+
+<figure class="lecture-visual lecture-visual--interactive" id="fig-secrecy-beliefs" data-secrecy-demo="">
+<div class="visual-controls">
+<label for="visual-prior">Prior P(M = 1) <output for="visual-prior" data-prior-label="">70%</output>
+</label>
+<input id="visual-prior" data-prior-input="" type="range" min="10" max="90" step="5" value="70">
+<label for="visual-pad-law">Pad <select id="visual-pad-law" data-pad-law="">
+<option value="0.5">Uniform: P(K = 1) = ½</option>
+<option value="0.9">Biased: P(K = 1) = 0.9</option>
+</select>
+</label>
+<label for="visual-observed-c">Observed c <select id="visual-observed-c" data-observed-c="">
+<option>0</option>
+<option selected>1</option>
+</select>
+</label>
+</div>
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 240" role="img" aria-labelledby="secrecy-beliefs-title secrecy-beliefs-desc">
+<title id="secrecy-beliefs-title">Beliefs before and after a ciphertext</title>
+<desc id="secrecy-beliefs-desc">With a uniform one-bit pad, the posterior message probability remains 70 percent, equal to the prior.</desc>
+<defs>
+<marker id="secrecy-beliefs-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<text x="320" y="18" text-anchor="middle" class="v-text">One-bit encryption: C = M ⊕ K; M and K independent</text>
+<text x="102" y="79" text-anchor="middle" class="v-small">Before seeing c</text>
+<rect x="200" y="64" width="400" height="30" class="v-box"/>
+<rect x="200" y="64" width="280.0" height="30" class="v-highlight" data-prior-bar=""/>
+<text x="400" y="79" text-anchor="middle" class="v-small" data-prior-text="">P(M = 1) = 70%</text>
+<text x="102" y="154" text-anchor="middle" class="v-small">After seeing c</text>
+<rect x="200" y="139" width="400" height="30" class="v-box"/>
+<rect x="200" y="139" width="280.0" height="30" class="v-highlight" data-posterior-bar=""/>
+<text x="400" y="154" text-anchor="middle" class="v-small" data-posterior-text="">P(M = 1) = 70%</text>
+<text x="200" y="190" text-anchor="middle" class="v-small">0%</text>
+<text x="600" y="190" text-anchor="middle" class="v-small">100%</text>
+<text x="320" y="220" text-anchor="middle" class="v-small" data-posterior-note="">A uniform pad leaves the prior unchanged, even when messages are biased.</text>
+</svg>
+</div>
+<output class="visual-result" data-secrecy-result="" aria-live="polite">P(C = 1) = 50%; P(M = 1 | C = 1) = 70%.</output>
+<figcaption>Move the prior or change the pad distribution. Perfect secrecy preserves every prior; a biased pad can leak information.</figcaption>
+</figure>
+
 <div class="env def" id="def-ps-2" data-title="Perfectly secret, second form">
 <p>For every distribution over $\mathcal{M}$, every $m \in \mathcal{M}$ with $\Pr[M = m] \gt 0$ and every $c \in \mathcal{C}$: $\quad \Pr[C = c \mid M = m] = \Pr[C = c].$</p>
 </div>
@@ -328,6 +629,10 @@ $$\Pr[\text{win}] = \tfrac12\left(\tfrac12 + \tfrac{p_0}{2}\right) + \tfrac12\le
 <div class="env thm" id="thm-otp">
 <p>The one-time pad is perfectly secret.</p>
 </div>
+<figure class="lecture-visual lecture-visual--interactive lecture-visual--compact" id="fig-otp" data-xor-demo="otp">
+<div class="v-bit-line"><span class="v-bit-label">message m</span><div class="v-bit-row" data-bit-row="message"><button type="button" aria-label="message m bit 1" aria-pressed="true">1</button><button type="button" aria-label="message m bit 2" aria-pressed="false">0</button><button type="button" aria-label="message m bit 3" aria-pressed="false">0</button><button type="button" aria-label="message m bit 4" aria-pressed="true">1</button></div></div><div class="v-bit-line"><span class="v-bit-label">pad k</span><div class="v-bit-row" data-bit-row="pad"><button type="button" aria-label="pad k bit 1" aria-pressed="false">0</button><button type="button" aria-label="pad k bit 2" aria-pressed="true">1</button><button type="button" aria-label="pad k bit 3" aria-pressed="true">1</button><button type="button" aria-label="pad k bit 4" aria-pressed="false">0</button></div></div><div class="v-bit-line"><span class="v-bit-label">ciphertext c</span><div class="v-bit-row" data-bit-row="cipher"><span>1</span><span>1</span><span>1</span><span>1</span></div></div><output class="visual-result" data-xor-result aria-live="polite">1001 ⊕ 0110 = 1111</output>
+<figcaption>Click a message or pad bit. With a uniform 4-bit pad, each of the 16 ciphertexts is equally likely for every message.</figcaption></figure>
+
 <div class="proof"><p>For every $m, c \in \{0,1\}^\ell$: $\Pr[\mathsf{Enc}_K(m) = c] = \Pr[K \oplus m = c] = \Pr[K = m \oplus c] = 2^{-\ell}$, independent of $m$. This is <a class="xref" href="#def-ps-3"></a>.</p></div>
 </section>
 
@@ -341,6 +646,22 @@ $$\Pr[\text{win}] = \tfrac12\left(\tfrac12 + \tfrac{p_0}{2}\right) + \tfrac12\le
 </div>
 <div class="proof" data-title="by contrapositive"><p>Assume $|\mathcal{K}| \lt |\mathcal{M}|$. Take the uniform distribution on $\mathcal{M}$ and a ciphertext $c$ with $\Pr[C = c] \gt 0$. Let $\mathcal{M}(c) = \{\mathsf{Dec}_k(c) \mid k \in \mathcal{K}\}$ be the set of messages $c$ can decrypt to. Since $\mathsf{Dec}$ is deterministic, $|\mathcal{M}(c)| \le |\mathcal{K}| \lt |\mathcal{M}|$, so some $\tilde m \notin \mathcal{M}(c)$ exists. By correctness $\tilde m$ can never be encrypted to $c$, hence $\Pr[M = \tilde m \mid C = c] = 0 \ne \frac{1}{|\mathcal{M}|} = \Pr[M = \tilde m]$.</p></div>
 <p>Claims of "unbreakable encryption with short keys" are therefore always wrong in the information-theoretic sense. (Reusing keys is also inherently impossible, see the reuse argument above.)</p>
+
+<figure class="lecture-visual" id="fig-pad-reuse"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 610 154" role="img" aria-labelledby="pad-reuse-title pad-reuse-desc">
+<title id="pad-reuse-title">Why reusing a pad leaks information</title><desc id="pad-reuse-desc">XORing two ciphertexts cancels their common pad and reveals the XOR of the messages.</desc>
+<defs><marker id="pad-reuse-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="20" width="260" height="42" rx="3" class="v-box"/>
+<text x="140.0" y="41.0" text-anchor="middle" class="v-text">c₀ = m₀ ⊕ k</text>
+<rect x="340" y="20" width="260" height="42" rx="3" class="v-box"/>
+<text x="470.0" y="41.0" text-anchor="middle" class="v-text">c₁ = m₁ ⊕ k</text>
+<polyline points="140,64 140,94 230,94" class="v-line" marker-end="url(#pad-reuse-arrow)"/>
+<polyline points="470,64 470,94 380,94" class="v-line" marker-end="url(#pad-reuse-arrow)"/>
+<rect x="230" y="75" width="150" height="40" rx="3" class="v-box v-highlight"/>
+<text x="305.0" y="95.0" text-anchor="middle" class="v-text">XOR ciphertexts</text>
+<text x="305" y="137.0" text-anchor="middle" class="v-text">c₀ ⊕ c₁ = m₀ ⊕ m₁   (k ⊕ k = 0)</text>
+</svg></div>
+<figcaption>The attacker can cancel a reused pad without learning the key.</figcaption></figure>
 </section>
 
 <section class="sub" id="sec-shannon">
@@ -399,6 +720,35 @@ $$\Pr[M = m_i] = \Pr[M = m_i \mid C = c] = \frac{\Pr[C = c \mid M = m_i] \Pr[M =
 <div class="env def" id="def-negligible" data-title="Negligible function">
 <p>A function $f : \mathbb{N} \to \mathbb{R}_{\ge 0}$ is negligible if for every polynomial $p$ there is an $N$ such that $f(n) \lt \frac{1}{p(n)}$ for all $n \gt N$. Equivalently: for every constant $c$, $f(n) \lt n^{-c}$ for all sufficiently large $n$. We write $\mathsf{negl}$ for an arbitrary negligible function.</p>
 </div>
+<figure class="lecture-visual" id="fig-negligible"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 590 246" role="img" aria-labelledby="negligible-title negligible-desc">
+<title id="negligible-title">Exponential versus polynomial decay</title><desc id="negligible-desc">On a logarithmic probability scale, 2 to minus n eventually falls faster than one over n squared. A finite graph illustrates but does not prove negligibility.</desc>
+<defs><marker id="negligible-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="66" y="9" text-anchor="start" class="v-small">probability (log₂ scale)</text><line x1="66" y1="24.0" x2="560" y2="24.0" class="v-grid"/>
+<text x="57" y="24.0" text-anchor="end" class="v-small">1</text>
+<line x1="66" y1="65.5" x2="560" y2="65.5" class="v-grid"/>
+<text x="57" y="65.5" text-anchor="end" class="v-small">2⁻¹⁶</text>
+<line x1="66" y1="107.0" x2="560" y2="107.0" class="v-grid"/>
+<text x="57" y="107.0" text-anchor="end" class="v-small">2⁻³²</text>
+<line x1="66" y1="148.5" x2="560" y2="148.5" class="v-grid"/>
+<text x="57" y="148.5" text-anchor="end" class="v-small">2⁻⁴⁸</text>
+<line x1="66" y1="190.0" x2="560" y2="190.0" class="v-grid"/>
+<text x="57" y="190.0" text-anchor="end" class="v-small">2⁻⁶⁴</text>
+<line x1="66" y1="24" x2="66" y2="190" class="v-line"/>
+<line x1="66" y1="190" x2="560" y2="190" class="v-line"/>
+<text x="66.0" y="208.0" text-anchor="middle" class="v-small">1</text>
+<text x="183.6190476190476" y="208.0" text-anchor="middle" class="v-small">16</text>
+<text x="309.07936507936506" y="208.0" text-anchor="middle" class="v-small">32</text>
+<text x="434.53968253968253" y="208.0" text-anchor="middle" class="v-small">48</text>
+<text x="560.0" y="208.0" text-anchor="middle" class="v-small">64</text>
+<polyline points="66.00,26.59 73.84,29.19 81.68,31.78 89.52,34.38 97.37,36.97 105.21,39.56 113.05,42.16 120.89,44.75 128.73,47.34 136.57,49.94 144.41,52.53 152.25,55.12 160.10,57.72 167.94,60.31 175.78,62.91 183.62,65.50 191.46,68.09 199.30,70.69 207.14,73.28 214.98,75.88 222.83,78.47 230.67,81.06 238.51,83.66 246.35,86.25 254.19,88.84 262.03,91.44 269.87,94.03 277.71,96.62 285.56,99.22 293.40,101.81 301.24,104.41 309.08,107.00 316.92,109.59 324.76,112.19 332.60,114.78 340.44,117.38 348.29,119.97 356.13,122.56 363.97,125.16 371.81,127.75 379.65,130.34 387.49,132.94 395.33,135.53 403.17,138.12 411.02,140.72 418.86,143.31 426.70,145.91 434.54,148.50 442.38,151.09 450.22,153.69 458.06,156.28 465.90,158.88 473.75,161.47 481.59,164.06 489.43,166.66 497.27,169.25 505.11,171.84 512.95,174.44 520.79,177.03 528.63,179.62 536.48,182.22 544.32,184.81 552.16,187.41 560.00,190.00" class="v-curve"/>
+<polyline points="66.00,24.00 73.84,29.19 81.68,32.22 89.52,34.38 97.37,36.05 105.21,37.41 113.05,38.56 120.89,39.56 128.73,40.44 136.57,41.23 144.41,41.95 152.25,42.60 160.10,43.20 167.94,43.75 175.78,44.27 183.62,44.75 191.46,45.20 199.30,45.63 207.14,46.04 214.98,46.42 222.83,46.79 230.67,47.13 238.51,47.47 246.35,47.78 254.19,48.09 262.03,48.38 269.87,48.67 277.71,48.94 285.56,49.20 293.40,49.45 301.24,49.70 309.08,49.94 316.92,50.17 324.76,50.39 332.60,50.61 340.44,50.82 348.29,51.02 356.13,51.22 363.97,51.42 371.81,51.61 379.65,51.79 387.49,51.97 395.33,52.15 403.17,52.32 411.02,52.49 418.86,52.65 426.70,52.81 434.54,52.97 442.38,53.13 450.22,53.28 458.06,53.43 465.90,53.57 473.75,53.71 481.59,53.85 489.43,53.99 497.27,54.13 505.11,54.26 512.95,54.39 520.79,54.52 528.63,54.64 536.48,54.77 544.32,54.89 552.16,55.01 560.00,55.12" class="v-curve v-curve--secondary"/>
+<text x="454" y="34.0" text-anchor="middle" class="v-small">1/n²</text>
+<text x="475" y="155.0" text-anchor="middle" class="v-small">2⁻ⁿ</text>
+<text x="315" y="232.0" text-anchor="middle" class="v-small">security parameter n</text>
+</svg></div>
+<figcaption>A finite-range illustration. Negligibility requires eventually falling below every inverse polynomial.</figcaption></figure>
+
 <p>Examples: $2^{-n}$, $2^{-\sqrt n}$ and $n^{-\log n}$ are negligible; $n^{-10}$ is not. Negligible functions eventually fall below every inverse polynomial, but at very different speeds.</p>
 <div class="env prop" id="prop-negl-closure">
 <p>Let $\mathsf{negl}_1, \mathsf{negl}_2$ be negligible and $p$ a polynomial. Then $\mathsf{negl}_3(n) = \mathsf{negl}_1(n) + \mathsf{negl}_2(n)$ and $\mathsf{negl}_4(n) = p(n) \cdot \mathsf{negl}_1(n)$ are negligible.</p>
@@ -431,6 +781,37 @@ $$\Pr[M = m_i] = \Pr[M = m_i \mid C = c] = \frac{\Pr[C = c \mid M = m_i] \Pr[M =
   <li>Output $1$ iff $b' = b$.</li>
 </ol>
 </div>
+
+<figure class="lecture-visual" id="fig-ind-game-flow">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 328" role="img" aria-labelledby="ind-game-flow-title ind-game-flow-desc">
+<title id="ind-game-flow-title">The indistinguishability challenge</title>
+<desc id="ind-game-flow-desc">The adversary chooses two equal-length messages. The challenger secretly samples a key and bit and returns an encryption of the selected message. The adversary guesses the bit.</desc>
+<defs>
+<marker id="ind-game-flow-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<rect x="20" y="12" width="180" height="45" rx="4" class="v-box"/>
+<text x="110.0" y="34.5" text-anchor="middle" class="v-text">Adversary A</text>
+<rect x="440" y="12" width="180" height="45" rx="4" class="v-box v-highlight"/>
+<text x="530.0" y="34.5" text-anchor="middle" class="v-text">Challenger</text>
+<path d="M110 60 V280 M530 60 V280" class="v-line v-dashed"/>
+<polyline points="112,93 527,93" class="v-line" marker-end="url(#ind-game-flow-arrow)"/>
+<text x="320" y="77" text-anchor="middle" class="v-small">Choose m₀, m₁ with equal length</text>
+<rect x="395" y="112" width="230" height="54" rx="4" class="v-box v-highlight"/>
+<text x="510.0" y="129.0" text-anchor="middle" class="v-text">Keep k and b secret</text>
+<text x="510.0" y="149.0" text-anchor="middle" class="v-text">b ← {0, 1}</text>
+<polyline points="528,198 113,198" class="v-line" marker-end="url(#ind-game-flow-arrow)"/>
+<text x="320" y="182" text-anchor="middle" class="v-small">c ← Encₖ(m_b)</text>
+<polyline points="112,257 527,257" class="v-line" marker-end="url(#ind-game-flow-arrow)"/>
+<text x="320" y="241" text-anchor="middle" class="v-small">Guess b′</text>
+<text x="320" y="307" text-anchor="middle" class="v-text">Win iff b′ = b. Random guessing succeeds with probability ½.</text>
+</svg>
+</div>
+<figcaption>This is the challenge shared by IND games. CPA and CCA additionally grant their specified oracle access.</figcaption>
+</figure>
+
 <div class="env def" id="def-ind-eav" data-title="IND-EAV">
 <p>$\Pi$ has indistinguishable encryptions in the presence of an eavesdropper (is <b>IND-EAV secure</b>) if for every PPT $\mathcal{A}$ there is a negligible $\mathsf{negl}$ with</p>
 $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
@@ -454,6 +835,61 @@ $$\big|\Pr[\mathcal{A} \text{ outputs } 1 \text{ in } \mathsf{PrivK}^{\mathsf{ea
 <p>$\ell$ is the expansion factor.</p>
 </div>
 <p><b>Only efficiency protects a PRG.</b> Let $\ell(n) = 2n$. The unbounded distinguisher $D(w)$: output $1$ iff $w = G(s)$ for some $s \in \{0,1\}^n$ (try all $2^n$ seeds). Then $\Pr[D(G(s)) = 1] = 1$, while at most $2^n$ of the $2^{2n}$ strings are outputs of $G$, so $\Pr[D(r) = 1] \le 2^{-n}$. The difference $1 - 2^{-n}$ is far from negligible. The seed must be long enough that such a search is infeasible.</p>
+
+<figure class="lecture-visual" id="fig-prg-support">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 258" role="img" aria-labelledby="prg-support-title prg-support-desc">
+<title id="prg-support-title">A small seed reaches only a small part of the output space</title>
+<desc id="prg-support-desc">Four two-bit seeds map to four of sixteen four-bit strings. Highlighted outputs are 0000,0101,1010,1111. This illustrates counting, not a secure generator.</desc>
+<defs>
+<marker id="prg-support-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<rect x="12" y="75" width="155" height="74" rx="4" class="v-box"/>
+<text x="89.5" y="102.0" text-anchor="middle" class="v-text">4 possible seeds</text>
+<text x="89.5" y="122.0" text-anchor="middle" class="v-text">s ∈ {00,01,10,11}</text>
+<polyline points="168,112 228,112" class="v-line" marker-end="url(#prg-support-arrow)"/>
+<text x="95" y="176" text-anchor="middle" class="v-small">Toy map: s ↦ s ∥ s</text>
+<text x="425" y="17" text-anchor="middle" class="v-text">16 possible 4-bit output strings</text>
+<rect x="245" y="40" width="85" height="32" rx="4" class="v-box v-highlight"/>
+<text x="287.5" y="56.0" text-anchor="middle" class="v-text">0000</text>
+<rect x="340" y="40" width="85" height="32" rx="4" class="v-box"/>
+<text x="382.5" y="56.0" text-anchor="middle" class="v-text">0001</text>
+<rect x="435" y="40" width="85" height="32" rx="4" class="v-box"/>
+<text x="477.5" y="56.0" text-anchor="middle" class="v-text">0010</text>
+<rect x="530" y="40" width="85" height="32" rx="4" class="v-box"/>
+<text x="572.5" y="56.0" text-anchor="middle" class="v-text">0011</text>
+<rect x="245" y="83" width="85" height="32" rx="4" class="v-box"/>
+<text x="287.5" y="99.0" text-anchor="middle" class="v-text">0100</text>
+<rect x="340" y="83" width="85" height="32" rx="4" class="v-box v-highlight"/>
+<text x="382.5" y="99.0" text-anchor="middle" class="v-text">0101</text>
+<rect x="435" y="83" width="85" height="32" rx="4" class="v-box"/>
+<text x="477.5" y="99.0" text-anchor="middle" class="v-text">0110</text>
+<rect x="530" y="83" width="85" height="32" rx="4" class="v-box"/>
+<text x="572.5" y="99.0" text-anchor="middle" class="v-text">0111</text>
+<rect x="245" y="126" width="85" height="32" rx="4" class="v-box"/>
+<text x="287.5" y="142.0" text-anchor="middle" class="v-text">1000</text>
+<rect x="340" y="126" width="85" height="32" rx="4" class="v-box"/>
+<text x="382.5" y="142.0" text-anchor="middle" class="v-text">1001</text>
+<rect x="435" y="126" width="85" height="32" rx="4" class="v-box v-highlight"/>
+<text x="477.5" y="142.0" text-anchor="middle" class="v-text">1010</text>
+<rect x="530" y="126" width="85" height="32" rx="4" class="v-box"/>
+<text x="572.5" y="142.0" text-anchor="middle" class="v-text">1011</text>
+<rect x="245" y="169" width="85" height="32" rx="4" class="v-box"/>
+<text x="287.5" y="185.0" text-anchor="middle" class="v-text">1100</text>
+<rect x="340" y="169" width="85" height="32" rx="4" class="v-box"/>
+<text x="382.5" y="185.0" text-anchor="middle" class="v-text">1101</text>
+<rect x="435" y="169" width="85" height="32" rx="4" class="v-box"/>
+<text x="477.5" y="185.0" text-anchor="middle" class="v-text">1110</text>
+<rect x="530" y="169" width="85" height="32" rx="4" class="v-box v-highlight"/>
+<text x="572.5" y="185.0" text-anchor="middle" class="v-text">1111</text>
+<text x="320" y="238" text-anchor="middle" class="v-small">An exhaustive membership test accepts at most 4/16 uniform strings.</text>
+</svg>
+</div>
+<figcaption>Highlighted cells are reachable. This toy map is insecure; a real PRG must hide its sparse output set from efficient tests.</figcaption>
+</figure>
+
 <div class="env def" id="def-variable-prg" data-title="Variable output-length PRG">
 <p>A deterministic polynomial-time algorithm $G(s, 1^\ell)$ is a variable output-length PRG if (1) for every positive integer $\ell$ it outputs $\ell$ bits; (2) for $\ell \lt \ell'$, $G(s, 1^\ell)$ is a prefix of $G(s, 1^{\ell'})$; and (3) for every polynomial $\ell(\cdot)$ satisfying $\ell(n) \gt n$ for all $n$, $G_\ell(s) := G(s, 1^{\ell(|s|)})$ is a PRG with expansion factor $\ell$. Shorter outputs are pseudorandom as well, by truncating a longer output using the prefix property; they simply do not satisfy the expansion requirement in <a class="xref" href="#def-prg"></a>.</p>
 </div>
@@ -469,6 +905,24 @@ $$\big|\Pr[\mathcal{A} \text{ outputs } 1 \text{ in } \mathsf{PrivK}^{\mathsf{ea
 <tr><td>$\mathsf{Enc}$</td><td>input $k$, $m$: $c := G(k) \oplus m$; output $c$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>input $k$, $c$: $m := G(k) \oplus c$; output $m$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-prg-pad"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 466 102" role="img" aria-labelledby="prg-pad-title prg-pad-desc">
+<title id="prg-pad-title">prg pad</title><desc id="prg-pad-desc">A PRG stretches the key into a pad. The same key gives the same pad.</desc>
+<defs><marker id="prg-pad-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="22" width="126" height="48" rx="3" class="v-box"/>
+<text x="73.0" y="36.5" text-anchor="middle" class="v-text">short key k</text>
+<text x="73.0" y="55.5" text-anchor="middle" class="v-text">n bits</text>
+<polyline points="138,46 168,46" class="v-line" marker-end="url(#prg-pad-arrow)"/>
+<rect x="170" y="22" width="126" height="48" rx="3" class="v-box"/>
+<text x="233.0" y="36.5" text-anchor="middle" class="v-text">G(k)</text>
+<text x="233.0" y="55.5" text-anchor="middle" class="v-text">ℓ(n) bits</text>
+<polyline points="298,46 328,46" class="v-line" marker-end="url(#prg-pad-arrow)"/>
+<rect x="330" y="22" width="126" height="48" rx="3" class="v-box v-highlight"/>
+<text x="393.0" y="36.5" text-anchor="middle" class="v-text">XOR with m</text>
+<text x="393.0" y="55.5" text-anchor="middle" class="v-text">c = G(k) ⊕ m</text>
+</svg></div>
+<figcaption>A PRG stretches the key into a pad. The same key gives the same pad.</figcaption></figure>
+
 <div class="env thm" id="thm-prg-enc">
 <p>If $G$ is a PRG, then this scheme $\Pi$ is IND-EAV secure.</p>
 </div>
@@ -560,6 +1014,30 @@ $$\big|\Pr[D^{F_k(\cdot)}(1^n) = 1] - \Pr[D^{f(\cdot)}(1^n) = 1]\big| \le \maths
 <tr><td>$\mathsf{Enc}$</td><td>input $k$, $m$: $r \leftarrow \{0,1\}^n$; $s := F_k(r) \oplus m$; output $c = \langle r, s \rangle$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>input $k$, $c = \langle r, s \rangle$: $m := F_k(r) \oplus s$; output $m$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-prf-encryption"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 630 180" role="img" aria-labelledby="prf-encryption-title prf-encryption-desc">
+<title id="prf-encryption-title">Encryption from a PRF</title><desc id="prf-encryption-desc">A fresh public r enters the secret keyed function. Its result masks m. The ciphertext contains r and the masked message s.</desc>
+<defs><marker id="prf-encryption-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="12" y="22" width="110" height="40" rx="3" class="v-box"/>
+<text x="67.0" y="42.0" text-anchor="middle" class="v-text">fresh r</text>
+<rect x="217" y="22" width="126" height="40" rx="3" class="v-box v-highlight"/>
+<text x="280.0" y="42.0" text-anchor="middle" class="v-text">Fₖ(r)</text>
+<circle cx="445" cy="42" r="19" class="v-box"/>
+<text x="445" y="42.0" text-anchor="middle" class="v-text">⊕</text>
+<rect x="524" y="22" width="92" height="40" rx="3" class="v-box"/>
+<text x="570.0" y="42.0" text-anchor="middle" class="v-text">s</text>
+<polyline points="124,42 215,42" class="v-line" marker-end="url(#prf-encryption-arrow)"/>
+<polyline points="345,42 423,42" class="v-line" marker-end="url(#prf-encryption-arrow)"/>
+<polyline points="466,42 522,42" class="v-line" marker-end="url(#prf-encryption-arrow)"/>
+<text x="445" y="100.0" text-anchor="middle" class="v-text">m</text>
+<polyline points="445,89 445,63" class="v-line" marker-end="url(#prf-encryption-arrow)"/>
+<polyline points="67,64 67,139 278,139" class="v-line" marker-end="url(#prf-encryption-arrow)"/>
+<polyline points="570,64 570,139 420,139" class="v-line" marker-end="url(#prf-encryption-arrow)"/>
+<rect x="280" y="119" width="138" height="40" rx="3" class="v-box v-highlight"/>
+<text x="349.0" y="139.0" text-anchor="middle" class="v-text">send ⟨r, s⟩</text>
+</svg></div>
+<figcaption>r travels with the ciphertext; the key and the pad Fₖ(r) stay secret.</figcaption></figure>
+
 <p>Correctness: $F_k(r) \oplus (F_k(r) \oplus m) = m$. Each encryption uses a fresh random point $r$, so the pads $F_k(r)$ look like independent one-time pads.</p>
 <div class="env thm" id="thm-prf-cpa">
 <p>If $F$ is a PRF, the scheme above is CPA-secure for messages of length $n$.</p>
@@ -588,6 +1066,27 @@ $$\mathsf{negl}(n) \ge \Pr[D^{F_k} = 1] - \Pr[D^{f} = 1] \ge \tfrac12 + \varepsi
 <tr><td>$\mathsf{Enc}$</td><td>input $(k_1, k_2)$, $m \in \{0,1\}^n$: $r \leftarrow \{0,1\}^n$; $c_1 \leftarrow \mathsf{Enc}^1_{k_1}(r)$; $c_2 \leftarrow \mathsf{Enc}^2_{k_2}(m \oplus r)$; output $\langle c_1, c_2 \rangle$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>$m := \mathsf{Dec}^1_{k_1}(c_1) \oplus \mathsf{Dec}^2_{k_2}(c_2)$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-two-shares"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 176" role="img" aria-labelledby="two-shares-title two-shares-desc">
+<title id="two-shares-title">Combining two encryption schemes</title><desc id="two-shares-desc">Split m into r and m XOR r. Encrypt the two shares independently; XOR the decrypted shares to recover m.</desc>
+<defs><marker id="two-shares-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="18" width="118" height="42" rx="3" class="v-box"/>
+<text x="69.0" y="39.0" text-anchor="middle" class="v-text">r (uniform)</text>
+<rect x="10" y="106" width="118" height="42" rx="3" class="v-box"/>
+<text x="69.0" y="127.0" text-anchor="middle" class="v-text">m ⊕ r</text>
+<rect x="225" y="18" width="170" height="42" rx="3" class="v-box"/>
+<text x="310.0" y="39.0" text-anchor="middle" class="v-text">Enc¹ₖ₁(r)</text>
+<rect x="225" y="106" width="170" height="42" rx="3" class="v-box"/>
+<text x="310.0" y="127.0" text-anchor="middle" class="v-text">Enc²ₖ₂(m ⊕ r)</text>
+<polyline points="130,39 223,39" class="v-line" marker-end="url(#two-shares-arrow)"/>
+<polyline points="130,127 223,127" class="v-line" marker-end="url(#two-shares-arrow)"/>
+<polyline points="397,39 455,39 455,83 491,83" class="v-line" marker-end="url(#two-shares-arrow)"/>
+<polyline points="397,127 455,127 455,83" class="v-line" marker-end="url(#two-shares-arrow)"/>
+<rect x="493" y="62" width="136" height="42" rx="3" class="v-box v-highlight"/>
+<text x="561.0" y="83.0" text-anchor="middle" class="v-text">send ⟨c₁, c₂⟩</text>
+</svg></div>
+<figcaption>Neither share alone reveals m. Decryption recombines them: r ⊕ (m ⊕ r) = m.</figcaption></figure>
+
 <div class="env thm" id="thm-combine">
 <p>If $\Pi_1$ or $\Pi_2$ is CPA-secure, then the combined scheme $\Pi$ is CPA-secure.</p>
 </div>
@@ -612,9 +1111,70 @@ $$\mathsf{negl}(n) \ge \Pr[D^{F_k} = 1] - \Pr[D^{f} = 1] \ge \tfrac12 + \varepsi
 <p>Every PRP is also a PRF.</p>
 </div>
 <div class="proof"><p>A random permutation and a random function can only be told apart through a collision $f(x) = f(x')$ with $x \ne x'$, which a permutation never produces. With $q$ queries a random function produces one with probability at most $\binom{q}{2} 2^{-n} \le q^2/2^{n+1}$ (birthday bound), which is negligible for polynomial $q$. Hence $|\Pr[D^{F_k}=1] - \Pr[D^{f \in \mathsf{Func}}=1]| \le |\Pr[D^{F_k}=1] - \Pr[D^{f \in \mathsf{Perm}}=1]| + q^2/2^{n+1}$, which is negligible.</p></div>
+<figure class="lecture-visual" id="fig-function-permutation">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" role="img" aria-labelledby="function-permutation-title function-permutation-desc">
+<title id="function-permutation-title">Function versus permutation</title>
+<desc id="function-permutation-desc">On the left, two inputs map to zero and one output is unused. On the right, four inputs map bijectively to four outputs.</desc>
+<defs>
+<marker id="function-permutation-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<text x="160" y="20" text-anchor="middle" class="v-text">Function: collisions allowed</text>
+<text x="480" y="20" text-anchor="middle" class="v-text">Permutation: one-to-one</text>
+<rect x="32" y="60" width="46" height="28" rx="4" class="v-box"/>
+<text x="55.0" y="74.0" text-anchor="middle" class="v-text">0</text>
+<rect x="240" y="60" width="46" height="28" rx="4" class="v-box"/>
+<text x="263.0" y="74.0" text-anchor="middle" class="v-text">0</text>
+<rect x="32" y="103" width="46" height="28" rx="4" class="v-box"/>
+<text x="55.0" y="117.0" text-anchor="middle" class="v-text">1</text>
+<rect x="240" y="103" width="46" height="28" rx="4" class="v-box"/>
+<text x="263.0" y="117.0" text-anchor="middle" class="v-text">1</text>
+<rect x="32" y="146" width="46" height="28" rx="4" class="v-box"/>
+<text x="55.0" y="160.0" text-anchor="middle" class="v-text">2</text>
+<rect x="240" y="146" width="46" height="28" rx="4" class="v-box"/>
+<text x="263.0" y="160.0" text-anchor="middle" class="v-text">2</text>
+<rect x="32" y="189" width="46" height="28" rx="4" class="v-box"/>
+<text x="55.0" y="203.0" text-anchor="middle" class="v-text">3</text>
+<rect x="240" y="189" width="46" height="28" rx="4" class="v-box"/>
+<text x="263.0" y="203.0" text-anchor="middle" class="v-text">3</text>
+<polyline points="80,74 237,74" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<polyline points="80,117 237,74" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<polyline points="80,160 237,203" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<polyline points="80,203 237,117" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<rect x="352" y="60" width="46" height="28" rx="4" class="v-box"/>
+<text x="375.0" y="74.0" text-anchor="middle" class="v-text">0</text>
+<rect x="560" y="60" width="46" height="28" rx="4" class="v-box"/>
+<text x="583.0" y="74.0" text-anchor="middle" class="v-text">0</text>
+<rect x="352" y="103" width="46" height="28" rx="4" class="v-box"/>
+<text x="375.0" y="117.0" text-anchor="middle" class="v-text">1</text>
+<rect x="560" y="103" width="46" height="28" rx="4" class="v-box"/>
+<text x="583.0" y="117.0" text-anchor="middle" class="v-text">1</text>
+<rect x="352" y="146" width="46" height="28" rx="4" class="v-box"/>
+<text x="375.0" y="160.0" text-anchor="middle" class="v-text">2</text>
+<rect x="560" y="146" width="46" height="28" rx="4" class="v-box"/>
+<text x="583.0" y="160.0" text-anchor="middle" class="v-text">2</text>
+<rect x="352" y="189" width="46" height="28" rx="4" class="v-box"/>
+<text x="375.0" y="203.0" text-anchor="middle" class="v-text">3</text>
+<rect x="560" y="189" width="46" height="28" rx="4" class="v-box"/>
+<text x="583.0" y="203.0" text-anchor="middle" class="v-text">3</text>
+<polyline points="400,74 557,160" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<polyline points="400,117 557,74" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<polyline points="400,160 557,203" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<polyline points="400,203 557,117" class="v-line" marker-end="url(#function-permutation-arrow)"/>
+<text x="160" y="239" text-anchor="middle" class="v-small">Two inputs share output 0.</text>
+<text x="480" y="239" text-anchor="middle" class="v-small">Every output has one preimage.</text>
+</svg>
+</div>
+<figcaption>Illustrative maps on four elements. A PRP is invertible for each key; a PRF need not be.</figcaption>
+</figure>
 </section>
 
 <section class="sub" id="sec-modes-of-operation">
+
+
+
 <h3>Modes of Operation</h3>
 <p>A mode of operation encrypts a long message $m = m_1 \cdots m_\ell$ (blocks of $n$ bits) with a PRF/PRP $F$. ($c_0 := IV$ denotes the initial value.)</p>
 <table class="plain">
@@ -631,6 +1191,149 @@ $$\mathsf{negl}(n) \ge \Pr[D^{F_k} = 1] - \Pr[D^{f} = 1] \ge \tfrac12 + \varepsi
 <div class="proof"><p>Let $\mathcal{A}$ be PPT, $q(n)$ a polynomial bounding both the number of oracle queries and the number of blocks per message. Let $\tilde\Pi$ use a random $f \in \mathsf{Func}_n$ instead of $F_k$. Exactly as in the proof of <a class="xref" href="#thm-prf-cpa"></a>, a distinguisher that runs $\mathcal{A}$ and computes all ciphertexts with its oracle shows $|\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] - \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi} = 1]| \le \mathsf{negl}(n)$. It remains to bound the ideal game.</p>
 <p>Let $ctr^*$ be the counter of the challenge, which uses $f(ctr^* + 1), \dots, f(ctr^* + \ell^*)$, and let $ctr_i$ be the counter of the $i$-th oracle query, using $f(ctr_i + 1), \dots, f(ctr_i + \ell_i)$. Let $\mathsf{Overlap}$ be the event that some $ctr_i + j = ctr^* + j^*$ for $j, j^* \in \{1, \dots, q\}$. Without overlap, all pads of the challenge are values of $f$ at points never used elsewhere, hence uniform and independent of everything $\mathcal{A}$ sees, and the challenge is a one-time-pad encryption: $\Pr[\text{succ} \mid \overline{\mathsf{Overlap}}] = \frac12$.</p>
 <p>The sequences $ctr_i + 1, \dots, ctr_i + \ell_i$ and $ctr^* + 1, \dots, ctr^* + \ell^*$ (both of length at most $q$) overlap only if $ctr^* - q \lt ctr_i \lt ctr^* + q$, i.e. $ctr_i$ falls into a window of $2q - 1$ values. Since $ctr^*$ is uniform, this happens with probability at most $(2q-1)/2^n$ for each $i$, and by the union bound $\Pr[\mathsf{Overlap}] \le q(2q-1)/2^n \le 2q^2/2^n$. Hence $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\tilde\Pi} = 1] \le \frac12 + 2q(n)^2/2^n$ and $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] \le \frac12 + 2q(n)^2/2^n + \mathsf{negl}(n)$.</p></div>
+
+<figure class="lecture-visual lecture-visual--interactive" id="fig-block-modes" data-print-modes data-mode-demo>
+<div class="visual-controls"><label for="visual-mode">Mode <select id="visual-mode"><option>ECB</option><option selected>CBC</option><option>OFB</option><option>CTR</option></select></label></div><div class="lecture-mode" data-mode-panel="ECB" hidden><div class="lecture-visual" id="fig-mode-ecb"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 218" role="img" aria-labelledby="mode-ecb-title mode-ecb-desc">
+<title id="mode-ecb-title">ECB data flow</title><desc id="mode-ecb-desc">Symbolic ECB wiring for three message blocks under the same key.</desc>
+<defs><marker id="mode-ecb-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="91" y="10" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="145.0" y="27.0" text-anchor="middle" class="v-text">A</text>
+<rect x="91" y="82" width="108" height="40" rx="3" class="v-box"/>
+<text x="145.0" y="102.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="145,46 145,80" class="v-line" marker-end="url(#mode-ecb-arrow)"/>
+<rect x="91" y="162" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="145.0" y="179.0" text-anchor="middle" class="v-text">X</text>
+<polyline points="145,124 145,160" class="v-line" marker-end="url(#mode-ecb-arrow)"/>
+<rect x="286" y="10" width="108" height="34" rx="3" class="v-box"/>
+<text x="340.0" y="27.0" text-anchor="middle" class="v-text">B</text>
+<rect x="286" y="82" width="108" height="40" rx="3" class="v-box"/>
+<text x="340.0" y="102.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="340,46 340,80" class="v-line" marker-end="url(#mode-ecb-arrow)"/>
+<rect x="286" y="162" width="108" height="34" rx="3" class="v-box"/>
+<text x="340.0" y="179.0" text-anchor="middle" class="v-text">Y</text>
+<polyline points="340,124 340,160" class="v-line" marker-end="url(#mode-ecb-arrow)"/>
+<rect x="481" y="10" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="535.0" y="27.0" text-anchor="middle" class="v-text">A</text>
+<rect x="481" y="82" width="108" height="40" rx="3" class="v-box"/>
+<text x="535.0" y="102.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="535,46 535,80" class="v-line" marker-end="url(#mode-ecb-arrow)"/>
+<rect x="481" y="162" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="535.0" y="179.0" text-anchor="middle" class="v-text">X</text>
+<polyline points="535,124 535,160" class="v-line" marker-end="url(#mode-ecb-arrow)"/>
+</svg></div>
+<p class="visual-result">ECB: repeated plaintext blocks give repeated ciphertext blocks.</p></div></div><div class="lecture-mode" data-mode-panel="CBC"><div class="lecture-visual" id="fig-mode-cbc"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 218" role="img" aria-labelledby="mode-cbc-title mode-cbc-desc">
+<title id="mode-cbc-title">CBC data flow</title><desc id="mode-cbc-desc">Symbolic CBC wiring for three message blocks under the same key.</desc>
+<defs><marker id="mode-cbc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="25" y="65.0" text-anchor="middle" class="v-small">IV</text>
+<polyline points="40,65 127,65" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<text x="145" y="18.0" text-anchor="middle" class="v-text">m1</text>
+<circle cx="145" cy="65" r="16" class="v-box"/>
+<text x="145" y="65.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="145,31 145,47" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<rect x="97" y="104" width="96" height="40" rx="3" class="v-box"/>
+<text x="145.0" y="124.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="145,83 145,102" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<text x="145" y="183.0" text-anchor="middle" class="v-text">c1</text>
+<polyline points="145,146 145,168" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<polyline points="145,157 243,157 243,65 322,65" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<text x="340" y="18.0" text-anchor="middle" class="v-text">m2</text>
+<circle cx="340" cy="65" r="16" class="v-box"/>
+<text x="340" y="65.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="340,31 340,47" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<rect x="292" y="104" width="96" height="40" rx="3" class="v-box"/>
+<text x="340.0" y="124.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="340,83 340,102" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<text x="340" y="183.0" text-anchor="middle" class="v-text">c2</text>
+<polyline points="340,146 340,168" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<polyline points="340,157 438,157 438,65 517,65" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<text x="535" y="18.0" text-anchor="middle" class="v-text">m3</text>
+<circle cx="535" cy="65" r="16" class="v-box"/>
+<text x="535" y="65.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="535,31 535,47" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<rect x="487" y="104" width="96" height="40" rx="3" class="v-box"/>
+<text x="535.0" y="124.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="535,83 535,102" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+<text x="535" y="183.0" text-anchor="middle" class="v-text">c3</text>
+<polyline points="535,146 535,168" class="v-line" marker-end="url(#mode-cbc-arrow)"/>
+</svg></div>
+<p class="visual-result">CBC: the previous ciphertext enters before Fₖ. Encryption is sequential.</p></div></div><div class="lecture-mode" data-mode-panel="OFB" hidden><div class="lecture-visual" id="fig-mode-ofb"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 218" role="img" aria-labelledby="mode-ofb-title mode-ofb-desc">
+<title id="mode-ofb-title">OFB data flow</title><desc id="mode-ofb-desc">Symbolic OFB wiring for three message blocks under the same key.</desc>
+<defs><marker id="mode-ofb-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="97" y="51" width="96" height="40" rx="3" class="v-box"/>
+<text x="145.0" y="71.0" text-anchor="middle" class="v-text">Fₖ</text>
+<circle cx="145" cy="142" r="16" class="v-box"/>
+<text x="145" y="142.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="145,93 145,124" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<text x="80" y="142.0" text-anchor="middle" class="v-text">m1</text>
+<polyline points="99,142 127,142" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<text x="145" y="199.0" text-anchor="middle" class="v-text">c1</text>
+<polyline points="145,160 145,184" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<polyline points="195,71 290,71" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<rect x="292" y="51" width="96" height="40" rx="3" class="v-box"/>
+<text x="340.0" y="71.0" text-anchor="middle" class="v-text">Fₖ</text>
+<circle cx="340" cy="142" r="16" class="v-box"/>
+<text x="340" y="142.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="340,93 340,124" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<text x="275" y="142.0" text-anchor="middle" class="v-text">m2</text>
+<polyline points="294,142 322,142" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<text x="340" y="199.0" text-anchor="middle" class="v-text">c2</text>
+<polyline points="340,160 340,184" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<polyline points="390,71 485,71" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<rect x="487" y="51" width="96" height="40" rx="3" class="v-box"/>
+<text x="535.0" y="71.0" text-anchor="middle" class="v-text">Fₖ</text>
+<circle cx="535" cy="142" r="16" class="v-box"/>
+<text x="535" y="142.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="535,93 535,124" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<text x="470" y="142.0" text-anchor="middle" class="v-text">m3</text>
+<polyline points="489,142 517,142" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<text x="535" y="199.0" text-anchor="middle" class="v-text">c3</text>
+<polyline points="535,160 535,184" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+<text x="25" y="71.0" text-anchor="middle" class="v-small">IV</text>
+<polyline points="40,71 95,71" class="v-line" marker-end="url(#mode-ofb-arrow)"/>
+</svg></div>
+<p class="visual-result">OFB: Fₖ feeds the next Fₖ; messages enter afterward through XOR.</p></div></div><div class="lecture-mode" data-mode-panel="CTR" hidden><div class="lecture-visual" id="fig-mode-ctr"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 218" role="img" aria-labelledby="mode-ctr-title mode-ctr-desc">
+<title id="mode-ctr-title">CTR data flow</title><desc id="mode-ctr-desc">Symbolic CTR wiring for three message blocks under the same key.</desc>
+<defs><marker id="mode-ctr-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="145" y="15.0" text-anchor="middle" class="v-text">ctr + 1</text>
+<polyline points="145,27 145,49" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<rect x="97" y="51" width="96" height="40" rx="3" class="v-box"/>
+<text x="145.0" y="71.0" text-anchor="middle" class="v-text">Fₖ</text>
+<circle cx="145" cy="142" r="16" class="v-box"/>
+<text x="145" y="142.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="145,93 145,124" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="80" y="142.0" text-anchor="middle" class="v-text">m1</text>
+<polyline points="99,142 127,142" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="145" y="199.0" text-anchor="middle" class="v-text">c1</text>
+<polyline points="145,160 145,184" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="340" y="15.0" text-anchor="middle" class="v-text">ctr + 2</text>
+<polyline points="340,27 340,49" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<rect x="292" y="51" width="96" height="40" rx="3" class="v-box"/>
+<text x="340.0" y="71.0" text-anchor="middle" class="v-text">Fₖ</text>
+<circle cx="340" cy="142" r="16" class="v-box"/>
+<text x="340" y="142.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="340,93 340,124" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="275" y="142.0" text-anchor="middle" class="v-text">m2</text>
+<polyline points="294,142 322,142" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="340" y="199.0" text-anchor="middle" class="v-text">c2</text>
+<polyline points="340,160 340,184" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="535" y="15.0" text-anchor="middle" class="v-text">ctr + 3</text>
+<polyline points="535,27 535,49" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<rect x="487" y="51" width="96" height="40" rx="3" class="v-box"/>
+<text x="535.0" y="71.0" text-anchor="middle" class="v-text">Fₖ</text>
+<circle cx="535" cy="142" r="16" class="v-box"/>
+<text x="535" y="142.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="535,93 535,124" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="470" y="142.0" text-anchor="middle" class="v-text">m3</text>
+<polyline points="489,142 517,142" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+<text x="535" y="199.0" text-anchor="middle" class="v-text">c3</text>
+<polyline points="535,160 535,184" class="v-line" marker-end="url(#mode-ctr-arrow)"/>
+</svg></div>
+<p class="visual-result">CTR: counter inputs are available up front, so Fₖ calls can run in parallel.</p></div></div>
+<figcaption>Follow where the message enters and what feeds the next block. IVs and counters travel with the ciphertext.</figcaption></figure>
 </section>
 </section>
 
@@ -656,6 +1359,10 @@ $$\mathsf{negl}(n) \ge \Pr[D^{F_k} = 1] - \Pr[D^{f} = 1] \ge \tfrac12 + \varepsi
 </div>
 <p><b>None of the schemes so far is CCA-secure.</b> Example: $\mathsf{Enc}_k(m) = \langle r, F_k(r) \oplus m \rangle$. Choose $m_0 = 0^n$, $m_1 = 1^n$, receive $\langle r, s \rangle$, flip the first bit of $s$ to get $s'$, and ask for the decryption of $\langle r, s' \rangle \ne \langle r, s \rangle$. The answer is $m_b$ with the first bit flipped, which reveals $b$; the adversary wins with probability $1$. The same "flip a ciphertext bit, a plaintext bit flips" attack works for CTR, OFB and (on the IV) CBC.</p>
 <p>The underlying problem is <b>malleability</b>: the ciphertext can be changed into a valid ciphertext of a related message. A CCA-secure scheme must be <b>non-malleable</b>: every manipulation either produces an invalid ciphertext or one whose plaintext is unrelated to the original. This requires integrity, which is the subject of the next section; a CCA-secure construction follows in <a class="xref" href="#sec-cca-secure"></a>.</p>
+
+<figure class="lecture-visual lecture-visual--interactive lecture-visual--compact" id="fig-bit-flip" data-xor-demo="attack">
+<div class="v-bit-line"><span class="v-bit-label">original c</span><div class="v-bit-row" data-bit-row="cipher"><span>1</span><span>1</span><span>1</span><span>1</span></div></div><div class="v-bit-line"><span class="v-bit-label">flip mask Δ</span><div class="v-bit-row" data-bit-row="delta"><button type="button" aria-label="flip mask Δ bit 1" aria-pressed="false">0</button><button type="button" aria-label="flip mask Δ bit 2" aria-pressed="false">0</button><button type="button" aria-label="flip mask Δ bit 3" aria-pressed="false">0</button><button type="button" aria-label="flip mask Δ bit 4" aria-pressed="false">0</button></div></div><div class="v-bit-line"><span class="v-bit-label">modified c′</span><div class="v-bit-row" data-bit-row="altered"><span>1</span><span>1</span><span>1</span><span>1</span></div></div><div class="v-bit-line"><span class="v-bit-label">decrypted m′</span><div class="v-bit-row" data-bit-row="recovered"><span>1</span><span>0</span><span>0</span><span>1</span></div></div><output class="visual-result" data-xor-result aria-live="polite">Original m = 1001; decrypted m′ = 1001.</output>
+<figcaption>Click an attack-mask bit. For an XOR-based scheme, c′ = c ⊕ Δ decrypts to m′ = m ⊕ Δ without knowing the pad.</figcaption></figure>
 </section>
 
 <section class="chapter" id="sec-mac">
@@ -689,7 +1396,48 @@ $$\mathsf{negl}(n) \ge \Pr[D^{F_k} = 1] - \Pr[D^{f} = 1] \ge \tfrac12 + \varepsi
 <p>$\Pi$ is existentially unforgeable under an adaptive chosen-message attack (or simply <b>secure</b>) if for every PPT $\mathcal{A}$: $\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n) = 1] \le \mathsf{negl}(n)$.</p>
 </div>
 <p>"Existential": forging a tag on <i>any</i> new message counts, even a meaningless one, since what is meaningful depends on the application. <b>Replay attacks</b> (resending an old valid $\langle m, t\rangle$) are not prevented by a MAC; they must be handled by the protocol, e.g. with <b>sequence numbers</b> or <b>time stamps</b> included in the authenticated message.</p>
+<figure class="lecture-visual" id="fig-forgery-decision">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 385" role="img" aria-labelledby="forgery-decision-title forgery-decision-desc">
+<title id="forgery-decision-title">What counts as a MAC forgery</title>
+<desc id="forgery-decision-desc">The tag must verify and the message must not have been queried. Replaying an old authenticated message does not win this experiment.</desc>
+<defs>
+<marker id="forgery-decision-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<rect x="210" y="10" width="220" height="48" rx="4" class="v-box"/>
+<text x="320.0" y="34.0" text-anchor="middle" class="v-text">Candidate (m*, t*)</text>
+<polyline points="320,59 320,84" class="v-line" marker-end="url(#forgery-decision-arrow)"/>
+<rect x="210" y="87" width="220" height="48" rx="4" class="v-box"/>
+<text x="320.0" y="111.0" text-anchor="middle" class="v-text">Does Vrfyₖ accept?</text>
+<polyline points="208,111 103,111 103,180" class="v-line" marker-end="url(#forgery-decision-arrow)"/>
+<text x="144" y="94" text-anchor="middle" class="v-small">no</text>
+<rect x="18" y="183" width="170" height="60" rx="4" class="v-box"/>
+<text x="103.0" y="203.0" text-anchor="middle" class="v-text">Invalid tag</text>
+<text x="103.0" y="223.0" text-anchor="middle" class="v-text">Not a forgery</text>
+<polyline points="320,136 320,164" class="v-line" marker-end="url(#forgery-decision-arrow)"/>
+<text x="349" y="151" text-anchor="middle" class="v-small">yes</text>
+<rect x="210" y="167" width="220" height="48" rx="4" class="v-box"/>
+<text x="320.0" y="191.0" text-anchor="middle" class="v-text">Was m* queried?</text>
+<polyline points="208,191 198,191 198,283 105,283 105,300" class="v-line" marker-end="url(#forgery-decision-arrow)"/>
+<text x="168" y="266" text-anchor="middle" class="v-small">yes</text>
+<rect x="18" y="303" width="180" height="60" rx="4" class="v-box"/>
+<text x="108.0" y="323.0" text-anchor="middle" class="v-text">Replay / old message</text>
+<text x="108.0" y="343.0" text-anchor="middle" class="v-text">Not a fresh forgery</text>
+<polyline points="432,191 533,191 533,300" class="v-line" marker-end="url(#forgery-decision-arrow)"/>
+<text x="493" y="173" text-anchor="middle" class="v-small">no</text>
+<rect x="443" y="303" width="180" height="60" rx="4" class="v-box v-highlight"/>
+<text x="533.0" y="323.0" text-anchor="middle" class="v-text">Valid + new message</text>
+<text x="533.0" y="343.0" text-anchor="middle" class="v-text">Adversary wins</text>
+</svg>
+</div>
+<figcaption>The basic experiment requires a new message, not merely a different tag. Replay protection belongs in the surrounding protocol.</figcaption>
+</figure>
 </section>
+
+
+
 
 <section class="sub" id="sec-prf-mac">
 <h3>A Fixed-Length MAC from a PRF</h3>
@@ -723,6 +1471,38 @@ $$\mathsf{negl}(n) \ge \big|\Pr[D^{F_k} = 1] - \Pr[D^{f} = 1]\big| \ge \varepsil
 <tr><td>$\mathsf{Mac}$</td><td>input $k$, $m$ of length $\ell$: set $d := \max(1, \lceil \ell/(n/4) \rceil)$ and pad $m$ with zeros to $d$ blocks $m_1, \dots, m_d$ (the empty message becomes one all-zero block); choose $r \leftarrow \{0,1\}^{n/4}$; for $i = 1, \dots, d$: $t_i \leftarrow \mathsf{Mac}'_k(r \,\|\, \langle \ell \rangle \,\|\, \langle i \rangle \,\|\, m_i)$; output $t := \langle r, t_1, \dots, t_d \rangle$</td></tr>
 <tr><td>$\mathsf{Vrfy}$</td><td>reject if $\ell \ge 2^{n/4}$, $r$ is not $n/4$ bits, or the number of tags differs from $d := \max(1, \lceil \ell/(n/4) \rceil)$. Recompute the same padded blocks; output $1$ iff $\mathsf{Vrfy}'_k(r \| \langle \ell \rangle \| \langle i \rangle \| m_i, t_i) = 1$ for every $i = 1, \dots, d$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-mac-fields"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 166" role="img" aria-labelledby="mac-fields-title mac-fields-desc">
+<title id="mac-fields-title">Binding each message block to its context</title><desc id="mac-fields-desc">Every authenticated row contains a common identifier and message length, plus its own position and block.</desc>
+<defs><marker id="mac-fields-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="15" y="14" width="147" height="34" rx="3" class="v-box"/>
+<text x="88.5" y="31.0" text-anchor="middle" class="v-text">r</text>
+<rect x="162" y="14" width="147" height="34" rx="3" class="v-box"/>
+<text x="235.5" y="31.0" text-anchor="middle" class="v-text">length ℓ</text>
+<rect x="309" y="14" width="147" height="34" rx="3" class="v-box v-highlight"/>
+<text x="382.5" y="31.0" text-anchor="middle" class="v-text">index 1</text>
+<rect x="456" y="14" width="147" height="34" rx="3" class="v-box"/>
+<text x="529.5" y="31.0" text-anchor="middle" class="v-text">block m1</text>
+<rect x="15" y="58" width="147" height="34" rx="3" class="v-box"/>
+<text x="88.5" y="75.0" text-anchor="middle" class="v-text">r</text>
+<rect x="162" y="58" width="147" height="34" rx="3" class="v-box"/>
+<text x="235.5" y="75.0" text-anchor="middle" class="v-text">length ℓ</text>
+<rect x="309" y="58" width="147" height="34" rx="3" class="v-box v-highlight"/>
+<text x="382.5" y="75.0" text-anchor="middle" class="v-text">index 2</text>
+<rect x="456" y="58" width="147" height="34" rx="3" class="v-box"/>
+<text x="529.5" y="75.0" text-anchor="middle" class="v-text">block m2</text>
+<rect x="15" y="102" width="147" height="34" rx="3" class="v-box"/>
+<text x="88.5" y="119.0" text-anchor="middle" class="v-text">r</text>
+<rect x="162" y="102" width="147" height="34" rx="3" class="v-box"/>
+<text x="235.5" y="119.0" text-anchor="middle" class="v-text">length ℓ</text>
+<rect x="309" y="102" width="147" height="34" rx="3" class="v-box v-highlight"/>
+<text x="382.5" y="119.0" text-anchor="middle" class="v-text">index 3</text>
+<rect x="456" y="102" width="147" height="34" rx="3" class="v-box"/>
+<text x="529.5" y="119.0" text-anchor="middle" class="v-text">block m3</text>
+<text x="310" y="155.0" text-anchor="middle" class="v-small">Each field has n/4 bits; authenticate the whole n-bit row.</text>
+</svg></div>
+<figcaption>The identifier blocks splicing, the length blocks truncation, and the index binds the order.</figcaption></figure>
+
 <div class="env thm" id="thm-var-mac">
 <p>If $\Pi'$ is a secure fixed-length MAC for messages of length $n$, then the construction above is a secure MAC for messages within the stated length bound, including the empty message. Every polynomial message length satisfies this bound for sufficiently large $n$.</p>
 </div>
@@ -751,6 +1531,40 @@ $$\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{Repeat}] 
 <tr><td>$\mathsf{Mac}$</td><td>split $m$ into $\ell = \ell(n)$ blocks $m_1, \dots, m_\ell$; $t_0 := 0^n$; for $i = 1, \dots, \ell$: $t_i := F_k(t_{i-1} \oplus m_i)$; output $t := t_\ell$</td></tr>
 <tr><td>$\mathsf{Vrfy}$</td><td>output $1$ iff $t = \mathsf{Mac}_k(m)$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-cbc-mac"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 196" role="img" aria-labelledby="cbc-mac-title cbc-mac-desc">
+<title id="cbc-mac-title">CBC-MAC chaining</title><desc id="cbc-mac-desc">Each block enters a compression or keyed-function stage. Only the final chaining value is output.</desc>
+<defs><marker id="cbc-mac-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="22" y="44.0" text-anchor="middle" class="v-small">0ⁿ</text>
+<circle cx="115" cy="44" r="16" class="v-box"/>
+<text x="115" y="44.0" text-anchor="middle" class="v-text">⊕</text>
+<text x="115" y="13.0" text-anchor="middle" class="v-small">m1</text>
+<polyline points="115,23 115,26" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<rect x="67" y="90" width="96" height="40" rx="3" class="v-box"/>
+<text x="115.0" y="110.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="115,62 115,88" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<polyline points="38,44 97,44" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<polyline points="115,132 115,151 230,151 230,44 293,44" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<circle cx="311" cy="44" r="16" class="v-box"/>
+<text x="311" y="44.0" text-anchor="middle" class="v-text">⊕</text>
+<text x="311" y="13.0" text-anchor="middle" class="v-small">m2</text>
+<polyline points="311,23 311,26" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<rect x="263" y="90" width="96" height="40" rx="3" class="v-box"/>
+<text x="311.0" y="110.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="311,62 311,88" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<polyline points="311,132 311,151 426,151 426,44 489,44" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<circle cx="507" cy="44" r="16" class="v-box"/>
+<text x="507" y="44.0" text-anchor="middle" class="v-text">⊕</text>
+<text x="507" y="13.0" text-anchor="middle" class="v-small">m3</text>
+<polyline points="507,23 507,26" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<rect x="459" y="90" width="96" height="40" rx="3" class="v-box v-highlight"/>
+<text x="507.0" y="110.0" text-anchor="middle" class="v-text">Fₖ</text>
+<polyline points="507,62 507,88" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<polyline points="507,132 507,169 610,169" class="v-line" marker-end="url(#cbc-mac-arrow)"/>
+<text x="625" y="169.0" text-anchor="middle" class="v-text">t</text>
+</svg></div>
+<figcaption>Start from 0ⁿ and output only the final tag; intermediate chaining values are not sent.</figcaption></figure>
+
 <div class="env thm" id="thm-cbc-mac">
 <p>If $F$ is a PRF, CBC-MAC is a secure MAC for messages of the fixed length $\ell(n) \cdot n$. (Proof omitted; it bounds the probability that two different messages lead to the same input of the last $F_k$ call.)</p>
 </div>
@@ -805,6 +1619,26 @@ $$\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{Repeat}] 
   <li>if $y_i = y_j$ for some $i \ne j$, output $(x_i, x_j)$.</li>
 </ol>
 <p>Treating the outputs as uniform, a collision among $q$ values in a set of size $N = 2^\ell$ occurs with probability about $1 - e^{-q^2/2N}$: for $q \approx \sqrt N = 2^{\ell/2}$ it is about $\frac12$ (in a group of 23 people, two share a birthday with probability $\gt \frac12$). <b>Consequence:</b> a hash function with $\ell$-bit outputs offers at most $\ell/2$ bits of security against collisions, so outputs must be at least 256 bits for 128-bit security. Finding the collision without storing all values is possible with cycle-finding (Floyd), using constant memory.</p>
+
+<figure class="lecture-visual lecture-visual--interactive" id="fig-birthday" data-birthday-demo>
+<div class="visual-controls"><label for="visual-hash-bits">Output bits <select id="visual-hash-bits" data-hash-bits><option>4</option><option selected>8</option><option>12</option></select></label><span><label for="visual-hash-queries">Queries q = </label><output for="visual-hash-queries" data-query-value>20</output></span><input id="visual-hash-queries" data-hash-queries type="range" min="1" max="64" value="20"></div><div class="lecture-visual__canvas"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 230" role="img" aria-labelledby="birthday-chart-title birthday-chart-desc">
+<title id="birthday-chart-title">Birthday collision probability</title><desc id="birthday-chart-desc">Exact probability of a collision among distinct inputs with independent uniform 8-bit outputs.</desc>
+<defs><marker id="birthday-chart-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<line x1="54" y1="188" x2="554" y2="188" class="v-grid"/>
+<text x="46" y="188.0" text-anchor="end" class="v-small">0%</text>
+<line x1="54" y1="112.0" x2="554" y2="112.0" class="v-grid"/>
+<text x="46" y="112.0" text-anchor="end" class="v-small">50%</text>
+<line x1="54" y1="36" x2="554" y2="36" class="v-grid"/>
+<text x="46" y="36.0" text-anchor="end" class="v-small">100%</text>
+<line x1="54" y1="36" x2="54" y2="188" class="v-line"/>
+<line x1="54" y1="188" x2="554" y2="188" class="v-line"/>
+<polyline class="v-curve" data-birthday-curve="" points="54.00,188.00 61.81,188.00 69.62,187.41 77.44,186.22 85.25,184.46 93.06,182.14 100.88,179.29 108.69,175.93 116.50,172.10 124.31,167.85 132.12,163.22 139.94,158.25 147.75,152.99 155.56,147.51 163.38,141.85 171.19,136.06 179.00,130.20 186.81,124.31 194.62,118.44 202.44,112.65 210.25,106.96 218.06,101.41 225.88,96.05 233.69,90.89 241.50,85.96 249.31,81.27 257.12,76.85 264.94,72.70 272.75,68.83 280.56,65.24 288.38,61.93 296.19,58.89 304.00,56.12 311.81,53.60 319.62,51.33 327.44,49.30 335.25,47.48 343.06,45.87 350.88,44.44 358.69,43.19 366.50,42.09 374.31,41.14 382.12,40.32 389.94,39.61 397.75,39.00 405.56,38.49 413.38,38.05 421.19,37.68 429.00,37.37 436.81,37.12 444.62,36.90 452.44,36.73 460.25,36.58 468.06,36.46 475.88,36.37 483.69,36.29 491.50,36.23 499.31,36.18 507.12,36.14 514.94,36.11 522.75,36.08 530.56,36.06 538.38,36.05 546.19,36.04 554.00,36.03"/>
+<circle data-birthday-dot="" class="v-dot" r="4" cx="210.25" cy="106.95860403462197"/>
+<text x="54" y="207.0" text-anchor="middle" class="v-small">0</text>
+<text x="304" y="207" class="v-small" text-anchor="middle" data-query-mid="">32</text><text x="554" y="207" class="v-small" text-anchor="middle" data-query-max="">64</text>
+<text x="304" y="224.0" text-anchor="middle" class="v-small">number of queries</text>
+</svg></div><output class="visual-result" data-birthday-result aria-live="polite">53.3% collision probability · 190 pairs · 256 possible outputs</output>
+<figcaption>Ideal uniform outputs; the curve uses the exact product, not the exponential approximation. Small output sizes make the birthday effect visible.</figcaption></figure>
 </section>
 
 <section class="sub" id="sec-merkle-damgard">
@@ -815,6 +1649,31 @@ $$\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{Repeat}] 
 <tr><td>$\mathsf{Gen}$</td><td>unchanged</td></tr>
 <tr><td>$H$</td><td>input $s$ and $x$ of length $L \lt 2^n$: let $B := \lceil L/n \rceil$; pad $x$ with zeros to $B$ blocks $x_1, \dots, x_B$ of $n$ bits; set $x_{B+1} := L$ (encoded in $n$ bits); $z_0 := IV = 0^n$; for $i = 1, \dots, B+1$: $z_i := h^s(z_{i-1} \| x_i)$; output $z_{B+1}$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-md-chain"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 196" role="img" aria-labelledby="md-chain-title md-chain-desc">
+<title id="md-chain-title">Merkle–Damgård chaining</title><desc id="md-chain-desc">Each block enters a compression or keyed-function stage. Only the final chaining value is output.</desc>
+<defs><marker id="md-chain-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="18" y="104.0" text-anchor="middle" class="v-small">IV</text>
+<rect x="112" y="82" width="102" height="42" rx="3" class="v-box"/>
+<text x="163.0" y="103.0" text-anchor="middle" class="v-text">hˢ</text>
+<text x="163" y="26.0" text-anchor="middle" class="v-text">x₁</text>
+<polyline points="163,38 163,80" class="v-line" marker-end="url(#md-chain-arrow)"/>
+<polyline points="42,103 110,103" class="v-line" marker-end="url(#md-chain-arrow)"/>
+<rect x="314" y="82" width="102" height="42" rx="3" class="v-box"/>
+<text x="365.0" y="103.0" text-anchor="middle" class="v-text">hˢ</text>
+<text x="365" y="26.0" text-anchor="middle" class="v-text">x₂</text>
+<polyline points="365,38 365,80" class="v-line" marker-end="url(#md-chain-arrow)"/>
+<polyline points="214,103 312,103" class="v-line" marker-end="url(#md-chain-arrow)"/>
+<rect x="516" y="82" width="102" height="42" rx="3" class="v-box v-highlight"/>
+<text x="567.0" y="103.0" text-anchor="middle" class="v-text">hˢ</text>
+<text x="567" y="26.0" text-anchor="middle" class="v-text">L</text>
+<polyline points="567,38 567,80" class="v-line" marker-end="url(#md-chain-arrow)"/>
+<polyline points="416,103 514,103" class="v-line" marker-end="url(#md-chain-arrow)"/>
+<polyline points="618,103 645,103" class="v-line" marker-end="url(#md-chain-arrow)"/>
+<text x="325" y="162.0" text-anchor="middle" class="v-small">state + message block → next state; L encodes the original length</text>
+</svg></div>
+<figcaption>Two message blocks are followed by their original length L before producing the digest.</figcaption></figure>
+
 <div class="env thm" id="thm-md">
 <p>If $(\mathsf{Gen}, h)$ is collision resistant, then so is $(\mathsf{Gen}, H)$.</p>
 </div>
@@ -830,6 +1689,30 @@ $$\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{Repeat}] 
 <p><b>HMAC</b> builds a MAC directly from an MD hash function $H$ with block length $b$ and fixed constants $\mathit{ipad} \ne \mathit{opad}$:</p>
 $$\mathsf{HMAC}_k(m) = H\big((k \oplus \mathit{opad}) \,\|\, H\big((k \oplus \mathit{ipad}) \,\|\, m\big)\big).$$
 <p>The inner hash is a keyed MD hash of $m$ (keyed through its first block); the outer hash, applied to a short value with a different key, prevents length extension. HMAC is secure if the compression function, keyed through its chaining input, behaves like a PRF/secure MAC and the inner hash is (weakly) collision resistant. It is the standard MAC in practice (TLS, IPsec, SSH).</p>
+
+<figure class="lecture-visual" id="fig-hmac-nesting"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 178" role="img" aria-labelledby="hmac-nesting-title hmac-nesting-desc">
+<title id="hmac-nesting-title">HMAC has an inner and an outer hash</title><desc id="hmac-nesting-desc">Hash the masked key with m. Then hash a differently masked key with that inner digest.</desc>
+<defs><marker id="hmac-nesting-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="12" y="18" width="192" height="42" rx="3" class="v-box"/>
+<text x="108.0" y="39.0" text-anchor="middle" class="v-text">(k ⊕ ipad) ∥ m</text>
+<rect x="252" y="18" width="82" height="42" rx="3" class="v-box"/>
+<text x="293.0" y="39.0" text-anchor="middle" class="v-text">H</text>
+<rect x="386" y="18" width="237" height="42" rx="3" class="v-box v-highlight"/>
+<text x="504.5" y="39.0" text-anchor="middle" class="v-text">inner digest</text>
+<polyline points="206,39 250,39" class="v-line" marker-end="url(#hmac-nesting-arrow)"/>
+<polyline points="336,39 384,39" class="v-line" marker-end="url(#hmac-nesting-arrow)"/>
+<rect x="12" y="111" width="192" height="42" rx="3" class="v-box"/>
+<text x="108.0" y="132.0" text-anchor="middle" class="v-text">k ⊕ opad</text>
+<rect x="252" y="111" width="225" height="42" rx="3" class="v-box v-highlight"/>
+<text x="364.5" y="132.0" text-anchor="middle" class="v-text">∥ inner digest → H</text>
+<rect x="528" y="111" width="95" height="42" rx="3" class="v-box"/>
+<text x="575.5" y="132.0" text-anchor="middle" class="v-text">tag</text>
+<polyline points="206,132 250,132" class="v-line" marker-end="url(#hmac-nesting-arrow)"/>
+<polyline points="479,132 526,132" class="v-line" marker-end="url(#hmac-nesting-arrow)"/>
+<polyline points="505,62 505,91 364,91 364,109" class="v-line" marker-end="url(#hmac-nesting-arrow)"/>
+</svg></div>
+<figcaption>Two different key masks separate the inner and outer hash applications.</figcaption></figure>
 </section>
 </section>
 
@@ -850,6 +1733,33 @@ $$\mathsf{HMAC}_k(m) = H\big((k \oplus \mathit{opad}) \,\|\, H\big((k \oplus \ma
 <tr><td>$\mathsf{Enc}$</td><td>input $(k_1, k_2)$, $m$: $c \leftarrow \mathsf{Enc}_{k_1}(m)$; $t \leftarrow \mathsf{Mac}_{k_2}(c)$; output $\langle c, t \rangle$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>input $(k_1, k_2)$, $\langle c, t \rangle$: if $\mathsf{Vrfy}_{k_2}(c, t) = 1$ output $\mathsf{Dec}_{k_1}(c)$, else output $\bot$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-etm-order"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 183" role="img" aria-labelledby="etm-order-title etm-order-desc">
+<title id="etm-order-title">Encrypt then authenticate, verify then decrypt</title><desc id="etm-order-desc">Authenticate the ciphertext, including its IV. The receiver checks the tag before decrypting and rejects invalid tags.</desc>
+<defs><marker id="etm-order-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="12" y="23.0" text-anchor="start" class="v-small">send</text>
+<rect x="76" y="4" width="134" height="42" rx="3" class="v-box"/>
+<text x="143.0" y="25.0" text-anchor="middle" class="v-text">m → Encₖ₁</text>
+<rect x="260" y="4" width="134" height="42" rx="3" class="v-box"/>
+<text x="327.0" y="25.0" text-anchor="middle" class="v-text">c → MACₖ₂</text>
+<rect x="450" y="4" width="184" height="42" rx="3" class="v-box v-highlight"/>
+<text x="542.0" y="25.0" text-anchor="middle" class="v-text">send ⟨c, t⟩</text>
+<polyline points="212,25 258,25" class="v-line" marker-end="url(#etm-order-arrow)"/>
+<polyline points="396,25 448,25" class="v-line" marker-end="url(#etm-order-arrow)"/>
+<text x="12" y="103.0" text-anchor="start" class="v-small">receive</text>
+<rect x="76" y="82" width="134" height="42" rx="3" class="v-box"/>
+<text x="143.0" y="103.0" text-anchor="middle" class="v-text">⟨c, t⟩</text>
+<rect x="260" y="82" width="134" height="42" rx="3" class="v-box v-highlight"/>
+<text x="327.0" y="103.0" text-anchor="middle" class="v-text">verify tag</text>
+<rect x="450" y="82" width="184" height="42" rx="3" class="v-box"/>
+<text x="542.0" y="103.0" text-anchor="middle" class="v-text">valid: Decₖ₁(c)</text>
+<polyline points="212,103 258,103" class="v-line" marker-end="url(#etm-order-arrow)"/>
+<polyline points="396,103 448,103" class="v-line" marker-end="url(#etm-order-arrow)"/>
+<polyline points="327,126 327,156 451,156" class="v-line" marker-end="url(#etm-order-arrow)"/>
+<text x="537" y="156.0" text-anchor="middle" class="v-text">invalid: reject ⊥</text>
+</svg></div>
+<figcaption>The tag covers c, including any IV or nonce encoded in c. Verification comes before decryption.</figcaption></figure>
+
 <div class="env thm" id="thm-etm">
 <p>If $\Pi_E$ is CPA-secure and $\Pi_M$ is a secure MAC with unique tags, the construction is CCA-secure.</p>
 </div>
@@ -887,6 +1797,46 @@ $$\mathsf{HMAC}_k(m) = H\big((k \oplus \mathit{opad}) \,\|\, H\big((k \oplus \ma
 </ol>
 <p>After the last round, a final key mixing is applied (otherwise the last substitution and permutation could simply be inverted by the adversary). Since S-boxes and permutation are invertible, the cipher is a permutation for every key, and decryption runs the steps backwards. Design requirements: S-boxes must be invertible, and changing one input bit of an S-box must change at least two output bits; the mixing permutation must spread the outputs of one S-box to many S-boxes of the next round.</p>
 <p><b>Attacks on few rounds.</b> With one round (and final key mixing) the key is found from one input/output pair. With two rounds, each output byte depends on only a few input bytes and key bytes, which allows guessing small parts of the key separately. Security comes from <b>enough rounds</b>; this is why real ciphers use 10 to 16 rounds.</p>
+
+<figure class="lecture-visual" id="fig-spn-wires"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 200" role="img" aria-labelledby="spn-wires-title spn-wires-desc">
+<title id="spn-wires-title">Substitution followed by diffusion</title><desc id="spn-wires-desc">A bit permutation sends outputs of each S-box to several S-boxes in the next round. Key XOR stages are omitted.</desc>
+<defs><marker id="spn-wires-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="26" y="18" width="126" height="40" rx="3" class="v-box v-highlight"/>
+<text x="89.0" y="38.0" text-anchor="middle" class="v-text">S-box 1</text>
+<rect x="172" y="18" width="126" height="40" rx="3" class="v-box"/>
+<text x="235.0" y="38.0" text-anchor="middle" class="v-text">S-box 2</text>
+<rect x="318" y="18" width="126" height="40" rx="3" class="v-box"/>
+<text x="381.0" y="38.0" text-anchor="middle" class="v-text">S-box 3</text>
+<rect x="464" y="18" width="126" height="40" rx="3" class="v-box"/>
+<text x="527.0" y="38.0" text-anchor="middle" class="v-text">S-box 4</text>
+<rect x="26" y="154" width="126" height="40" rx="3" class="v-box"/>
+<text x="89.0" y="174.0" text-anchor="middle" class="v-text">S-box 1</text>
+<rect x="172" y="154" width="126" height="40" rx="3" class="v-box"/>
+<text x="235.0" y="174.0" text-anchor="middle" class="v-text">S-box 2</text>
+<rect x="318" y="154" width="126" height="40" rx="3" class="v-box"/>
+<text x="381.0" y="174.0" text-anchor="middle" class="v-text">S-box 3</text>
+<rect x="464" y="154" width="126" height="40" rx="3" class="v-box"/>
+<text x="527.0" y="174.0" text-anchor="middle" class="v-text">S-box 4</text>
+<line x1="40" y1="59" x2="40" y2="153" class="v-line v-emphasis"/>
+<line x1="63" y1="59" x2="186" y2="153" class="v-line v-emphasis"/>
+<line x1="86" y1="59" x2="332" y2="153" class="v-line v-emphasis"/>
+<line x1="109" y1="59" x2="478" y2="153" class="v-line v-emphasis"/>
+<line x1="186" y1="59" x2="63" y2="153" class="v-line v-faint"/>
+<line x1="209" y1="59" x2="209" y2="153" class="v-line v-faint"/>
+<line x1="232" y1="59" x2="355" y2="153" class="v-line v-faint"/>
+<line x1="255" y1="59" x2="501" y2="153" class="v-line v-faint"/>
+<line x1="332" y1="59" x2="86" y2="153" class="v-line v-faint"/>
+<line x1="355" y1="59" x2="232" y2="153" class="v-line v-faint"/>
+<line x1="378" y1="59" x2="378" y2="153" class="v-line v-faint"/>
+<line x1="401" y1="59" x2="524" y2="153" class="v-line v-faint"/>
+<line x1="478" y1="59" x2="109" y2="153" class="v-line v-faint"/>
+<line x1="501" y1="59" x2="255" y2="153" class="v-line v-faint"/>
+<line x1="524" y1="59" x2="401" y2="153" class="v-line v-faint"/>
+<line x1="547" y1="59" x2="547" y2="153" class="v-line v-faint"/>
+
+</svg></div>
+<figcaption>S-boxes substitute locally; the wiring spreads their outputs across the next round. Key mixing is omitted here.</figcaption></figure>
 </section>
 
 <section class="sub" id="sec-feistel">
@@ -896,6 +1846,31 @@ $$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
 <div class="env prop" id="prop-feistel">
 <p>A Feistel network is a permutation for any round functions $f_i$. It is inverted by $R_{i-1} := L_i$, $L_{i-1} := R_i \oplus f_i(L_i)$, i.e. by running the rounds backwards; no $f_i^{-1}$ is needed.</p>
 </div>
+<figure class="lecture-visual" id="fig-feistel-round"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 270" role="img" aria-labelledby="feistel-round-title feistel-round-desc">
+<title id="feistel-round-title">One Feistel round</title><desc id="feistel-round-desc">The right input is copied to the left output and passed to f. The left input and the output of f meet at XOR to produce the right output.</desc>
+<defs><marker id="feistel-round-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="60" y="12" width="120" height="40" rx="3" class="v-box"/>
+<text x="120.0" y="32.0" text-anchor="middle" class="v-text">Lᵢ₋₁</text>
+<rect x="390" y="12" width="120" height="40" rx="3" class="v-box"/>
+<text x="450.0" y="32.0" text-anchor="middle" class="v-text">Rᵢ₋₁</text>
+<rect x="540" y="90" width="100" height="40" rx="3" class="v-box v-highlight"/>
+<text x="590.0" y="110.0" text-anchor="middle" class="v-text">fᵢ</text>
+<circle cx="450" cy="175" r="18" class="v-box"/>
+<text x="450" y="175.0" text-anchor="middle" class="v-text">⊕</text>
+<polyline points="450,54 450,75 120,210 120,224" class="v-line" marker-end="url(#feistel-round-arrow)"/>
+<polyline points="450,64 590,64 590,88" class="v-line" marker-end="url(#feistel-round-arrow)"/>
+<circle cx="450" cy="64" r="2.5" fill="currentColor"/>
+<polyline points="120,54 120,84 430,175" class="v-line" marker-end="url(#feistel-round-arrow)"/>
+<polyline points="590,132 590,175 470,175" class="v-line" marker-end="url(#feistel-round-arrow)"/>
+<polyline points="450,195 450,224" class="v-line" marker-end="url(#feistel-round-arrow)"/>
+<rect x="60" y="226" width="120" height="34" rx="3" class="v-box"/>
+<text x="120.0" y="243.0" text-anchor="middle" class="v-text">Lᵢ = Rᵢ₋₁</text>
+<rect x="390" y="226" width="120" height="34" rx="3" class="v-box"/>
+<text x="450.0" y="243.0" text-anchor="middle" class="v-text">Rᵢ</text>
+</svg></div>
+<figcaption>The crossing wires are separate. Inversion undoes XOR; fᵢ itself does not need an inverse.</figcaption></figure>
+
 <p>If the halves are swapped after the last round (as in DES), decryption is <b>the same procedure with the round keys in reverse order</b>. Theory: with pseudorandom round functions, three rounds give a PRP and four rounds a strong PRP (Luby–Rackoff).</p>
 </section>
 
@@ -915,6 +1890,26 @@ $$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
   <li>Triple encryption only helps because <b>DES is not a group</b>: there is (in general) no single key $k$ with $\mathsf{DES}_k = \mathsf{DES}_{k_3} \circ \mathsf{DES}_{k_2} \circ \mathsf{DES}_{k_1}$. Otherwise triple-DES would be just another DES key.</li>
 </ul>
 <p><b>AES</b> (2001, Rijndael) is an SPN with 128-bit blocks, keys of 128, 192 or 256 bits and 10, 12 or 14 rounds. Each round applies byte-wise S-boxes (SubBytes), ShiftRows and MixColumns for diffusion, and AddRoundKey. No practical attack better than brute force is known.</p>
+
+<figure class="lecture-visual" id="fig-meet-middle"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 130" role="img" aria-labelledby="meet-middle-title meet-middle-desc">
+<title id="meet-middle-title">Meet in the middle for double encryption</title><desc id="meet-middle-desc">Encrypt x under every inner key and decrypt y under every outer key. Look for matching intermediate values.</desc>
+<defs><marker id="meet-middle-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="32" width="85" height="40" rx="3" class="v-box"/>
+<text x="52.5" y="52.0" text-anchor="middle" class="v-text">x</text>
+<rect x="153" y="32" width="125" height="40" rx="3" class="v-box"/>
+<text x="215.5" y="52.0" text-anchor="middle" class="v-text">Fₖ₂(x)</text>
+<rect x="365" y="32" width="125" height="40" rx="3" class="v-box"/>
+<text x="427.5" y="52.0" text-anchor="middle" class="v-text">F⁻¹ₖ₁(y)</text>
+<rect x="550" y="32" width="85" height="40" rx="3" class="v-box"/>
+<text x="592.5" y="52.0" text-anchor="middle" class="v-text">y</text>
+<polyline points="97,52 151,52" class="v-line" marker-end="url(#meet-middle-arrow)"/>
+<polyline points="548,52 492,52" class="v-line" marker-end="url(#meet-middle-arrow)"/>
+<line x1="280" y1="52" x2="363" y2="52" class="v-line"/>
+<text x="322" y="28.0" text-anchor="middle" class="v-small">match</text>
+<text x="322" y="106.0" text-anchor="middle" class="v-small">Build two tables of about 2ⁿ entries; compare the middle values.</text>
+</svg></div>
+<figcaption>A match proposes a key pair; additional plaintext–ciphertext pairs can filter false matches.</figcaption></figure>
 </section>
 </section>
 
@@ -924,6 +1919,17 @@ $$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
 
 <section class="sub" id="sec-divisibility">
 <h3>Divisibility, GCD and the Euclidean Algorithm</h3>
+<figure class="lecture-visual" id="fig-euclid-steps">
+<div class="lecture-visual__canvas"><table>
+<tr><th>Divide with remainder</th><th>Next gcd problem ↓</th></tr>
+<tr><td>1140 = 103 × 11 + 7</td><td>gcd(11, 7)</td></tr>
+<tr><td>11 = 1 × 7 + 4</td><td>gcd(7, 4)</td></tr>
+<tr><td>7 = 1 × 4 + 3</td><td>gcd(4, 3)</td></tr>
+<tr><td>4 = 1 × 3 + 1</td><td>gcd(3, 1)</td></tr>
+<tr><td>3 = 3 × 1 + 0</td><td>Stop: gcd = 1</td></tr>
+</table></div>
+<figcaption>The gcd stays unchanged at every step. Back-substitution gives 1 = 311 × 11 − 3 × 1140, so 11⁻¹ mod 1140 = 311.</figcaption>
+</figure>
 <div class="env def" id="def-divides" data-title="Divides">
 <p>$a$ divides $b$, written $a \mid b$, if $b = ac$ for some integer $c$. Basic rules: $a \mid b$ and $b \mid c$ imply $a \mid c$; $a \mid b$ and $a \mid c$ imply $a \mid (xb + yc)$ for all $x, y$. If $a \mid b$ and $b \ne 0$, then $|a| \le |b|$. The condition $b \ne 0$ is essential: every integer divides $0$.</p>
 </div>
@@ -952,9 +1958,22 @@ $$L_i := R_{i-1}, \qquad R_i := L_{i-1} \oplus f_i(R_{i-1}).$$
 <p>$a$ is invertible modulo $N$ (there is $b$ with $ab \equiv 1 \pmod N$) if and only if $\gcd(a, N) = 1$. The inverse $b = [a^{-1} \bmod N]$ is computed with the extended Euclidean algorithm: from $ax + Ny = 1$ we get $a x \equiv 1$.</p>
 </div>
 <p><b>Efficient exponentiation</b> (square-and-multiply): to compute $[a^e \bmod N]$, go through the bits of $e$ from the most significant one; for each bit square the current value and, if the bit is $1$, multiply by $a$. This needs at most $2 \log_2 e$ multiplications modulo $N$, so it is polynomial in the input length even for exponents with thousands of bits.</p>
+<figure class="lecture-visual" id="fig-square-multiply">
+<div class="lecture-visual__canvas"><table>
+<caption>3¹³ mod 17: exponent 13 = (1101)₂; start with r = 1</caption>
+<tr><th>Read next bit →</th><th>1</th><th>1</th><th>0</th><th>1</th></tr>
+<tr><th>Square, then multiply for a 1</th><td>1² × 3</td><td>3² × 3</td><td>10²</td><td>15² × 3</td></tr>
+<tr><th>New r modulo 17</th><td>3</td><td>10</td><td>15</td><td>12</td></tr>
+</table></div>
+<figcaption>Read bits left to right and reduce after each operation. The result is 12; the work grows with the exponent’s bit length.</figcaption>
+</figure>
 <div class="env thm" id="thm-crt1" data-title="Chinese remainder theorem">
 <p>Let $p, q \ge 2$, $N = pq$ and $\gcd(p, q) = 1$. For all $a_p, a_q$ there is exactly one $x \in \{0, \dots, N-1\}$ with $x \equiv a_p \pmod p$ and $x \equiv a_q \pmod q$. It is computed as $x = [a_p \cdot q \cdot (q^{-1} \bmod p) + a_q \cdot p \cdot (p^{-1} \bmod q) \bmod N]$. More generally, for pairwise coprime moduli $m_1, \dots, m_r \ge 2$, any prescribed residues determine exactly one solution modulo $\prod_{i=1}^r m_i$.</p>
 </div>
+<figure class="lecture-visual lecture-visual--interactive lecture-visual--compact" id="fig-crt" data-crt-demo>
+<div class="visual-controls"><label for="visual-crt-a">x mod 3 <select id="visual-crt-a" data-crt-a><option>0</option><option>1</option><option selected>2</option></select></label><label for="visual-crt-b">x mod 5 <select id="visual-crt-b" data-crt-b><option>0</option><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label></div><table aria-label="CRT solutions modulo 15; rows give residue modulo 3 and columns give residue modulo 5"><thead><tr><th scope="col">mod 3 ∖ mod 5</th><th scope="col">0</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">0</th><td data-crt-value="0">0</td><td data-crt-value="6">6</td><td data-crt-value="12">12</td><td data-crt-value="3">3</td><td data-crt-value="9">9</td></tr><tr><th scope="row">1</th><td data-crt-value="10">10</td><td data-crt-value="1">1</td><td data-crt-value="7">7</td><td data-crt-value="13">13</td><td data-crt-value="4">4</td></tr><tr><th scope="row">2</th><td data-crt-value="5">5</td><td data-crt-value="11">11</td><td data-crt-value="2">2</td><td data-crt-value="8" class="is-selected" aria-current="true">8</td><td data-crt-value="14">14</td></tr></tbody></table><output class="visual-result" data-crt-result aria-live="polite">x ≡ 8 (mod 15): 8 mod 3 = 2, 8 mod 5 = 3.</output>
+<figcaption>Choose two residues. Since 3 and 5 are coprime, each pair selects exactly one number modulo 15.</figcaption></figure>
+
 <p class="small">Example: solve $x \equiv 2 \pmod{20}$, $x \equiv 3 \pmod{57}$ and $x \equiv 1 \pmod 7$. Since $1 = 20 \cdot 20 - 7 \cdot 57$, the first two congruences give $x \equiv 2(-7 \cdot 57) + 3(20 \cdot 20) = 402 \pmod{1140}$. Write $x = 402 + 1140j$. Modulo $7$ this becomes $3 + 6j \equiv 1$, so $j \equiv 2 \pmod 7$. Thus $x \equiv 2682 \pmod{7980}$.</p>
 <p>Use in RSA: instead of computing $[y^d \bmod N]$ with a full-size modulus, compute $y^{d \bmod (p-1)} \bmod p$ and $y^{d \bmod (q-1)} \bmod q$ with half-size numbers and combine them; this is about 4 times faster.</p>
 <div class="env thm" id="thm-fermat" data-title="Fermat's little theorem">
@@ -1005,6 +2024,35 @@ $$\mathbb{Z}_N^* = \{a \in \{1, \dots, N-1\} : \gcd(a, N) = 1\}$$
 </div>
 <p class="small">Example: in $\mathbb{Z}_5^*$, $\langle 2 \rangle = \{1, 2, 4, 3\} = \mathbb{Z}_5^*$, so $2$ is a generator; $\langle 4 \rangle = \{1, 4\}$ has order $2$.</p>
 <p>In cryptography one usually works in a subgroup of <b>prime order</b> $q$: e.g. for a "safe prime" $p = 2q + 1$, the quadratic residues modulo $p$ form a subgroup of $\mathbb{Z}_p^*$ of prime order $q$. Elliptic-curve groups are the other common choice.</p>
+
+<figure class="lecture-visual" id="fig-group-cycles"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 206" role="img" aria-labelledby="group-cycles-title group-cycles-desc">
+<title id="group-cycles-title">Generators and smaller subgroups</title><desc id="group-cycles-desc">Multiplying by two modulo five from one visits all four units. Multiplying by four visits only one and four.</desc>
+<defs><marker id="group-cycles-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="155" y="18.0" text-anchor="middle" class="v-text">multiply by 2 mod 5</text>
+<polyline points="169.97176360346327,57.260704905924605 210.02823639653673,92.7392950940754" class="v-line" marker-end="url(#group-cycles-arrow)"/>
+<polyline points="210.02823639653673,119.2607049059246 169.97176360346327,154.7392950940754" class="v-line" marker-end="url(#group-cycles-arrow)"/>
+<polyline points="140.02823639653673,154.7392950940754 99.97176360346326,119.26070490592461" class="v-line" marker-end="url(#group-cycles-arrow)"/>
+<polyline points="99.97176360346326,92.73929509407542 140.02823639653676,57.260704905924605" class="v-line" marker-end="url(#group-cycles-arrow)"/>
+<circle cx="155.0" cy="44.0" r="18" class="v-box v-highlight"/>
+<text x="155.0" y="44.0" text-anchor="middle" class="v-text">1</text>
+<circle cx="225.0" cy="106.0" r="18" class="v-box v-highlight"/>
+<text x="225.0" y="106.0" text-anchor="middle" class="v-text">2</text>
+<circle cx="155.0" cy="168.0" r="18" class="v-box v-highlight"/>
+<text x="155.0" y="168.0" text-anchor="middle" class="v-text">4</text>
+<circle cx="85.0" cy="106.0" r="18" class="v-box v-highlight"/>
+<text x="85.0" y="106.0" text-anchor="middle" class="v-text">3</text>
+<text x="155" y="192.0" text-anchor="middle" class="v-small">order 4; whole group</text>
+<text x="470" y="18.0" text-anchor="middle" class="v-text">multiply by 4 mod 5</text>
+<polyline points="430.0,75 510.0,75" class="v-line" marker-end="url(#group-cycles-arrow)"/>
+<polyline points="510.0,125 430.0,125" class="v-line" marker-end="url(#group-cycles-arrow)"/>
+<circle cx="410" cy="100" r="18" class="v-box v-highlight"/>
+<text x="410" y="100.0" text-anchor="middle" class="v-text">1</text>
+<circle cx="530" cy="100" r="18" class="v-box v-highlight"/>
+<text x="530" y="100.0" text-anchor="middle" class="v-text">4</text>
+<text x="470" y="192.0" text-anchor="middle" class="v-small">order 2; subgroup {1, 4}</text>
+</svg></div>
+<figcaption>Of these two choices, 2 generates all of ℤ₅*; 4 generates only {1, 4}.</figcaption></figure>
 </section>
 </section>
 
@@ -1073,6 +2121,43 @@ $$\mathbb{Z}_N^* = \{a \in \{1, \dots, N-1\} : \gcd(a, N) = 1\}$$
 $$\big|\Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^z) = 1] - \Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^{xy}) = 1]\big| \le \mathsf{negl}(n),$$
 <p>for $x, y, z \leftarrow \mathbb{Z}_q$: the Diffie–Hellman value cannot be distinguished from a random group element.</p>
 </div>
+
+<figure class="lecture-visual" id="fig-dh-reductions">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 289" role="img" aria-labelledby="dh-reductions-title dh-reductions-desc">
+<title id="dh-reductions-title">Solvers and hardness implications run in opposite directions</title>
+<desc id="dh-reductions-desc">A discrete-log solver yields a CDH solver, which yields a DDH distinguisher. Consequently DDH hardness implies CDH hardness, which implies discrete-log hardness.</desc>
+<defs>
+<marker id="dh-reductions-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<text x="320" y="20" text-anchor="middle" class="v-text">If efficient solvers exist, they give:</text>
+<rect x="15" y="45" width="150" height="50" rx="4" class="v-box"/>
+<text x="90.0" y="70.0" text-anchor="middle" class="v-text">DLog solver</text>
+<rect x="245" y="45" width="150" height="50" rx="4" class="v-box"/>
+<text x="320.0" y="70.0" text-anchor="middle" class="v-text">CDH solver</text>
+<rect x="475" y="45" width="150" height="50" rx="4" class="v-box"/>
+<text x="550.0" y="70.0" text-anchor="middle" class="v-text">DDH distinguisher</text>
+<polyline points="167,70 242,70" class="v-line" marker-end="url(#dh-reductions-arrow)"/>
+<polyline points="397,70 472,70" class="v-line" marker-end="url(#dh-reductions-arrow)"/>
+<text x="205" y="110" text-anchor="middle" class="v-small">recover x</text>
+<text x="435" y="110" text-anchor="middle" class="v-small">compare gˣʸ</text>
+<text x="320" y="158" text-anchor="middle" class="v-text">Therefore the hardness assumptions imply:</text>
+<rect x="15" y="183" width="150" height="50" rx="4" class="v-box v-highlight"/>
+<text x="90.0" y="208.0" text-anchor="middle" class="v-text">DDH hard</text>
+<rect x="245" y="183" width="150" height="50" rx="4" class="v-box v-highlight"/>
+<text x="320.0" y="208.0" text-anchor="middle" class="v-text">CDH hard</text>
+<rect x="475" y="183" width="150" height="50" rx="4" class="v-box v-highlight"/>
+<text x="550.0" y="208.0" text-anchor="middle" class="v-text">DLog hard</text>
+<polyline points="167,208 242,208" class="v-line" marker-end="url(#dh-reductions-arrow)"/>
+<polyline points="397,208 472,208" class="v-line" marker-end="url(#dh-reductions-arrow)"/>
+<text x="320" y="268" text-anchor="middle" class="v-small">A harder-to-satisfy assumption appears farther left in the lower row.</text>
+</svg>
+</div>
+<figcaption>These implications hold for the same group family. Reverse implications do not follow from these reductions.</figcaption>
+</figure>
+
 <div class="env prop" id="prop-dh-relations">
 <p>If DDH is hard, then CDH is hard; if CDH is hard, then DLog is hard.</p>
 </div>
@@ -1095,7 +2180,41 @@ $$\big|\Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^z) = 1] - \Pr[\mathcal{A}(\
   <li><b>key agreement</b> over a public channel without any prior shared secret.</li>
 </ul>
 <p>The remaining problem is authenticity of public keys: how does Alice know that $e_B$ really belongs to Bob? <b>Certificates</b> solve it: a certification authority (CA) whose public key everyone knows signs the statement "the key $e_B$ belongs to Bob", $\sigma = \mathsf{Sign}_{d_{CA}}(\text{"Bob"}, e_B)$. CAs can form hierarchies (root CA, sub-CAs, end users) or webs of trust; standards include X.509 and the PKCS family.</p>
+<figure class="lecture-visual" id="fig-certificate-binding">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 350" role="img" aria-labelledby="certificate-binding-title certificate-binding-desc">
+<title id="certificate-binding-title">How a certificate authenticates a public key</title>
+<desc id="certificate-binding-desc">A trusted CA public key verifies a signature over Bob’s identity and public key. The verifier also checks identity and certificate validity before accepting the binding.</desc>
+<defs>
+<marker id="certificate-binding-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<rect x="15" y="18" width="200" height="60" rx="4" class="v-box v-highlight"/>
+<text x="115.0" y="38.0" text-anchor="middle" class="v-text">Trusted CA public key</text>
+<text x="115.0" y="58.0" text-anchor="middle" class="v-text">local trust anchor</text>
+<rect x="345" y="18" width="275" height="60" rx="4" class="v-box"/>
+<text x="482.5" y="38.0" text-anchor="middle" class="v-text">Certificate: “Bob”, pk_B</text>
+<text x="482.5" y="58.0" text-anchor="middle" class="v-text">CA signature σ_CA</text>
+<polyline points="115,80 115,132 235,132" class="v-line" marker-end="url(#certificate-binding-arrow)"/>
+<polyline points="485,80 485,132 405,132" class="v-line" marker-end="url(#certificate-binding-arrow)"/>
+<rect x="238" y="108" width="164" height="48" rx="4" class="v-box"/>
+<text x="320.0" y="132.0" text-anchor="middle" class="v-text">Verify σ_CA</text>
+<polyline points="320,158 320,188" class="v-line" marker-end="url(#certificate-binding-arrow)"/>
+<rect x="175" y="191" width="290" height="58" rx="4" class="v-box"/>
+<text x="320.0" y="210.0" text-anchor="middle" class="v-text">Check intended identity = Bob</text>
+<text x="320.0" y="230.0" text-anchor="middle" class="v-text">and certificate validity</text>
+<polyline points="320,251 320,280" class="v-line" marker-end="url(#certificate-binding-arrow)"/>
+<rect x="175" y="283" width="290" height="48" rx="4" class="v-box v-highlight"/>
+<text x="320.0" y="307.0" text-anchor="middle" class="v-text">Accept binding: Bob ↔ pk_B</text>
+</svg>
+</div>
+<figcaption>A valid signature needs a trusted starting key and a check that the certificate names the intended peer.</figcaption>
+</figure>
 </section>
+
+
+
 
 <section class="sub" id="sec-ke-def">
 <h3>Key-Exchange Protocols and their Security</h3>
@@ -1118,11 +2237,59 @@ $$\big|\Pr[\mathcal{A}(\mathbb{G}, q, g, g^x, g^y, g^z) = 1] - \Pr[\mathcal{A}(\
 
 <section class="sub" id="sec-dh">
 <h3>The Diffie–Hellman Protocol</h3>
+<figure class="lecture-visual" id="fig-dh-mitm">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" role="img" aria-labelledby="mitm-title mitm-desc">
+<title id="mitm-title">Man-in-the-middle attack on unauthenticated Diffie–Hellman</title>
+<desc id="mitm-desc">Eve intercepts both public shares and substitutes her own. Alice shares g to the power x e2 with Eve; Bob shares g to the power y e1 with Eve. Eve can decrypt and re-encrypt traffic between the two peers.</desc>
+<defs><marker id="mitm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+<rect x="15" y="15" width="150" height="42" rx="4" class="v-box"/>
+<rect x="245" y="15" width="150" height="42" rx="4" class="v-box v-highlight"/>
+<rect x="475" y="15" width="150" height="42" rx="4" class="v-box"/>
+<g text-anchor="middle" class="v-text">
+<text x="90" y="36">Alice: secret x</text><text x="320" y="36">Eve: e₁ and e₂</text><text x="550" y="36">Bob: secret y</text>
+</g>
+<g class="v-line" marker-end="url(#mitm-arrow)">
+<path d="M90 100 H290"/><path d="M350 100 H550"/>
+<path d="M550 155 H350"/><path d="M290 155 H90"/>
+</g>
+<g text-anchor="middle" class="v-small">
+<text x="190" y="82">gˣ intercepted</text><text x="450" y="82">gᵉ¹ sent to Bob</text>
+<text x="450" y="137">gʸ intercepted</text><text x="190" y="137">gᵉ² sent to Alice</text>
+</g>
+<rect x="15" y="185" width="260" height="60" rx="4" class="v-box v-highlight"/>
+<rect x="365" y="185" width="260" height="60" rx="4" class="v-box v-highlight"/>
+<g text-anchor="middle" class="v-text">
+<text x="145" y="205">Alice ↔ Eve</text><text x="145" y="228">K_A = g^(x e₂)</text>
+<text x="495" y="205">Eve ↔ Bob</text><text x="495" y="228">K_B = g^(y e₁)</text>
+<text x="320" y="277">Eve decrypts with one key and re-encrypts with the other.</text>
+</g></svg></div>
+<figcaption>Passive secrecy does not authenticate the peer. Authenticate the exchanged values to prevent this substitution.</figcaption>
+</figure>
 <div class="alg" id="constr-dh"><table>
 <tr><td>Alice</td><td>$(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$; $x \leftarrow \mathbb{Z}_q$; $h_1 := g^x$; send $(\mathbb{G}, q, g, h_1)$ to Bob</td></tr>
 <tr><td>Bob</td><td>$y \leftarrow \mathbb{Z}_q$; $h_2 := g^y$; send $h_2$ to Alice; output $k_B := h_1^y$</td></tr>
 <tr><td>Alice</td><td>output $k_A := h_2^x$</td></tr>
 </table></div>
+<figure class="lecture-visual lecture-visual--interactive" id="fig-dh" data-dh-demo>
+<div class="visual-controls"><label for="visual-dh-x">Alice’s private x <input type="number" id="visual-dh-x" data-dh-x min="0" max="10" value="3" step="1"></label><label for="visual-dh-y">Bob’s private y <input type="number" id="visual-dh-y" data-dh-y min="0" max="10" value="7" step="1"></label></div><div class="lecture-visual__canvas"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 252" role="img" aria-labelledby="dh-exchange-title dh-exchange-desc">
+<title id="dh-exchange-title">Diffie–Hellman exchange</title><desc id="dh-exchange-desc">Alice and Bob exchange public powers of g and derive the same secret group element locally.</desc>
+<defs><marker id="dh-exchange-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="125" y="17.0" text-anchor="middle" class="v-text">Alice</text>
+<text x="495" y="17.0" text-anchor="middle" class="v-text">Bob</text>
+<text x="125" y="44" class="v-small" text-anchor="middle" data-dh-private-x="">private x = 3</text><text x="495" y="44" class="v-small" text-anchor="middle" data-dh-private-y="">private y = 7</text>
+<line x1="125" y1="64" x2="125" y2="198" class="v-grid"/>
+<line x1="495" y1="64" x2="495" y2="198" class="v-grid"/>
+<text x="310" y="84" class="v-text" text-anchor="middle" data-dh-public-a="">A = 2^3 mod 23 = 8</text>
+<polyline points="129,105 491,105" class="v-line" marker-end="url(#dh-exchange-arrow)"/>
+<text x="310" y="143" class="v-text" text-anchor="middle" data-dh-public-b="">B = 2^7 mod 23 = 13</text>
+<polyline points="491,165 129,165" class="v-line" marker-end="url(#dh-exchange-arrow)"/>
+<rect x="21" y="203" width="208" height="40" rx="3" class="v-box v-highlight"/>
+<rect x="391" y="203" width="208" height="40" rx="3" class="v-box v-highlight"/>
+<text x="125" y="224" class="v-text" text-anchor="middle" data-dh-alice-key="">B^x mod 23 = 12</text><text x="495" y="224" class="v-text" text-anchor="middle" data-dh-bob-key="">A^y mod 23 = 12</text>
+</svg></div><output class="visual-result" data-dh-result aria-live="polite">Both derive 12; the private exponents x and y are not sent.</output>
+<figcaption>Arithmetic example only: the order-11 subgroup generated by g = 2 modulo p = 23. Use exponents 0–10; these tiny parameters provide no security.</figcaption></figure>
+
 <p>Correctness: $k_A = (g^y)^x = g^{xy} = (g^x)^y = k_B$.</p>
 <div class="env thm" id="thm-dh">
 <p>If DDH is hard relative to $\mathcal{G}$, the Diffie–Hellman protocol is secure in the presence of an eavesdropper (with keys in $\mathbb{G}$).</p>
@@ -1180,6 +2347,59 @@ $$= \tfrac12 + \tfrac12\Big(\Pr[\mathcal{A}(\dots, g^{xy}) = 1] - \Pr[\mathcal{A
 <div class="env thm" id="thm-pk-mult">
 <p>If $\Pi$ is CPA-secure, it is also secure for multiple encryptions: $\Pr[\mathsf{PubK}^{\mathsf{mult}}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$ for every PPT $\mathcal{A}$.</p>
 </div>
+<figure class="lecture-visual" id="fig-hybrid-proof"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 234" role="img" aria-labelledby="hybrid-proof-title hybrid-proof-desc">
+<title id="hybrid-proof-title">A hybrid argument changes one ciphertext at a time</title><desc id="hybrid-proof-desc">Each successive hybrid replaces one m1 message with its corresponding m0 message. Adjacent rows differ in one slot.</desc>
+<defs><marker id="hybrid-proof-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="35" y="25.0" text-anchor="middle" class="v-small">H0</text>
+<rect x="80" y="8" width="108" height="34" rx="3" class="v-box"/>
+<text x="134.0" y="25.0" text-anchor="middle" class="v-text">m₁[1]</text>
+<rect x="198" y="8" width="108" height="34" rx="3" class="v-box"/>
+<text x="252.0" y="25.0" text-anchor="middle" class="v-text">m₁[2]</text>
+<rect x="316" y="8" width="108" height="34" rx="3" class="v-box"/>
+<text x="370.0" y="25.0" text-anchor="middle" class="v-text">m₁[3]</text>
+<rect x="434" y="8" width="108" height="34" rx="3" class="v-box"/>
+<text x="488.0" y="25.0" text-anchor="middle" class="v-text">m₁[4]</text>
+<text x="35" y="68.0" text-anchor="middle" class="v-small">H1</text>
+<rect x="80" y="51" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="134.0" y="68.0" text-anchor="middle" class="v-text">m₀[1]</text>
+<rect x="198" y="51" width="108" height="34" rx="3" class="v-box"/>
+<text x="252.0" y="68.0" text-anchor="middle" class="v-text">m₁[2]</text>
+<rect x="316" y="51" width="108" height="34" rx="3" class="v-box"/>
+<text x="370.0" y="68.0" text-anchor="middle" class="v-text">m₁[3]</text>
+<rect x="434" y="51" width="108" height="34" rx="3" class="v-box"/>
+<text x="488.0" y="68.0" text-anchor="middle" class="v-text">m₁[4]</text>
+<text x="35" y="111.0" text-anchor="middle" class="v-small">H2</text>
+<rect x="80" y="94" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="134.0" y="111.0" text-anchor="middle" class="v-text">m₀[1]</text>
+<rect x="198" y="94" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="252.0" y="111.0" text-anchor="middle" class="v-text">m₀[2]</text>
+<rect x="316" y="94" width="108" height="34" rx="3" class="v-box"/>
+<text x="370.0" y="111.0" text-anchor="middle" class="v-text">m₁[3]</text>
+<rect x="434" y="94" width="108" height="34" rx="3" class="v-box"/>
+<text x="488.0" y="111.0" text-anchor="middle" class="v-text">m₁[4]</text>
+<text x="35" y="154.0" text-anchor="middle" class="v-small">H3</text>
+<rect x="80" y="137" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="134.0" y="154.0" text-anchor="middle" class="v-text">m₀[1]</text>
+<rect x="198" y="137" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="252.0" y="154.0" text-anchor="middle" class="v-text">m₀[2]</text>
+<rect x="316" y="137" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="370.0" y="154.0" text-anchor="middle" class="v-text">m₀[3]</text>
+<rect x="434" y="137" width="108" height="34" rx="3" class="v-box"/>
+<text x="488.0" y="154.0" text-anchor="middle" class="v-text">m₁[4]</text>
+<text x="35" y="197.0" text-anchor="middle" class="v-small">H4</text>
+<rect x="80" y="180" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="134.0" y="197.0" text-anchor="middle" class="v-text">m₀[1]</text>
+<rect x="198" y="180" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="252.0" y="197.0" text-anchor="middle" class="v-text">m₀[2]</text>
+<rect x="316" y="180" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="370.0" y="197.0" text-anchor="middle" class="v-text">m₀[3]</text>
+<rect x="434" y="180" width="108" height="34" rx="3" class="v-box v-highlight"/>
+<text x="488.0" y="197.0" text-anchor="middle" class="v-text">m₀[4]</text>
+<text x="330" y="228.0" text-anchor="middle" class="v-small">Each displayed slot is encrypted with the same public key.</text>
+</svg></div>
+<figcaption>Adjacent rows differ in one encrypted message, so single-message security connects the endpoints.</figcaption></figure>
+
 <div class="proof" data-title="hybrid argument"><p>Fix $\mathcal{A}$ with $t = t(n)$ messages per vector. For $i = 0, \dots, t$ define the hybrid distribution</p>
 $$H^{(i)} = \big(\mathsf{Enc}_{pk}(m_0^1), \dots, \mathsf{Enc}_{pk}(m_0^i), \mathsf{Enc}_{pk}(m_1^{i+1}), \dots, \mathsf{Enc}_{pk}(m_1^t)\big),$$
 <p>so $H^{(t)}$ is the encryption of $\vec M_0$ and $H^{(0)}$ that of $\vec M_1$. Let $p_i := \Pr[\mathcal{A}(H^{(i)}) = 0]$; the advantage of $\mathcal{A}$ is $\varepsilon = \frac12(p_t - p_0) = \frac12 \sum_{i=1}^t (p_i - p_{i-1})$.</p>
@@ -1197,6 +2417,31 @@ $$\Pr[\mathcal{A}' \text{ wins}] - \tfrac12 = \frac{1}{2t} \sum_{i=1}^t (p_i - p
 <tr><td>$\mathsf{Enc}^{\mathsf{hy}}$</td><td>input $pk$, $m$: $k \leftarrow \mathsf{Gen}'(1^n)$; $c_1 \leftarrow \mathsf{Enc}_{pk}(k)$; $c_2 \leftarrow \mathsf{Enc}'_k(m)$; output $\langle c_1, c_2 \rangle$</td></tr>
 <tr><td>$\mathsf{Dec}^{\mathsf{hy}}$</td><td>input $sk$, $\langle c_1, c_2 \rangle$: $k := \mathsf{Dec}_{sk}(c_1)$; output $\mathsf{Dec}'_k(c_2)$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-hybrid-encryption"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 210" role="img" aria-labelledby="hybrid-encryption-title hybrid-encryption-desc">
+<title id="hybrid-encryption-title">Hybrid encryption splits the work</title><desc id="hybrid-encryption-desc">Encrypt a fresh symmetric key with the public key and the long message with that symmetric key. Recover the key first when decrypting.</desc>
+<defs><marker id="hybrid-encryption-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="18" width="112" height="40" rx="3" class="v-box"/>
+<text x="66.0" y="38.0" text-anchor="middle" class="v-text">fresh key k</text>
+<rect x="214" y="18" width="162" height="40" rx="3" class="v-box"/>
+<text x="295.0" y="38.0" text-anchor="middle" class="v-text">Encₚₖ(k)</text>
+<rect x="470" y="18" width="165" height="40" rx="3" class="v-box"/>
+<text x="552.5" y="38.0" text-anchor="middle" class="v-text">c₁</text>
+<polyline points="124,38 212,38" class="v-line" marker-end="url(#hybrid-encryption-arrow)"/>
+<polyline points="378,38 468,38" class="v-line" marker-end="url(#hybrid-encryption-arrow)"/>
+<rect x="10" y="98" width="112" height="40" rx="3" class="v-box"/>
+<text x="66.0" y="118.0" text-anchor="middle" class="v-text">message m</text>
+<rect x="214" y="98" width="162" height="40" rx="3" class="v-box v-highlight"/>
+<text x="295.0" y="118.0" text-anchor="middle" class="v-text">Enc′ₖ(m)</text>
+<rect x="470" y="98" width="165" height="40" rx="3" class="v-box"/>
+<text x="552.5" y="118.0" text-anchor="middle" class="v-text">c₂</text>
+<polyline points="124,118 212,118" class="v-line" marker-end="url(#hybrid-encryption-arrow)"/>
+<polyline points="378,118 468,118" class="v-line" marker-end="url(#hybrid-encryption-arrow)"/>
+<polyline points="66,60 66,77 295,77 295,96" class="v-line" marker-end="url(#hybrid-encryption-arrow)"/>
+<text x="325" y="184.0" text-anchor="middle" class="v-small">Receive: c₁ → Decₛₖ → k; then (k, c₂) → Dec′ → m</text>
+</svg></div>
+<figcaption>Public-key encryption protects a short fresh key; symmetric encryption handles the data.</figcaption></figure>
+
 <p><b>Efficiency.</b> Let $\alpha$ be the cost of encrypting $k$ with $\Pi$ and $\beta$ the cost per message bit of $\Pi'$. For a message of $t$ bits, the cost per bit is $\frac{\alpha + \beta t}{t} = \frac{\alpha}{t} + \beta$, which approaches the private-key cost $\beta$ for long messages.</p>
 <p>Notation: $X \stackrel{c}{\equiv} Y$ means that no PPT algorithm distinguishes the distributions with non-negligible advantage. $\stackrel{c}{\equiv}$ is transitive (for a constant number of steps). Security of $\Pi$ means $(pk, \mathsf{Enc}_{pk}(m_0)) \stackrel{c}{\equiv} (pk, \mathsf{Enc}_{pk}(m_1))$, and EAV security of $\Pi'$ means $\mathsf{Enc}'_k(m_0) \stackrel{c}{\equiv} \mathsf{Enc}'_k(m_1)$.</p>
 <div class="env thm" id="thm-hybrid">
@@ -1235,7 +2480,70 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
   <li><b>Common modulus II:</b> the same $m$ is encrypted under $(N, e_1)$ and $(N, e_2)$ with $\gcd(e_1, e_2) = 1$. With $X e_1 + Y e_2 = 1$ (extended Euclid): $c_1^X c_2^Y = m^{X e_1 + Y e_2} = m \pmod N$.</li>
   <li><b>Malleable:</b> $c \cdot s^e$ is an encryption of $m \cdot s$, which enables chosen-ciphertext attacks.</li>
 </ul>
+<figure class="lecture-visual lecture-visual--interactive" id="fig-rsa-multiplication" data-rsa-demo="">
+<div class="visual-controls">
+<label for="visual-rsa-m">Message m <select id="visual-rsa-m" data-rsa-m="">
+<option>2</option>
+<option>3</option>
+<option selected>7</option>
+<option>8</option>
+<option>9</option>
+<option>12</option>
+<option>13</option>
+<option>17</option>
+<option>19</option>
+</select>
+</label>
+<label for="visual-rsa-s">Multiplier s <select id="visual-rsa-s" data-rsa-s="">
+<option selected>2</option>
+<option>3</option>
+<option>4</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+</select>
+</label>
+</div>
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" role="img" aria-labelledby="rsa-multiplication-title rsa-multiplication-desc">
+<title id="rsa-multiplication-title">Multiplying a textbook RSA ciphertext</title>
+<desc id="rsa-multiplication-desc">For message 7, ciphertext 13 is multiplied by 2 cubed modulo 55 to obtain 49. Decrypting gives 14, twice the original message modulo 55.</desc>
+<defs>
+<marker id="rsa-multiplication-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<text x="320" y="18" text-anchor="middle" class="v-text">Toy textbook RSA: N = 55, e = 3, d = 27</text>
+<rect x="15" y="49" width="150" height="65" rx="4" class="v-box"/>
+<text x="90.0" y="71.5" text-anchor="middle" class="v-text">message m</text>
+<text x="90.0" y="91.5" text-anchor="middle" class="v-text"  data-rsa-message="">7</text>
+<rect x="245" y="49" width="150" height="65" rx="4" class="v-box"/>
+<text x="320.0" y="71.5" text-anchor="middle" class="v-text">encrypt: m³ mod 55</text>
+<text x="320.0" y="91.5" text-anchor="middle" class="v-text"  data-rsa-cipher="">c = 13</text>
+<rect x="475" y="49" width="150" height="65" rx="4" class="v-box"/>
+<text x="550.0" y="71.5" text-anchor="middle" class="v-text">decrypt: c²⁷ mod 55</text>
+<text x="550.0" y="91.5" text-anchor="middle" class="v-text"  data-rsa-original="">m = 7</text>
+<polyline points="167,81 242,81" class="v-line" marker-end="url(#rsa-multiplication-arrow)"/>
+<polyline points="397,81 472,81" class="v-line" marker-end="url(#rsa-multiplication-arrow)"/>
+<polyline points="320,115 320,155" class="v-line" marker-end="url(#rsa-multiplication-arrow)"/>
+<text x="452" y="137" text-anchor="middle" class="v-small">Multiply by s³ mod 55</text>
+<rect x="205" y="158" width="230" height="60" rx="4" class="v-box v-highlight"/>
+<text x="320.0" y="178.0" text-anchor="middle" class="v-text">altered ciphertext</text>
+<text x="320.0" y="198.0" text-anchor="middle" class="v-text"  data-rsa-altered="">c′ = 49</text>
+<polyline points="320,220 320,246" class="v-line" marker-end="url(#rsa-multiplication-arrow)"/>
+<rect x="170" y="249" width="300" height="60" rx="4" class="v-box v-highlight"/>
+<text x="320.0" y="269.0" text-anchor="middle" class="v-text">receiver decrypts c′</text>
+<text x="320.0" y="289.0" text-anchor="middle" class="v-text"  data-rsa-recovered="">m′ = m · s mod 55 = 14</text>
+</svg>
+</div>
+<output class="visual-result" data-rsa-result="" aria-live="polite">Decrypting c′ gives 14 = 7 × 2 mod 55.</output>
+<figcaption>Tiny parameters for arithmetic only. The attacker computes the alteration with the public key; no private exponent is needed.</figcaption>
+</figure>
 </section>
+
+
+
 
 <section class="sub" id="sec-padded-rsa">
 <h3>Padded RSA</h3>
@@ -1261,6 +2569,31 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
 <tr><td>$\mathsf{Enc}$</td><td>input $pk$, $m \in \mathbb{G}$: $y \leftarrow \mathbb{Z}_q$; output $\langle c_1, c_2 \rangle = \langle g^y, h^y \cdot m \rangle$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>input $sk$, $\langle c_1, c_2 \rangle$: $m := c_2 / c_1^x$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-elgamal-mask"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 182" role="img" aria-labelledby="elgamal-mask-title elgamal-mask-desc">
+<title id="elgamal-mask-title">ElGamal uses a Diffie–Hellman mask</title><desc id="elgamal-mask-desc">Publish g to the y as c1 and mask m with h to the y. The receiver derives the same mask by raising c1 to its secret x.</desc>
+<defs><marker id="elgamal-mask-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="18" width="125" height="42" rx="3" class="v-box"/>
+<text x="72.5" y="39.0" text-anchor="middle" class="v-text">random y</text>
+<rect x="224" y="18" width="170" height="42" rx="3" class="v-box"/>
+<text x="309.0" y="39.0" text-anchor="middle" class="v-text">gʸ = c₁</text>
+<rect x="480" y="18" width="155" height="42" rx="3" class="v-box"/>
+<text x="557.5" y="39.0" text-anchor="middle" class="v-text">send c₁</text>
+<polyline points="137,39 222,39" class="v-line" marker-end="url(#elgamal-mask-arrow)"/>
+<polyline points="396,39 478,39" class="v-line" marker-end="url(#elgamal-mask-arrow)"/>
+<rect x="10" y="109" width="125" height="42" rx="3" class="v-box"/>
+<text x="72.5" y="130.0" text-anchor="middle" class="v-text">public h = gˣ</text>
+<rect x="224" y="109" width="170" height="42" rx="3" class="v-box v-highlight"/>
+<text x="309.0" y="130.0" text-anchor="middle" class="v-text">mask hʸ = gˣʸ</text>
+<rect x="480" y="109" width="155" height="42" rx="3" class="v-box"/>
+<text x="557.5" y="130.0" text-anchor="middle" class="v-text">c₂ = hʸ · m</text>
+<polyline points="137,130 222,130" class="v-line" marker-end="url(#elgamal-mask-arrow)"/>
+<polyline points="396,130 478,130" class="v-line" marker-end="url(#elgamal-mask-arrow)"/>
+<polyline points="72,62 72,83 310,83 310,107" class="v-line" marker-end="url(#elgamal-mask-arrow)"/>
+<text x="325" y="173.0" text-anchor="middle" class="v-small">Receiver: c₁ˣ = gˣʸ, so m = c₂ / c₁ˣ.</text>
+</svg></div>
+<figcaption>The ciphertext contains c₁ and c₂, but not the shared mask.</figcaption></figure>
+
 <p>Correctness: $c_2 / c_1^x = g^{xy} m / g^{xy} = m$.</p>
 <div class="env thm" id="thm-elgamal">
 <p>If DDH is hard relative to $\mathcal{G}$, ElGamal encryption is CPA-secure.</p>
@@ -1331,6 +2664,24 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
 <div class="env thm" id="thm-hash-and-sign" data-title="Hash-and-sign">
 <p>Let $\Pi$ be a secure signature scheme for messages of length $n$ and $(\mathsf{Gen}_H, H)$ a collision-resistant hash function with $n$-bit outputs. The scheme that signs $m$ as $\sigma \leftarrow \mathsf{Sign}_{sk}(H^s(m))$ (with $s$ part of the public key) is secure for arbitrary-length messages.</p>
 </div>
+<figure class="lecture-visual" id="fig-hash-sign"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 466 102" role="img" aria-labelledby="hash-sign-title hash-sign-desc">
+<title id="hash-sign-title">hash sign</title><desc id="hash-sign-desc">Verification hashes m again and checks σ with the public key.</desc>
+<defs><marker id="hash-sign-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="22" width="126" height="48" rx="3" class="v-box"/>
+<text x="73.0" y="36.5" text-anchor="middle" class="v-text">message m</text>
+<text x="73.0" y="55.5" text-anchor="middle" class="v-text">any length</text>
+<polyline points="138,46 168,46" class="v-line" marker-end="url(#hash-sign-arrow)"/>
+<rect x="170" y="22" width="126" height="48" rx="3" class="v-box"/>
+<text x="233.0" y="36.5" text-anchor="middle" class="v-text">Hˢ(m)</text>
+<text x="233.0" y="55.5" text-anchor="middle" class="v-text">fixed-size digest</text>
+<polyline points="298,46 328,46" class="v-line" marker-end="url(#hash-sign-arrow)"/>
+<rect x="330" y="22" width="126" height="48" rx="3" class="v-box v-highlight"/>
+<text x="393.0" y="36.5" text-anchor="middle" class="v-text">Signₛₖ</text>
+<text x="393.0" y="55.5" text-anchor="middle" class="v-text">signature σ</text>
+</svg></div>
+<figcaption>Verification hashes m again and checks σ with the public key.</figcaption></figure>
+
 <div class="proof" data-title="sketch"><p>Let $(m^*, \sigma^*)$ be a forgery after queries $m_1, \dots, m_q$. Either $H^s(m^*) = H^s(m_i)$ for some $i$: then $(m^*, m_i)$ is a collision, since $m^* \ne m_i$. Or $H^s(m^*)$ was never signed: then $(H^s(m^*), \sigma^*)$ is a forgery against $\Pi$. A forger thus yields either a collision finder (which simulates the signer with a self-generated key pair) or a forger for $\Pi$ (which hashes all queries itself); both succeed only with negligible probability.</p></div>
 </section>
 
@@ -1356,14 +2707,80 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
 <tr><td>$\mathsf{Sign}$</td><td>$\sigma := (x_{1,m_1}, \dots, x_{\ell,m_\ell})$</td></tr>
 <tr><td>$\mathsf{Vrfy}$</td><td>output $1$ iff $f(\sigma_i) = y_{i,m_i}$ for all $i$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-lamport-selection"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 610 203" role="img" aria-labelledby="lamport-selection-title lamport-selection-desc">
+<title id="lamport-selection-title">A Lamport signature reveals one secret per bit</title><desc id="lamport-selection-desc">For message 010, reveal x1,0, x2,1 and x3,0. Keep the other secret values hidden; the public key contains all six hashes.</desc>
+<defs><marker id="lamport-selection-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<text x="52" y="47.0" text-anchor="middle" class="v-small">bit 0</text>
+<text x="52" y="110.0" text-anchor="middle" class="v-small">bit 1</text>
+<text x="176" y="16.0" text-anchor="middle" class="v-small">position 1</text>
+<rect x="110" y="27" width="132" height="40" rx="3" class="v-box v-highlight"/>
+<text x="176.0" y="47.0" text-anchor="middle" class="v-text">x1,0</text>
+<rect x="110" y="90" width="132" height="40" rx="3" class="v-box"/>
+<text x="176.0" y="110.0" text-anchor="middle" class="v-text">x1,1</text>
+<text x="339" y="16.0" text-anchor="middle" class="v-small">position 2</text>
+<rect x="273" y="27" width="132" height="40" rx="3" class="v-box"/>
+<text x="339.0" y="47.0" text-anchor="middle" class="v-text">x2,0</text>
+<rect x="273" y="90" width="132" height="40" rx="3" class="v-box v-highlight"/>
+<text x="339.0" y="110.0" text-anchor="middle" class="v-text">x2,1</text>
+<text x="502" y="16.0" text-anchor="middle" class="v-small">position 3</text>
+<rect x="436" y="27" width="132" height="40" rx="3" class="v-box v-highlight"/>
+<text x="502.0" y="47.0" text-anchor="middle" class="v-text">x3,0</text>
+<rect x="436" y="90" width="132" height="40" rx="3" class="v-box"/>
+<text x="502.0" y="110.0" text-anchor="middle" class="v-text">x3,1</text>
+<text x="305" y="163.0" text-anchor="middle" class="v-text">m = 010  →  σ = (x₁,₀, x₂,₁, x₃,₀)</text>
+<text x="305" y="191.0" text-anchor="middle" class="v-small">Public key: yᵢ,ᵦ = f(xᵢ,ᵦ); verify f on each revealed value.</text>
+</svg></div>
+<figcaption>One signature reveals exactly one pre-image per position. Signing complementary bits would reveal both.</figcaption></figure>
+
 <div class="env thm" id="thm-lamport">
 <p>If $f$ is one-way, Lamport's scheme is a <b>one-time</b> signature scheme: secure when the adversary may obtain the signature on at most one message.</p>
 </div>
 <div class="proof"><p>Let $\mathcal{A}$ be a forger: it asks for the signature on $m'$ and outputs a valid $(m, \sigma)$ with $m \ne m'$, with probability $\varepsilon(n)$. Inverter $\mathcal{I}(1^n, y)$: choose $i^* \leftarrow \{1, \dots, \ell\}$ and $b^* \leftarrow \{0,1\}$; set $y_{i^*,b^*} := y$ and generate all other pairs honestly. Run $\mathcal{A}(pk)$. If $\mathcal{A}$ asks for a signature on $m'$ with $m'_{i^*} = b^*$, abort; otherwise answer with the known $x_{i,m'_i}$. If $\mathcal{A}$ outputs $(m, \sigma)$ with $m_{i^*} = b^*$, output $\sigma_{i^*}$.</p>
 <p>$\mathcal{A}$'s view does not depend on $(i^*, b^*)$ ($y$ is distributed like every other $y_{i,b}$). Since $m \ne m'$, they differ in some position $i$, where $m_i = 1 - m'_i$. With probability at least $\frac{1}{2\ell}$, $(i^*, b^*) = (i, m_i)$; then the query was answered (since $m'_{i^*} \ne b^*$) and $f(\sigma_{i^*}) = y$. So $\mathcal{I}$ inverts $f$ with probability at least $\varepsilon(n)/(2\ell)$, and $\varepsilon$ must be negligible.</p></div>
 <p>After two signatures, e.g. on $0^\ell$ and $1^\ell$, the whole private key is revealed. Many-time signatures can be built from one-time ones using trees of keys (each node signs the public keys of its children), at the cost of long signatures; this yields signatures from one-way functions alone. The <b>DSS/DSA</b> and <b>ECDSA</b> standards are based on discrete logarithms; RSA-based signatures (RSA-PSS) are the other common standard.</p>
+<figure class="lecture-visual" id="fig-lamport-reuse">
+<div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 356" role="img" aria-labelledby="lamport-reuse-title lamport-reuse-desc">
+<title id="lamport-reuse-title">Why a Lamport key is one-time</title>
+<desc id="lamport-reuse-desc">Signing 010 and 101 reveals both secret values at every bit position. An adversary can assemble a signature on 111 without inverting the one-way function.</desc>
+<defs>
+<marker id="lamport-reuse-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+</marker>
+</defs>
+<text x="320" y="17" text-anchor="middle" class="v-text">Two signatures under the same Lamport key</text>
+<text x="230" y="52" text-anchor="middle" class="v-small">position 1</text>
+<text x="390" y="52" text-anchor="middle" class="v-small">position 2</text>
+<text x="550" y="52" text-anchor="middle" class="v-small">position 3</text>
+<text x="75" y="93" text-anchor="middle" class="v-small">Sign 010</text>
+<rect x="165" y="73" width="130" height="40" rx="4" class="v-box v-highlight"/>
+<text x="230.0" y="93.0" text-anchor="middle" class="v-text">x₁,₀</text>
+<rect x="325" y="73" width="130" height="40" rx="4" class="v-box v-highlight"/>
+<text x="390.0" y="93.0" text-anchor="middle" class="v-text">x₂,₁</text>
+<rect x="485" y="73" width="130" height="40" rx="4" class="v-box v-highlight"/>
+<text x="550.0" y="93.0" text-anchor="middle" class="v-text">x₃,₀</text>
+<text x="75" y="155" text-anchor="middle" class="v-small">Sign 101</text>
+<rect x="165" y="135" width="130" height="40" rx="4" class="v-box v-highlight"/>
+<text x="230.0" y="155.0" text-anchor="middle" class="v-text">x₁,₁</text>
+<rect x="325" y="135" width="130" height="40" rx="4" class="v-box v-highlight"/>
+<text x="390.0" y="155.0" text-anchor="middle" class="v-text">x₂,₀</text>
+<rect x="485" y="135" width="130" height="40" rx="4" class="v-box v-highlight"/>
+<text x="550.0" y="155.0" text-anchor="middle" class="v-text">x₃,₁</text>
+<polyline points="320,178 320,210" class="v-line" marker-end="url(#lamport-reuse-arrow)"/>
+<text x="320" y="234" text-anchor="middle" class="v-text">All six secrets are now public: any 3-bit message can be signed.</text>
+<rect x="90" y="264" width="460" height="48" rx="4" class="v-box v-highlight"/>
+<text x="320.0" y="288.0" text-anchor="middle" class="v-text">New forgery on 111: (x₁,₁, x₂,₁, x₃,₁)</text>
+<text x="320" y="336" text-anchor="middle" class="v-small">Reuse can expose enough values to assemble a signature on a new message.</text>
+</svg>
+</div>
+<figcaption>These two messages reveal the entire 3-bit signing key. Other pairs may reveal only part of it; the one-time guarantee does not cover reuse.</figcaption>
+</figure>
 </section>
 </section>
+
+
+
 
 <section class="chapter" id="sec-rom">
 <h2>The Random Oracle Model</h2>
@@ -1384,6 +2801,10 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
 </ol>
 <p>The simulator implements $H$ by <b>lazy sampling</b>: keep a table of answered queries; answer a new query $x$ with a fresh uniform $y$ and store $(x, y)$. As a consequence, a random oracle is a one-way function ($q$ queries find a pre-image with probability $\le q/2^n$), a collision-resistant hash function (collisions only by the birthday bound, $q^2/2^{n+1}$), and the basis of a PRF ($F_k(x) := H(k \| x)$). Experiments in the ROM are written $\mathsf{Exp}^{H}_{\mathcal{A},\Pi}(n)$; security means, e.g., $\Pr[\mathsf{PubK}^{\mathsf{eav}, H}_{\mathcal{A},\Pi}(n) = 1] \le \frac12 + \mathsf{negl}(n)$, with the probability also over the choice of $H$.</p>
 <p><b>Criticism.</b> No real function is a random oracle; there are (contrived) schemes that are secure in the ROM but insecure with <i>any</i> concrete hash function. Concrete properties of hash functions can also break ROM-proven schemes: $\mathsf{Mac}_k(m) = H(k \| m)$ is a secure MAC in the ROM but insecure for Merkle–Damgård hashes (length extension). Still, a ROM proof is much better than none: it shows that the design has no structural flaw, and attacks would have to exploit specific properties of the hash function. Widely used schemes with ROM proofs have not been broken in practice.</p>
+
+<figure class="lecture-visual lecture-visual--interactive" id="fig-oracle" data-oracle-demo>
+<form class="visual-controls" data-oracle-form><label for="visual-oracle-input">Input x</label><input id="visual-oracle-input" value="hello" maxlength="40" autocomplete="off"><button type="submit">Query H</button><button type="button" data-oracle-reset>New oracle</button></form><table class="oracle-table"><thead><tr><th scope="col">Query</th><th scope="col">H(x)</th><th scope="col">Answer</th></tr></thead><tbody><tr><td>hello</td><td>0x39af</td><td>initial sample</td></tr></tbody></table><output class="visual-result" data-oracle-result aria-live="polite">Query hello again to reuse its stored answer.</output>
+<figcaption>Lazy sampling with illustrative 16-bit outputs. New inputs sample an answer; repeated inputs reuse it. “New oracle” starts a new experiment.</figcaption></figure>
 </section>
 
 <section class="sub" id="sec-rom-cpa">
@@ -1419,6 +2840,33 @@ $$(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) \overset{(1)}{\stackrel{c}{\e
 <tr><td>$\mathsf{Enc}$</td><td>$r \leftarrow \mathbb{Z}_N^*$; $k := H(r)$; output $\langle [r^e \bmod N],\ \mathsf{Enc}'_k(m) \rangle$</td></tr>
 <tr><td>$\mathsf{Dec}$</td><td>$r := [c_1^d \bmod N]$; $k := H(r)$; output $\mathsf{Dec}'_k(c_2)$</td></tr>
 </table></div>
+<figure class="lecture-visual" id="fig-rsa-oracle-kem"><div class="lecture-visual__canvas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 184" role="img" aria-labelledby="rsa-oracle-kem-title rsa-oracle-kem-desc">
+<title id="rsa-oracle-kem-title">RSA and a random oracle derive a symmetric key</title><desc id="rsa-oracle-kem-desc">Encrypt random r with RSA and hash r into a symmetric key. The receiver recovers r with the RSA trapdoor and derives the same key.</desc>
+<defs><marker id="rsa-oracle-kem-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="currentColor"/></marker></defs>
+<rect x="10" y="24" width="102" height="40" rx="3" class="v-box"/>
+<text x="61.0" y="44.0" text-anchor="middle" class="v-text">random r</text>
+<rect x="205" y="6" width="172" height="40" rx="3" class="v-box"/>
+<text x="291.0" y="26.0" text-anchor="middle" class="v-text">rᵉ mod N</text>
+<rect x="482" y="6" width="152" height="40" rx="3" class="v-box"/>
+<text x="558.0" y="26.0" text-anchor="middle" class="v-text">c₁</text>
+<polyline points="114,44 158,44 158,26 203,26" class="v-line" marker-end="url(#rsa-oracle-kem-arrow)"/>
+<polyline points="379,26 480,26" class="v-line" marker-end="url(#rsa-oracle-kem-arrow)"/>
+<rect x="205" y="105" width="102" height="40" rx="3" class="v-box v-highlight"/>
+<text x="256.0" y="125.0" text-anchor="middle" class="v-text">H(r) = k</text>
+<rect x="366" y="105" width="132" height="40" rx="3" class="v-box"/>
+<text x="432.0" y="125.0" text-anchor="middle" class="v-text">Enc′ₖ(m)</text>
+<rect x="549" y="105" width="85" height="40" rx="3" class="v-box"/>
+<text x="591.5" y="125.0" text-anchor="middle" class="v-text">c₂</text>
+<polyline points="62,66 62,125 203,125" class="v-line" marker-end="url(#rsa-oracle-kem-arrow)"/>
+<polyline points="309,125 364,125" class="v-line" marker-end="url(#rsa-oracle-kem-arrow)"/>
+<polyline points="500,125 547,125" class="v-line" marker-end="url(#rsa-oracle-kem-arrow)"/>
+<text x="432" y="68.0" text-anchor="middle" class="v-text">m</text>
+<polyline points="432,80 432,103" class="v-line" marker-end="url(#rsa-oracle-kem-arrow)"/>
+<text x="325" y="174.0" text-anchor="middle" class="v-small">Decapsulation: r = c₁ᵈ mod N, then k = H(r).</text>
+</svg></div>
+<figcaption>In the final construction, the data component uses a CCA-secure symmetric encryption scheme.</figcaption></figure>
+
 <div class="env thm" id="thm-rsa-rom-cca">
 <p>If the RSA problem is hard relative to $\mathsf{GenRSA}$, $\Pi'$ is CCA-secure and $H$ is modeled as a random oracle, then this scheme is CCA-secure.</p>
 </div>
@@ -1436,6 +2884,7 @@ $$\Pr[\mathsf{PubK}^{\mathsf{cca}}_{\mathcal{A},\Pi} = 1] \le \Pr[\mathsf{PubK}^
 </div>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="assets/script-visuals.js"></script>
 <script src="assets/script.js"></script>
 </body>
 </html>

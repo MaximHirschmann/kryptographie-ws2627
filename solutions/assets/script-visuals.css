@@ -1,0 +1,73 @@
+/* Diagrams use the lecture's restrained palette and remain legible in print. */
+.lecture-visual {
+  --visual-paper: #fff;
+  --visual-wash: #d6eaf0;
+  --visual-accent: #245f76;
+  --visual-muted: #52606b;
+  --visual-rule: #cad1d6;
+  max-width: 700px;
+  margin: 24px auto;
+  color: inherit;
+  break-inside: avoid;
+}
+.lecture-visual, .lecture-visual * { box-sizing: border-box; }
+.lecture-visual__canvas { overflow-x: auto; overflow-y: hidden; }
+.lecture-visual svg { display: block; width: 100%; height: auto; min-width: 520px; }
+.lecture-visual svg text { fill: currentColor; font-family: system-ui, sans-serif; dominant-baseline: middle; }
+.v-text { font-size: 14px; }
+.v-small { font-size: 12px; }
+.v-box { fill: var(--visual-paper); stroke: currentColor; stroke-width: 1.2; }
+.v-highlight { fill: var(--visual-wash); }
+.v-boundary { fill: none; stroke: currentColor; stroke-width: 1; stroke-dasharray: 4 4; }
+.v-line { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; }
+.v-dashed { stroke-dasharray: 4 4; }
+.v-faint { opacity: .16; }
+.v-emphasis { stroke: var(--visual-accent); stroke-width: 2; }
+.v-grid { stroke: var(--visual-rule); stroke-width: .7; }
+.v-curve { fill: none; stroke: var(--visual-accent); stroke-width: 2.2; }
+.v-curve--secondary { stroke: currentColor; stroke-dasharray: 6 4; }
+.v-dot { fill: var(--visual-accent); }
+.lecture-visual figcaption { margin-top: 8px; font-size: 14px; text-align: center; }
+.lecture-visual--compact { max-width: 540px; }
+.lecture-visual--compact svg { min-width: 0; }
+.lecture-visual--interactive { padding: 14px 0; border-top: 1px solid var(--visual-rule); border-bottom: 1px solid var(--visual-rule); }
+.lecture-visual .visual-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 12px; font: 14px/1.5 system-ui, sans-serif; }
+.visual-controls label { display: flex; align-items: center; gap: 7px; }
+.visual-controls > span { display: flex; align-items: center; gap: 4px; }
+.visual-controls input, .visual-controls select, .visual-controls button { border: 1px solid var(--visual-rule); border-radius: 3px; background: var(--visual-paper); color: inherit; font: inherit; padding: 4px 7px; }
+.visual-controls input[type="range"] { min-width: 100px; flex: 1; padding: 0; accent-color: var(--visual-accent); }
+.visual-controls input[type="number"] { width: 62px; }
+.visual-controls input[type="text"] { flex: 1; min-width: 80px; width: 130px; }
+.visual-controls button { cursor: pointer; }
+.lecture-visual button:focus-visible, .lecture-visual input:focus-visible, .lecture-visual select:focus-visible { outline: 2px solid var(--visual-accent); outline-offset: 3px; }
+.paper .lecture-visual p, .lecture-visual p { text-align: left; hyphens: none; }
+.paper .lecture-visual .visual-result, .lecture-visual .visual-result { display: block; margin: 8px 0; font: 13px/1.5 system-ui, sans-serif; color: inherit; text-align: center; }
+.v-bit-line { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 6px 0; font: 14px/1.5 system-ui, sans-serif; }
+.v-bit-label { width: 102px; text-align: right; }
+.v-bit-row { display: flex; gap: 5px; }
+.v-bit-row > * { display: grid; place-items: center; width: 36px; height: 34px; border: 1px solid var(--visual-rule); border-radius: 3px; background: var(--visual-paper); color: inherit; font: 16px/1 ui-monospace, Consolas, monospace; }
+.v-bit-row > button { cursor: pointer; }
+.v-bit-row > button[aria-pressed="true"], .v-bit-row > .v-bit--changed { background: var(--visual-wash); }
+.lecture-visual table { border-collapse: collapse; width: 100%; font: 14px/1.5 system-ui, sans-serif; }
+.lecture-visual th, .lecture-visual td { padding: 6px 9px; border-bottom: 1px solid var(--visual-rule); text-align: center; }
+.lecture-visual th { font-weight: 500; }
+.lecture-visual td.is-selected { background: var(--visual-wash); box-shadow: inset 0 0 0 2px var(--visual-accent); font-weight: 600; }
+.lecture-visual .oracle-table td { overflow-wrap: anywhere; max-width: 180px; text-align: left; }
+.lecture-visual .oracle-table th { text-align: left; }
+.lecture-visual .oracle-table td:nth-child(2) { font-family: ui-monospace, Consolas, monospace; }
+.lecture-mode figcaption { margin: 4px 0 12px; }
+@media (max-width: 480px) {
+  .v-bit-label { width: 83px; font-size: 12px; }
+  .v-bit-row > * { width: 31px; }
+  .lecture-visual .visual-controls { gap: 8px 12px; }
+  .lecture-visual th, .lecture-visual td { padding: 5px; }
+}
+@media print {
+  .lecture-visual { --visual-paper: #fff; color: #111; }
+  .lecture-visual__canvas { overflow: visible; }
+  .lecture-visual svg { min-width: 0; }
+  .visual-controls { display: none !important; }
+  .lecture-mode[hidden] { display: block; }
+  [data-print-modes] { break-inside: auto; }
+  .lecture-visual--interactive { border: none; padding: 0; }
+}
