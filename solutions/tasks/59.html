@@ -19,35 +19,21 @@
   </div>
 
   <div class="solution">
-    <h2>Idea</h2>
-    <p><a href="26.html">Question 26</a> shows that hiding the length is impossible for messages of <i>unbounded</i> length. Here the message length is bounded by a polynomial, so we can pad every message to the <b>same</b> length before encrypting. Then all ciphertexts encrypt equally long strings and the length leaks nothing.</p>
+    <p><b>Idea.</b> Pad every message to the same length before encrypting, so the length leaks nothing. Padding must be reversible: append a $1$ and then zeros.</p>
 
     <h2>Construction</h2>
-    <p>The new message space is all strings of length at most $\ell(n) - 1$. Padding has to be reversible, so append a $1$ and then zeros:</p>
+    <p>For messages of length at most $\ell(n) - 1$:</p>
     $$\mathsf{pad}(m) = m \,\|\, 1 \,\|\, 0^{\ell(n) - |m| - 1}, \qquad |\mathsf{pad}(m)| = \ell(n).$$
     <div class="algo"><table>
       <tr><td>Gen'</td><td>$k \leftarrow \mathsf{Gen}(1^n)$</td></tr>
-      <tr><td>Enc'</td><td>$\mathsf{Enc}'_k(m) = \mathsf{Enc}_k(\mathsf{pad}(m))$ for $|m| \le \ell(n) - 1$</td></tr>
-      <tr><td>Dec'</td><td>$\hat m := \mathsf{Dec}_k(c)$; remove all trailing zeros and then the last $1$; output the rest</td></tr>
+      <tr><td>Enc'</td><td>$\mathsf{Enc}_k(\mathsf{pad}(m))$</td></tr>
+      <tr><td>Dec'</td><td>decrypt, then remove the trailing zeros and the last $1$</td></tr>
     </table></div>
-    <p><b>Correctness.</b> $\mathsf{pad}(m)$ ends with $1\,0^j$, so the last $1$ marks exactly where $m$ ends.</p>
 
-    <h2>Security proof</h2>
-    <div class="box claim"><span class="label">Claim.</span> If $\Pi$ satisfies Definition 3.8, then $\Pi'$ satisfies Definition 3.8 even for adversaries that output messages of different lengths.</div>
-    <p>Let $\mathcal{A}'$ be any PPT adversary against $\Pi'$ (messages of arbitrary lengths up to $\ell(n)-1$). Build $\mathcal{A}$ against $\Pi$:</p>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>Run $\mathcal{A}'(1^n)$ and get $m_0, m_1$.</td></tr>
-      <tr><td>2.</td><td>Output $\mathsf{pad}(m_0), \mathsf{pad}(m_1)$. Both have length exactly $\ell(n)$, so this is a legal pair for $\Pi$.</td></tr>
-      <tr><td>3.</td><td>Receive $c \leftarrow \mathsf{Enc}_k(\mathsf{pad}(m_b))$, give $c$ to $\mathcal{A}'$, and output whatever $\mathcal{A}'$ outputs.</td></tr>
-    </table></div>
-    <p>$c$ is distributed exactly like $\mathsf{Enc}'_k(m_b)$, so $\mathcal{A}'$'s view is the same as in $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}$ and</p>
-    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n) = 1] = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
-    <p>$\mathcal{A}$ runs in polynomial time because padding takes $O(\ell(n))$ steps. <span class="qed">$\blacksquare$</span></p>
-
-    <div class="box result"><span class="label">Result.</span> Pad every message to the fixed length $\ell(n)$ (with $1\,0^*$ so it can be removed) and encrypt with $\Pi$. Since all padded messages have the same length, the restriction to equal-length messages disappears. This costs one bit of message length. <span class="qed">$\blacksquare$</span></div>
-    <h2>Keeping the entire original message space</h2>
-    <p>To include messages of length exactly $\ell(n)$ as well, assume $\ell(n)\ge1$ and generate two independent keys $k_1,k_2$. Encode $m$ as $m\|1\|0^{2\ell(n)-|m|-1}$, split it into two $\ell(n)$-bit blocks $u,v$, and send $\langle\mathsf{Enc}_{k_1}(u),\mathsf{Enc}_{k_2}(v)\rangle$. Decrypt both blocks and remove the delimiter padding. Two hybrid steps, one for each independent key, establish security for arbitrary challenge lengths up to $\ell(n)$ using only the original scheme’s EAV security. Reusing one key for both blocks would require a stronger security assumption.</p>
-    <p class="note">Padding to a fixed bound trades bandwidth for length hiding. Correctness requires enough distinct ciphertexts to represent every allowed message; it does not require each individual ciphertext to have the same length.</p>
+    <h2>Proof</h2>
+    <p>Given an adversary $\mathcal{A}'$ against $\Pi'$ that outputs $m_0, m_1$ of any lengths, let $\mathcal{A}$ output $\mathsf{pad}(m_0), \mathsf{pad}(m_1)$ to its own challenger. These have equal length $\ell(n)$, so the pair is legal for $\Pi$. $\mathcal{A}$ passes the challenge to $\mathcal{A}'$ and outputs its guess. The challenge is distributed exactly like $\mathsf{Enc}'_k(m_b)$, so</p>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n) = 1] = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \le \tfrac12 + \mathsf{negl}(n). \qquad \blacksquare$$
+    <p class="note">The padding costs one bit of message length. (The book's solution pads to $\ell(n) + 1$ bits, which $\Pi$ cannot encrypt.) To keep messages of length exactly $\ell(n)$, pad to $2\ell(n)$ bits and encrypt the two halves under two independent keys.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

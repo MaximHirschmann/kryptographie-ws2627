@@ -21,42 +21,18 @@
   </div>
 
   <div class="solution">
-    <h2>Construction 1: a random permutation</h2>
-    <p>Let $N = |\mathcal{M}|$ and $\mathcal{C} = \mathcal{M}$.</p>
-    <div class="algo"><table>
-      <tr><td>Gen</td><td>choose a uniformly random permutation $\pi$ of $\mathcal{M}$; output $k = \pi$</td></tr>
-      <tr><td>Enc</td><td>$\mathsf{Enc}_\pi(m) = \pi(m)$</td></tr>
-      <tr><td>Dec</td><td>$\mathsf{Dec}_\pi(c) = \pi^{-1}(c)$</td></tr>
-    </table></div>
+    <h2>Construction: a random permutation</h2>
+    <p>Let $N = |\mathcal{M}|$ and $\mathcal{C} = \mathcal{M}$. $\mathsf{Gen}$ chooses a uniformly random permutation $\pi$ of $\mathcal{M}$; $\mathsf{Enc}_\pi(m) = \pi(m)$ and $\mathsf{Dec}_\pi(c) = \pi^{-1}(c)$.</p>
 
-    <h3>Key lemma</h3>
-    <p>For fixed $m \ne m'$ and $c \ne c'$:</p>
-    $$\Pr_\pi[\pi(m) = c \wedge \pi(m') = c'] = \frac{(N-2)!}{N!} = \frac{1}{N(N-1)}.$$
-    <p>The pair $(\pi(m), \pi(m'))$ is uniform over all ordered pairs of distinct ciphertexts, <b>whatever $m \ne m'$ are</b>. Also, since $\pi$ is a bijection, $C \ne C'$ holds exactly when $M \ne M'$.</p>
+    <h2>Proof</h2>
+    <p>For fixed $m \ne m'$ and $c \ne c'$, a random permutation maps $(m, m')$ to $(c, c')$ with probability $\frac{1}{N(N-1)}$, the same for all such pairs. Since the key is independent of the messages,</p>
+    $$\Pr[M = m \wedge M' = m' \wedge C = c \wedge C' = c'] = \frac{\Pr[M = m \wedge M' = m']}{N(N-1)}.$$
+    <p>$\pi$ is a bijection, so $C \ne C'$ happens exactly when $M \ne M'$. Summing over all pairs $m_1 \ne m_2$ gives $\Pr[C = c \wedge C' = c'] = \frac{\Pr[M \ne M']}{N(N-1)}$. Dividing:</p>
+    $$\Pr[M = m \wedge M' = m' \mid C = c \wedge C' = c'] = \frac{\Pr[M = m \wedge M' = m']}{\Pr[M \ne M']} = \Pr[M = m \wedge M' = m' \mid M \ne M']. \qquad \blacksquare$$
 
-    <h3>Proof</h3>
-    <p>Fix a distribution and $m \ne m'$, $c \ne c'$. The key is independent of the messages, so</p>
-    $$\Pr[M = m \wedge M' = m' \wedge C = c \wedge C' = c'] = \Pr[M = m \wedge M' = m'] \cdot \tfrac{1}{N(N-1)}.$$
-    <p>Summing over all pairs $(m_1, m_2)$: pairs with $m_1 = m_2$ give $C = C'$ and contribute nothing, so</p>
-    $$\Pr[C = c \wedge C' = c'] = \sum_{m_1 \ne m_2} \Pr[M = m_1 \wedge M' = m_2] \cdot \tfrac{1}{N(N-1)} = \frac{\Pr[M \ne M']}{N(N-1)}.$$
-    <p>Dividing the two lines:</p>
-    $$\Pr[M = m \wedge M' = m' \mid C = c \wedge C' = c'] = \frac{\Pr[M = m \wedge M' = m']}{\Pr[M \ne M']} = \Pr[M = m \wedge M' = m' \mid M \ne M'],$$
-    <p>where the last step uses $m \ne m'$ (so the event $M = m \wedge M' = m'$ is contained in $M \ne M'$). <span class="qed">$\blacksquare$</span></p>
-    <p><b>Key length.</b> There are $N!$ keys, so a key needs $\log_2 N! \approx N \log_2 N$ bits. For $\ell$-bit messages ($N = 2^\ell$) that is about $\ell \cdot 2^\ell$ bits: exponentially longer than a message.</p>
-
-    <h2>Construction 2: much shorter keys</h2>
-    <p>The proof only used the key lemma: every pair of distinct messages goes to every pair of distinct ciphertexts with the same probability. An affine map already has this property. Identify $\{0,1\}^\ell$ with the field $\mathrm{GF}(2^\ell)$:</p>
-    <div class="algo"><table>
-      <tr><td>Gen</td><td>$a \leftarrow \mathrm{GF}(2^\ell) \setminus \{0\}$, $b \leftarrow \mathrm{GF}(2^\ell)$; output $k = (a, b)$</td></tr>
-      <tr><td>Enc</td><td>$\mathsf{Enc}_{a,b}(m) = a \cdot m + b$</td></tr>
-      <tr><td>Dec</td><td>$\mathsf{Dec}_{a,b}(c) = a^{-1}(c - b)$</td></tr>
-    </table></div>
-    <p>For $m \ne m'$ and $c \ne c'$ the system $am + b = c$, $am' + b = c'$ has exactly one solution: $a = (c - c')/(m - m') \ne 0$ and $b = c - am$. There are $N(N-1)$ keys, so the probability is $\frac{1}{N(N-1)}$ and the key lemma holds. The proof above goes through unchanged. The key is $2\ell$ bits, <b>twice the message length</b>.</p>
-
-    <h2>Lower bound: $2\ell$ is essentially optimal</h2>
-    <p>Fix $c \ne c'$ with $\Pr[C = c \wedge C' = c'] \gt 0$ under the uniform distribution. The definition forces every pair $m \ne m'$ to have positive probability given $(c, c')$, so every such pair must be reachable. A key determines $(m, m') = (\mathsf{Dec}_k(c), \mathsf{Dec}_k(c'))$, so different pairs need different keys: $|\mathcal{K}| \ge N(N-1)$, i.e. about $2\ell$ bits.</p>
-
-    <div class="box result"><span class="label">Result.</span> A uniformly random permutation works (key $\approx \ell \cdot 2^\ell$ bits). A random affine map $m \mapsto am + b$ over $\mathrm{GF}(2^\ell)$ also works, with a key of $2\ell$ bits, which is optimal up to one bit. <span class="qed">$\blacksquare$</span></div>
+    <h2>Key length</h2>
+    <p>There are $N!$ keys, so a key has about $\log_2 N! \approx N \log_2 N$ bits. For $\ell$-bit messages that is about $\ell \cdot 2^\ell$ bits, exponentially longer than a message.</p>
+    <p class="note">The proof only used that every pair of distinct messages goes to every pair of distinct ciphertexts with the same probability. A random affine map $m \mapsto am + b$ over $\mathrm{GF}(2^\ell)$ ($a \ne 0$) also has this property, with a key of only $2\ell$ bits.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

@@ -24,26 +24,15 @@
 
   <div class="solution">
     <h2>(a) One signing query: insecure</h2>
-    <p>Use the multiplicative structure (blinding): $(xy)^d = x^d y^d$.</p>
+    <p>Use that RSA signatures are multiplicative.</p>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Given $(N, e)$ and $m \in \mathbb{Z}_N^*$, choose $r \leftarrow \mathbb{Z}_N^* \setminus \{1\}$ and set $m' := m \cdot r^e \bmod N$.</td></tr>
-      <tr><td>2.</td><td>Ask for $\sigma' = (m')^d = m^d \cdot r^{ed} = m^d \cdot r \bmod N$.</td></tr>
-      <tr><td>3.</td><td>Output $\sigma := \sigma' \cdot r^{-1} \bmod N = m^d$.</td></tr>
+      <tr><td>1.</td><td>Choose $r \leftarrow \mathbb{Z}_N^* \setminus \{1\}$ and ask for the signature $\sigma'$ on $m' := m \cdot r^e \bmod N$. (Then $m' \ne m$.)</td></tr>
+      <tr><td>2.</td><td>Output $\sigma := \sigma' / r \bmod N$.</td></tr>
     </table></div>
-    <p>The query is legal: $x \mapsto x^e$ is a permutation of $\mathbb{Z}_N^*$, so $r \ne 1$ gives $r^e \ne 1$ and $m' \ne m$. The output satisfies $\sigma^e = m$, so the forgery always succeeds. (If $\gcd(m, N) \ne 1$, which happens with negligible probability, $\gcd(m, N)$ factors $N$ and signing is easy.) <span class="qed">$\blacksquare$</span></p>
+    <p>Check: $\sigma^e = (\sigma')^e / r^e = m r^e / r^e = m \pmod N$. The forgery always succeeds. <span class="qed">$\blacksquare$</span></p>
 
     <h2>(b) No queries: secure under the RSA assumption</h2>
-    <p>Without queries, the task "given $(N, e)$ and a uniform $m$, find $\sigma$ with $\sigma^e = m$" <b>is</b> the RSA problem.</p>
-    <p><b>Proof.</b> Let $\mathcal{A}$ win this experiment with probability $\varepsilon(n)$. Build $\mathcal{I}$ for the RSA experiment, which gets $(N, e, y)$ with $y \leftarrow \mathbb{Z}_N^*$:</p>
-    <div class="algo"><table>
-      <tr><td>$\mathcal{I}(N, e, y)$:</td><td>give $pk = (N, e)$ and the message $m := y$ to $\mathcal{A}$; output its $\sigma$.</td></tr>
-    </table></div>
-    <p>$\mathcal{A}$'s input has exactly the right distribution (assuming the random message is uniform in $\mathbb{Z}_N^*$). Whenever $\mathcal{A}$ wins, $\sigma^e \equiv y$, so</p>
-    $$\Pr[\mathsf{RSA\text{-}inv}_{\mathcal{I}} = 1] = \varepsilon(n).$$
-    <p>Under the RSA assumption, $\varepsilon$ is negligible. <span class="qed">$\blacksquare$</span></p>
-
-    <div class="box result"><span class="label">Result.</span> (a) Insecure: a single blinded query $m r^e$ gives the signature on $m$. (b) Secure if the RSA problem is hard: forging on a random message without help is exactly inverting RSA. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">Textbook RSA also falls to a "no-message attack" in the standard definition: pick any $\sigma$ and output $(\sigma^e \bmod N, \sigma)$. That works because the forger chooses the message. In (b) the message is random and fixed in advance, which rules this out.</p>
+    <p>Signing a uniform message $m$ without help means computing $m^{1/e} \bmod N$, which is exactly the RSA problem on a random instance. Formally, an RSA inverter given $(N, e, y)$ hands $pk = (N, e)$ and the message $m := y$ to the forger and outputs its signature. It succeeds whenever the forger does, so the forger's success probability is negligible. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

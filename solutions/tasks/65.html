@@ -25,46 +25,25 @@
 
   <div class="solution">
     <h2>(a) Definition</h2>
-    <p>The experiment $\mathsf{Mac\text{-}forge}^{\mathsf{vrfy}}_{\mathcal{A},\Pi}(n)$:</p>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>$k \leftarrow \mathsf{Gen}(1^n)$.</td></tr>
-      <tr><td>2.</td><td>$\mathcal{A}(1^n)$ gets oracles $\mathsf{Mac}_k(\cdot)$ and $\mathsf{Vrfy}_k(\cdot,\cdot)$. Let $\mathcal{Q}$ be the set of messages it asked $\mathsf{Mac}_k$ for.</td></tr>
-      <tr><td>3.</td><td>$\mathcal{A}$ outputs $(m, t)$. The output is $1$ iff $\mathsf{Vrfy}_k(m, t) = 1$ and $m \notin \mathcal{Q}$.</td></tr>
-    </table></div>
-    <p>$\Pi$ is <b>secure with verification queries</b> if for every PPT $\mathcal{A}$, $\Pr[\mathsf{Mac\text{-}forge}^{\mathsf{vrfy}}_{\mathcal{A},\Pi}(n) = 1] \le \mathsf{negl}(n)$.</p>
-    <p><b>What it models.</b> In practice an attacker can send forged messages to the receiver and observe whether they are accepted: the receiver acts on the message, answers it, returns an error code, takes measurably longer, or closes the connection. Each such reaction answers one verification query.</p>
+    <p>$\mathsf{Mac\text{-}forge}^{\mathsf{vrfy}}_{\mathcal{A},\Pi}(n)$: $k \leftarrow \mathsf{Gen}(1^n)$; $\mathcal{A}$ gets oracles $\mathsf{Mac}_k(\cdot)$ and $\mathsf{Vrfy}_k(\cdot,\cdot)$ and outputs $(m, t)$; with $\mathcal{Q}$ the set of $\mathsf{Mac}$ queries, the output is $1$ iff $\mathsf{Vrfy}_k(m, t) = 1$ and $m \notin \mathcal{Q}$. $\Pi$ is secure if this happens with negligible probability for every PPT $\mathcal{A}$.</p>
+    <p><b>What it models:</b> an attacker sends forged messages to the receiver and observes whether they are accepted (the receiver acts on them, returns an error, takes longer, or drops the connection).</p>
 
     <h2>(b) Unique tags make the $\mathsf{Vrfy}$ oracle useless</h2>
-    <p><b>Unique tags:</b> $\mathsf{Mac}_k$ is deterministic and $\mathsf{Vrfy}_k(m, t) = 1 \iff t = \mathsf{Mac}_k(m)$.</p>
-    <p>Let $\mathcal{A}'$ be a PPT adversary in the new experiment making at most $q_v$ verification queries. Build $\mathcal{A}$ for Definition 4.2 (only a $\mathsf{Mac}$ oracle):</p>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>Choose $j \leftarrow \{1, \dots, q_v + 1\}$.</td></tr>
-      <tr><td>2.</td><td>Run $\mathcal{A}'$ and forward its $\mathsf{Mac}$ queries to the own oracle.</td></tr>
-      <tr><td>3.</td><td>For a verification query $(m, t)$ with $m \in \mathcal{Q}$: the unique valid tag $\mathsf{Mac}_k(m)$ is already known, so answer $1$ iff $t$ equals it (always correct).</td></tr>
-      <tr><td>4.</td><td>For a verification query $(m, t)$ with $m \notin \mathcal{Q}$ (a "fresh" query): if it is the $j$-th fresh query, stop and output $(m, t)$; otherwise answer $0$.</td></tr>
-      <tr><td>5.</td><td>If $\mathcal{A}'$ finishes, output its final $(m, t)$ (this is "query number $q_v + 1$").</td></tr>
-    </table></div>
-    <p>The simulation is perfect up to the first fresh verification query whose correct answer is $1$, because that query is itself a forgery. Let $i^*$ be the position of the first valid fresh query, or $q_v + 1$ if $\mathcal{A}'$ only succeeds with its final output. If $\mathcal{A}'$ succeeds or makes a valid fresh query, then $i^*$ exists, and with probability $\frac{1}{q_v+1}$ we have $j = i^*$. In that case $\mathcal{A}$ outputs a valid forgery on a message it never asked to be MACed. Therefore</p>
-    $$\Pr[\mathsf{Mac\text{-}forge}^{\mathsf{vrfy}}_{\mathcal{A}',\Pi} = 1] \le (q_v + 1) \cdot \Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi} = 1] \le (q_v + 1) \cdot \mathsf{negl}(n),$$
-    <p>which is negligible since $q_v$ is polynomial. <span class="qed">$\blacksquare$</span></p>
+    <p>With unique tags, $\mathsf{Vrfy}_k(m, t) = 1$ iff $t = \mathsf{Mac}_k(m)$. Every verification query $(m, t)$ falls into one of three cases:</p>
+    <ul>
+      <li>$m$ was MAC-queried with answer $t$: the adversary knows the answer is $1$.</li>
+      <li>$m$ was MAC-queried with a different answer: the adversary knows the answer is $0$.</li>
+      <li>$m$ is new: the answer is $1$ only if $(m, t)$ is already a forgery.</li>
+    </ul>
+    <p>So a forger $\mathcal{A}'$ with a $\mathsf{Vrfy}$ oracle (at most $q_v$ queries) gives a forger $\mathcal{A}$ without one: $\mathcal{A}$ guesses $j \leftarrow \{1, \dots, q_v + 1\}$, answers the first two cases itself and every new-message query with $0$, and outputs the $j$-th new-message query (or $\mathcal{A}'$'s final output if $j = q_v + 1$). With probability $\frac{1}{q_v + 1}$ it outputs the first valid forgery, so $\Pr[\mathcal{A}' \text{ wins}] \le (q_v + 1) \cdot \mathsf{negl}(n)$. <span class="qed">$\blacksquare$</span></p>
 
     <h2>(c) Without unique tags: a counterexample</h2>
-    <p>Let $\Pi = (\mathsf{Gen}, \mathsf{Mac}, \mathsf{Vrfy})$ be any secure MAC with $n$-bit keys (e.g. $\mathsf{Mac}_k(m) = F_k(m)$). Define $\Pi'$ with the same keys. The new tags are triples $(t, i, \beta)$ with $i \in \{0, \dots, n\}$ and $\beta \in \{0,1\}$:</p>
+    <p>From a secure MAC $\Pi$ with key $k \in \{0,1\}^n$, build $\Pi'$ with tags $(t, i, \beta)$:</p>
     <div class="algo"><table>
       <tr><td>Mac'</td><td>$\mathsf{Mac}'_k(m) = (\mathsf{Mac}_k(m), 0, 0)$</td></tr>
-      <tr><td>Vrfy'</td><td>$\mathsf{Vrfy}'_k(m, (t, i, \beta)) = 1$ iff $\mathsf{Vrfy}_k(m, t) = 1$ <b>and</b> ($i = 0$ or $k_i = \beta$)</td></tr>
+      <tr><td>Vrfy'</td><td>accept iff $\mathsf{Vrfy}_k(m, t) = 1$ and ($i = 0$ or $k_i = \beta$)</td></tr>
     </table></div>
-    <p>Tags are not unique: $(t, 0, 0)$ and $(t, i, k_i)$ are all valid.</p>
-    <p><b>$\Pi'$ satisfies Definition 4.2.</b> A forgery $(m^*, (t^*, i, \beta))$ for a fresh $m^*$ requires $\mathsf{Vrfy}_k(m^*, t^*) = 1$, which is a forgery against $\Pi$. A reduction simulates $\mathsf{Mac}'$ by appending $(0, 0)$ to its own tags. So any forger for $\Pi'$ gives a forger for $\Pi$ with the same success probability.</p>
-    <p><b>$\Pi'$ is broken with a $\mathsf{Vrfy}$ oracle.</b></p>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>Query $\mathsf{Mac}'_k(m)$ for some $m$ and get $(t, 0, 0)$.</td></tr>
-      <tr><td>2.</td><td>For $i = 1, \dots, n$: query $\mathsf{Vrfy}'_k(m, (t, i, 0))$. The answer is $1$ iff $k_i = 0$, so it reveals bit $k_i$.</td></tr>
-      <tr><td>3.</td><td>With the full key $k$, compute $(\mathsf{Mac}_k(m^*), 0, 0)$ for a new $m^* \ne m$ and output it.</td></tr>
-    </table></div>
-    <p>This uses $1 + n$ queries and succeeds with probability $1$. <span class="qed">$\blacksquare$</span></p>
-
-    <div class="box result"><span class="label">Result.</span> With unique tags, a verification oracle gives nothing that the $\mathsf{Mac}$ oracle doesn't already give, except the chance to test forgeries, which is covered by guessing $j$. Without unique tags, "which tags are accepted" can leak secret information, as $\Pi'$ shows. <span class="qed">$\blacksquare$</span></div>
+    <p>$\Pi'$ satisfies Definition 4.2: any forgery contains a valid $\Pi$-tag $t$ on a new message. But with a $\mathsf{Vrfy}'$ oracle the attacker gets $(t, 0, 0)$ for some $m$, then asks $\mathsf{Vrfy}'(m, (t, i, 0))$ for $i = 1, \dots, n$; each answer reveals the key bit $k_i$. With the whole key it forges any message. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

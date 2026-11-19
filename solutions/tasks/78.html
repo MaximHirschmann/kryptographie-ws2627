@@ -19,25 +19,10 @@
   </div>
 
   <div class="solution">
-    <h2>Setup</h2>
-    <p>$ed \equiv 1 \pmod{\phi(N)}$ and $\phi(N) = (p-1)(q-1)$, so</p>
-    $$ed = 1 + t(p-1)(q-1) \quad \text{for some integer } t \ge 0.$$
-    <p>By the Chinese remainder theorem, $a \equiv b \pmod N$ iff $a \equiv b \pmod p$ and $a \equiv b \pmod q$. So it suffices to show $x^{ed} \equiv x$ modulo $p$ and modulo $q$.</p>
-
-    <h2>Modulo $p$</h2>
-    <p><b>Case $p \mid x$:</b> then $x \equiv 0$ and $x^{ed} \equiv 0 \pmod p$ (since $ed \ge 1$). Both sides are $0$.</p>
-    <p><b>Case $p \nmid x$:</b> by Fermat's little theorem $x^{p-1} \equiv 1 \pmod p$, so</p>
-    $$x^{ed} = x \cdot \left(x^{p-1}\right)^{t(q-1)} \equiv x \cdot 1 = x \pmod p.$$
-
-    <h2>Modulo $q$</h2>
-    <p>The same argument with the roles of $p$ and $q$ swapped (using $x^{q-1} \equiv 1 \pmod q$ when $q \nmid x$) gives $x^{ed} \equiv x \pmod q$.</p>
-
-    <h2>Combine</h2>
-    <p>$x^{ed} - x$ is divisible by $p$ and by $q$, and $p \ne q$ are primes, so it is divisible by $pq = N$:</p>
-    $$(x^e)^d = x^{ed} \equiv x \pmod N \quad \text{for all } x \in \mathbb{Z}_N. \quad \blacksquare$$
-
-    <div class="box result"><span class="label">Result.</span> RSA decryption is correct for every $x \in \mathbb{Z}_N$. Elements not in $\mathbb{Z}_N^*$ are $0$ modulo one of the primes, where the equation holds trivially. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">Such $x$ are irrelevant in practice anyway: an $x$ with $\gcd(x, N) \notin \{1, N\}$ reveals a factor of $N$ via $\gcd(x, N)$, and a uniform $x\in\mathbb{Z}_N$ has a nontrivial gcd with probability $\frac{p+q-2}{N}$, which is negligible. The argument needs $N$ to be squarefree; it fails for $N = p^2$.</p>
+    <p>By the CRT it suffices to show $x^{ed} \equiv x$ modulo $p$ and modulo $q$.</p>
+    <p><b>Modulo $p$.</b> $\phi(N) = (p-1)(q-1)$, so $ed \equiv 1 \pmod{p-1}$ as well. If $p \nmid x$, Fermat's little theorem gives $x^{ed} = x^{[ed \bmod (p-1)]} = x \pmod p$. If $p \mid x$, both sides are $0 \bmod p$. So $x^{ed} \equiv x \pmod p$ for every $x$.</p>
+    <p><b>Modulo $q$.</b> The same argument.</p>
+    <p>Hence $x^{ed} \equiv x$ modulo $p$ and modulo $q$, and by the CRT modulo $N = pq$, for all $x \in \mathbb{Z}_N$. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

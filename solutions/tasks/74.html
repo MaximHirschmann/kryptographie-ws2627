@@ -19,25 +19,15 @@
   </div>
 
   <div class="solution">
-    <h2>Idea: meet in the middle</h2>
-    <p>The cipher splits into two independent halves: the first 8 rounds depend only on $k_L$, the last 8 only on $k_R$. Given a known pair $(x, y)$, compute the state after round 8 forwards from $x$ for every $k_L$ and backwards from $y$ for every $k_R$, then look for a match. This is the same idea as the attack on double encryption.</p>
-
-    <h2>Attack</h2>
-    <p>Let $E^{(1)}_{k_L}$ be $IP$ followed by rounds 1–8, and $E^{(2)}_{k_R}$ rounds 9–16 followed by the swap and $IP^{-1}$. Then $\mathsf{DES}'_{k}(x) = E^{(2)}_{k_R}(E^{(1)}_{k_L}(x))$. Both parts are invertible, since Feistel rounds are invertible given their sub-keys.</p>
+    <h2>Attack: meet in the middle</h2>
+    <p>Rounds 1–8 depend only on the left key half $k_L$, rounds 9–16 only on the right half $k_R$. So we can meet in the middle, after round 8, exactly as in the attack on double encryption.</p>
     <div class="algo"><table>
-      <tr><td>0.</td><td>Get two known plaintext/ciphertext pairs $(x, y)$ and $(x', y')$.</td></tr>
-      <tr><td>1.</td><td>For every $k_L \in \{0,1\}^{28}$: compute $v = E^{(1)}_{k_L}(x)$ and store $(v, k_L)$ in a hash table indexed by $v$.</td></tr>
-      <tr><td>2.</td><td>For every $k_R \in \{0,1\}^{28}$: compute $w = (E^{(2)}_{k_R})^{-1}(y)$ and look up all $k_L$ stored under $w$.</td></tr>
-      <tr><td>3.</td><td>For each match $(k_L, k_R)$, test it on $(x', y')$ and output it if it passes.</td></tr>
+      <tr><td>0.</td><td>Obtain three plaintext/ciphertext pairs $(x_1, y_1), (x_2, y_2), (x_3, y_3)$.</td></tr>
+      <tr><td>1.</td><td>For every $k_L \in \{0,1\}^{28}$: store $(z, k_L)$, where $z$ is the result of 8 rounds of encryption of $x_1$ under $k_L$.</td></tr>
+      <tr><td>2.</td><td>For every $k_R \in \{0,1\}^{28}$: compute $z'$, the result of 8 rounds of decryption of $y_1$ under $k_R$, and look up all $k_L$ with $z = z'$.</td></tr>
+      <tr><td>3.</td><td>Check each candidate $(k_L, k_R)$ on $(x_2, y_2)$ and $(x_3, y_3)$; output the one that passes.</td></tr>
     </table></div>
-
-    <h2>Analysis</h2>
-    <p><b>Correctness.</b> For the true key, $E^{(1)}_{k_L}(x)$ and $(E^{(2)}_{k_R})^{-1}(y)$ are both the true middle state, so the true key is found.</p>
-    <p><b>False matches.</b> There are $2^{56}$ pairs $(k_L, k_R)$ and the middle state has 64 bits, so a wrong pair matches with probability about $2^{-64}$. The expected number of false matches is about $2^{56-64} = 2^{-8}$. The second pair removes them (a wrong key survives it with probability $2^{-64}$).</p>
-    <p><b>Cost.</b> $2^{28}$ evaluations of 8 rounds forwards and $2^{28}$ backwards: about $2^{29}$ half-DES evaluations, i.e. roughly $2^{28}$ full DES evaluations. Memory: a table with $2^{28}$ entries (a few GB).</p>
-
-    <div class="box result"><span class="label">Result.</span> Because the two key halves act on disjoint sets of rounds, a meet-in-the-middle attack on the state after round 8 recovers both halves in about $2^{28}$ time and memory, instead of $2^{56}$ for brute force. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">The real DES key schedule rotates and selects bits so that each key bit is used in about 14 of the 16 rounds. That rules out such a split.</p>
+    <p>The true key always produces a match. Steps 1 and 2 take $2^{28}$ half-DES evaluations each, so the attack takes about $2^{28}$ time (and $2^{28}$ memory) instead of $2^{56}$. The extra pairs eliminate the few false matches. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

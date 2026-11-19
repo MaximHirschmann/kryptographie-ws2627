@@ -31,28 +31,19 @@
       <tr><td>3. $m \oplus F_k(0^n)$</td><td><b>yes</b></td><td>no</td></tr>
       <tr><td>4. $\langle r, m_1 \oplus F_k(r), m_2 \oplus F_k(r+1) \rangle$</td><td><b>yes</b></td><td><b>yes</b></td></tr>
     </table></div>
-    <p class="note">General facts used: CPA security implies EAV security, and a <b>deterministic</b> scheme is never CPA-secure. The attacker asks the oracle for the encryption of $m_0$ and compares it with the challenge.</p>
+    <p class="note">CPA security implies EAV security, and a deterministic scheme is never CPA-secure: query $\mathsf{Enc}(m_0)$ and compare it with the challenge.</p>
 
     <h2>1. Not EAV-secure in general, not CPA-secure</h2>
-    <p>It is deterministic, so it is not CPA-secure. The PRG guarantee only covers <i>one</i> output on a uniform seed. It says nothing about $G(k)$ and $G(k+1)$ together, because the seeds $k$ and $k + 1$ are related.</p>
-    <p><b>Counterexample.</b> Let $G'$ be a PRG from $n - 1$ to $n + 1$ bits, and let $G(s) := G'(s_1 \cdots s_{n-1})$, which ignores the last seed bit. $G$ is still a PRG. If the last bit of $k$ is $0$, then $k$ and $k + 1$ differ only in that bit, so $G(k) = G(k+1)$ and the two ciphertext halves satisfy $c_1 \oplus c_2 = m_1 \oplus m_2$.</p>
-    <p>Attack: choose $u \leftarrow \{0,1\}^{n+1}$ uniformly and output the messages $m^0 = 0^{n+1} \| 0^{n+1}$ and $m^1 = 0^{n+1} \| u$. Given $\langle c_1, c_2 \rangle$, output $0$ iff $c_1 = c_2$.</p>
-    <ul>
-      <li>$b = 0$: $c_1 = c_2$ whenever $G(k) = G(k+1)$, so with probability at least $\frac12$.</li>
-      <li>$b = 1$: $c_1 \oplus c_2 = G(k) \oplus G(k+1) \oplus u$ with $u$ uniform and independent, so $c_1 = c_2$ only with probability $2^{-(n+1)}$.</li>
-    </ul>
-    $$\Pr[\mathsf{win}] \ge \tfrac12 \cdot \tfrac12 + \tfrac12 \big(1 - 2^{-(n+1)}\big) = \tfrac34 - 2^{-(n+2)}.$$
-    <p>So the advantage is non-negligible.</p>
+    <p>It is deterministic, so not CPA-secure. For EAV: the PRG guarantee covers one output on a uniform seed, not two outputs on the related seeds $k$ and $k+1$. Counterexample: let $G(s) := G'(s_1 \cdots s_{n-1})$ for a PRG $G'$; this $G$ ignores the last seed bit and is still a PRG. Whenever the last bit of $k$ is $0$ (probability $\frac12$), $G(k) = G(k+1)$ and $c_1 \oplus c_2 = m_1 \oplus m_2$. Distinguishing $0^{n+1} \| 0^{n+1}$ from $0^{n+1} \| u$ (uniform $u$) by checking $c_1 = c_2$ succeeds with probability about $\frac34$.</p>
 
     <h2>2. Neither</h2>
-    <p>$r$ is sent in the clear and $G$ is public, and the key $k$ is not even used. Anyone computes $G(r)$ and recovers $m = (G(r) \oplus m) \oplus G(r)$.</p>
+    <p>The ciphertext does not depend on the key. Anyone computes $m = G(r) \oplus (G(r) \oplus m)$.</p>
 
     <h2>3. EAV-secure, not CPA-secure</h2>
-    <p><b>EAV:</b> this is a one-time pad with the pad $F_k(0^n)$. Since $F$ is a PRF, $F_k(0^n)$ is indistinguishable from a uniform string. So for a single message the scheme is as good as the one-time pad, up to a negligible difference: reduce to the PRF with a distinguisher that queries $0^n$ once.</p>
-    <p><b>Not CPA:</b> the scheme is deterministic and always uses the same pad. Ask for $\mathsf{Enc}(0^n) = F_k(0^n)$ and decrypt the challenge with it.</p>
+    <p>$F_k(0^n)$ is pseudorandom, so this is a one-time pad with a pseudorandom pad, secure for one message exactly as in the PRG scheme (script <a href="../script.html#thm-prg-enc">Theorem 8</a>). It is deterministic, so not CPA-secure.</p>
 
     <h2>4. EAV- and CPA-secure</h2>
-    <p>This is <b>randomised counter mode</b> with two blocks: the pads are $F_k(r)$ and $F_k(r+1)$ for a fresh random $r$. Replace $F_k$ by a random function. The challenge pads are then uniform and independent of everything else unless one of the two inputs $r^*, r^* + 1$ was already used in an oracle query. With $q$ queries, that happens with probability at most $\frac{4q}{2^n}$, which is negligible. So the challenge is a one-time pad except with negligible probability, and the reduction to the PRF works as in <a href="19.html">Question 19</a>.</p>
+    <p>This is randomised counter mode with two blocks. The proof is the one for $\langle r, F_k(r) \oplus m \rangle$ (<a href="19.html">Question 19</a>), with $\mathsf{Repeat}$ now the event that $r^* - 1$, $r^*$ or $r^* + 1$ is used in another ciphertext; this has probability $\le 3q/2^n$, which is negligible. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

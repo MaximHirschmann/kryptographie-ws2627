@@ -20,40 +20,15 @@
 
   <div class="solution">
     <h2>Construction</h2>
-    <p>Let $x^* := F_k^{-1}(0^n)$, the input that $F_k$ maps to $0^n$. Swap the outputs of $k$ and $x^*$:</p>
-    $$F'_k(x) = \begin{cases} 0^n & \text{if } x = k,\\ F_k(k) & \text{if } x = x^*,\\ F_k(x) & \text{otherwise.} \end{cases}$$
-    <p>(If $x^* = k$, then $F'_k = F_k$ already satisfies $F'_k(k) = 0^n$.) Swapping two outputs keeps $F'_k$ a permutation. Both $F'_k$ and its inverse are efficiently computable given $k$, because $F_k^{-1}$ is.</p>
+    <p>Swap the outputs of $k$ and $F_k^{-1}(0^n)$, so that $F'_k(k) = 0^n$:</p>
+    $$F'_k(x) = \begin{cases} 0^n & \text{if } x = k,\\ F_k(k) & \text{if } x = F_k^{-1}(0^n),\\ F_k(x) & \text{otherwise.} \end{cases}$$
+    <p>Swapping two outputs keeps $F'_k$ a permutation, and $F'_k$ and its inverse are efficient given $k$.</p>
 
-    <h2>Part 1: $F'$ is not a strong PRP</h2>
-    <div class="algo"><table>
-      <tr><td>$D^{O, O^{-1}}(1^n)$:</td><td></td></tr>
-      <tr><td>1.</td><td>Query the inverse oracle: $\hat k := O^{-1}(0^n)$.</td></tr>
-      <tr><td>2.</td><td>Pick some $x \notin \{\hat k\}$, query $y := O(x)$.</td></tr>
-      <tr><td>3.</td><td>Output $1$ iff $y = F'_{\hat k}(x)$ (computed locally).</td></tr>
-    </table></div>
-    <p>With $O = F'_k$: $O^{-1}(0^n) = k$, so $\hat k = k$ and the check always succeeds: probability $1$. With a random permutation $f$: $\hat k$ is just some value and $f(x)$ is uniform over the $2^n - 1$ values different from $f(\hat k) = 0^n$, so the check succeeds with probability at most $\frac{1}{2^n - 1}$. The advantage is $\approx 1$.</p>
+    <h2>Not a strong PRP</h2>
+    <p>Query the inverse oracle on $0^n$ and obtain $\hat k$. Then pick $x \notin \{\hat k, F_{\hat k}^{-1}(0^n)\}$, query $y = O(x)$, and output $1$ iff $y = F_{\hat k}(x)$. With $F'_k$ we get $\hat k = k$ and always output $1$; with a random permutation this happens only with probability about $2^{-n}$.</p>
 
-    <h2>Part 2: $F'$ is still a PRP</h2>
-    <p>Let $D'$ be a PPT distinguisher with a forward oracle only, making $q = q(n)$ queries. $F'_k$ and $F_k$ differ only on the two inputs $k$ and $x^*$. Let $\mathsf{Bad}$ be the event that $D'$, run with oracle $F_k$, queries $k$ or $x^*$. Until $\mathsf{Bad}$ happens the two oracles answer identically, so</p>
-    $$\big|\Pr[D'^{F'_k} = 1] - \Pr[D'^{F_k} = 1]\big| \le \Pr[\mathsf{Bad}].$$
-
-    <h3>$\Pr[\mathsf{Bad}]$ is negligible</h3>
-    <p>Build $D''$ against $F$:</p>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>Run $D'$, answering its queries with the own oracle $O$; let $x_1, \dots, x_q$ be the queries.</td></tr>
-      <tr><td>2.</td><td>Query one more point $z \notin \{x_1, \dots, x_q\}$ and get $O(z)$.</td></tr>
-      <tr><td>3.</td><td>Output $1$ iff some $O(x_i) = 0^n$ <b>or</b> some $x_i$ satisfies $F_{x_i}(z) = O(z)$.</td></tr>
-    </table></div>
-    <ul>
-      <li><b>$O = F_k$:</b> if $D'$ queries $x^*$, then $O(x^*) = 0^n$; if $D'$ queries $k$, then $F_k(z) = O(z)$. So $\Pr[D''^{F_k} = 1] \ge \Pr[\mathsf{Bad}]$.</li>
-      <li><b>$O = f$ random permutation:</b> each answer $f(x_i)$ equals $0^n$ with probability at most $\frac{1}{2^n - q}$. $f(z)$ is uniform over at least $2^n - q$ values independent of $D'$'s view, so it matches one of the $q$ values $F_{x_i}(z)$ with probability at most $\frac{q}{2^n - q}$. In total $\Pr[D''^{f} = 1] \le \frac{2q}{2^n - q}$.</li>
-    </ul>
-    <p>$F$ is a PRP, so $\Pr[D''^{F_k} = 1] \le \Pr[D''^{f} = 1] + \mathsf{negl}(n)$. Hence $\Pr[\mathsf{Bad}] \le \frac{2q}{2^n - q} + \mathsf{negl}(n)$, which is negligible.</p>
-
-    <h3>Putting it together</h3>
-    $$\big|\Pr[D'^{F'_k} = 1] - \Pr[D'^{f} = 1]\big| \le \Pr[\mathsf{Bad}] + \big|\Pr[D'^{F_k} = 1] - \Pr[D'^{f} = 1]\big| \le \mathsf{negl}(n).$$
-
-    <div class="box result"><span class="label">Result.</span> $F'$ (which maps $k$ to $0^n$) is a PRP: without an inverse oracle, finding $k$ or $F_k^{-1}(0^n)$ is as hard as breaking $F$. With an inverse oracle, the single query $O^{-1}(0^n)$ returns the key. <span class="qed">$\blacksquare$</span></div>
+    <h2>Still a PRP</h2>
+    <p>With forward queries only, $F'_k$ and $F_k$ differ only if the distinguisher queries $k$ or $F_k^{-1}(0^n)$. Finding either point is infeasible: a distinguisher that queries $x^* = F_k^{-1}(0^n)$ sees the answer $0^n$, and one that queries $k$ can check the guess by evaluating $F_k$ itself. Either event would let it tell $F_k$ from a random permutation, contradicting that $F$ is a PRP. So $F'_k \approx F_k \approx$ random permutation. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

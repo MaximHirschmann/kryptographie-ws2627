@@ -19,30 +19,14 @@
   </div>
 
   <div class="solution">
-    <h2>Idea</h2>
-    <p>In the private-key setting the adversary does not know the key, so it cannot encrypt. With public keys the adversary can encrypt everything itself. With unlimited time it can list <b>all possible encryptions of 0</b> and check whether $c$ is among them.</p>
-
-    <h2>The adversary</h2>
-    <p>$\mathsf{Enc}$ is a polynomial-time algorithm, so on input $pk$ it uses at most $p(n)$ random bits for some polynomial $p$. Write $\mathsf{Enc}_{pk}(0; r)$ for the encryption with random tape $r$.</p>
-    <div class="algo"><table>
-      <tr><td>$\mathcal{A}(pk, c)$:</td><td></td></tr>
-      <tr><td>1.</td><td>For every $r \in \{0,1\}^{p(n)}$: if $\mathsf{Enc}_{pk}(0; r) = c$, output $0$.</td></tr>
-      <tr><td>2.</td><td>If no $r$ matched, output $1$.</td></tr>
-    </table></div>
-    <p>This takes $2^{p(n)}$ encryptions: exponential, but we put no limit on time.</p>
-
-    <h2>Correctness</h2>
+    <h2>The adversary: brute force over the random coins</h2>
+    <p>Let $\ell = \ell(n)$ be the number of random bits used by $\mathsf{Enc}$. Given $pk$ and $c$, compute $\mathsf{Enc}_{pk}(0; r)$ for every $r \in \{0,1\}^\ell$. If some result equals $c$, output $0$; otherwise output $1$.</p>
     <ul>
-      <li><b>If $m = 0$:</b> $c = \mathsf{Enc}_{pk}(0; r^*)$ for the random tape $r^*$ that was actually used, so the search finds a match and $\mathcal{A}$ outputs $0$.</li>
-      <li><b>If $m = 1$:</b> suppose some $r$ gives $\mathsf{Enc}_{pk}(0; r) = c$. Then $c$ is both a possible encryption of $0$ and of $1$ under $pk$. With the matching $sk$, correctness requires $\mathsf{Dec}_{sk}(c) = 0$ and $\mathsf{Dec}_{sk}(c) = 1$, which is impossible. So no $r$ matches and $\mathcal{A}$ outputs $1$.</li>
+      <li>If $m = 0$, then $c = \mathsf{Enc}_{pk}(0; r)$ for the coins actually used, so the adversary outputs $0$.</li>
+      <li>If $m = 1$, then no encryption of $0$ equals $c$, because $\mathsf{Dec}_{sk}(c)$ cannot be both $0$ and $1$ (correctness). So the adversary outputs $1$.</li>
     </ul>
-    <p>$\mathcal{A}$ is always right. <span class="qed">$\blacksquare$</span></p>
-
-    <h2>Consequence</h2>
-    <p>In $\mathsf{PubK}^{\mathsf{eav}}$ with $m_0 = 0$ and $m_1 = 1$, this adversary wins with probability $1 \ne \frac12$. So no public-key scheme is perfectly secret. Any security must be <b>computational</b>.</p>
-
-    <div class="box result"><span class="label">Result.</span> Because anyone can encrypt, an unbounded adversary can compare $c$ with all encryptions of $0$. The supports of $\mathsf{Enc}_{pk}(0)$ and $\mathsf{Enc}_{pk}(1)$ are disjoint, so this decides $m$ with certainty. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">An alternative is to search all random tapes of $\mathsf{Gen}$ for some $(pk, sk')$ with the given $pk$ and decrypt with $sk'$. If correctness only holds with overwhelming probability (not perfectly), the adversary still succeeds with probability $1 - \mathsf{negl}(n)$, which is still far from $\frac12$.</p>
+    <p>The adversary is always right; it is exponential-time, which is allowed here. <span class="qed">$\blacksquare$</span></p>
+    <p><b>Consequence.</b> In $\mathsf{PubK}^{\mathsf{eav}}$ with $m_0 = 0$, $m_1 = 1$ it wins with probability $1 \ne \frac12$, so no public-key scheme is perfectly secret. The reason is that anyone can encrypt with $pk$.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

@@ -22,25 +22,18 @@
 
   <div class="solution">
     <h2>1. CBC, OFB and CTR are not CCA-secure</h2>
-    <p>In the CCA game, the adversary may ask the decryption oracle about any ciphertext <i>except the challenge itself</i>. All three modes are <b>malleable</b>: changing one bit of the ciphertext changes the plaintext in a predictable way. So the attacker modifies the challenge slightly, has it decrypted, and undoes the change.</p>
-    <p>Use single-block messages $m_0 = 0^n$ and $m_1 = 1^n$, and let $\delta := 0^{n-1}1$. The challenge is $\langle c_0, c_1 \rangle$, where $c_0$ is the $IV$ or counter.</p>
+    <p>All three modes are malleable: flipping a ciphertext bit flips a predictable plaintext bit. The attacker modifies the challenge, asks for its decryption (allowed, since it is a different ciphertext), and undoes the change.</p>
+    <p>Use one-block messages $m_0 = 0^n$, $m_1 = 1^n$ and $\delta := 0^{n-1}1$. The challenge is $\langle c_0, c_1 \rangle$, where $c_0$ is the IV or counter.</p>
     <div class="table-scroll"><table class="data">
       <tr><th>Mode</th><th>Decryption query</th><th>Answer</th></tr>
       <tr><td>CBC</td><td>$\langle c_0 \oplus \delta,\ c_1 \rangle$</td><td>$F_k^{-1}(c_1) \oplus c_0 \oplus \delta = m_b \oplus \delta$</td></tr>
-      <tr><td>OFB</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$c_1 \oplus \delta \oplus F_k(c_0) = m_b \oplus \delta$</td></tr>
-      <tr><td>CTR</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$c_1 \oplus \delta \oplus F_k(c_0 + 1) = m_b \oplus \delta$</td></tr>
+      <tr><td>OFB</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$m_b \oplus \delta$</td></tr>
+      <tr><td>CTR</td><td>$\langle c_0,\ c_1 \oplus \delta \rangle$</td><td>$m_b \oplus \delta$</td></tr>
     </table></div>
-    <p>In each case the query differs from the challenge, so it is allowed. The attacker computes $m_b = \text{answer} \oplus \delta$ and outputs $b$. It wins with probability $1$. The attack uses no property of $F$, so it works <b>for every $F$</b>, even a truly random permutation. <span class="qed">$\blacksquare$</span></p>
+    <p>The attacker XORs the answer with $\delta$, obtains $m_b$ and wins with probability $1$, for every $F$. <span class="qed">$\blacksquare$</span></p>
 
     <h2>2. Integrity</h2>
-    <p><b>No.</b> CBC, OFB and CTR can provide CPA confidentiality with the appropriate primitive and IV/nonce rules. ECB is not even secure for general multi-block messages against eavesdropping. They do not protect integrity:</p>
-    <ul>
-      <li><b>Every string decrypts.</b> Decryption never rejects, so the receiver cannot tell a forged or modified ciphertext from a real one.</li>
-      <li><b>Bit flipping (OFB, CTR):</b> flipping bit $j$ of $c_i$ flips exactly bit $j$ of $m_i$. If the attacker knows part of the plaintext, they can change it to anything, e.g. "pay 100" becomes "pay 900".</li>
-      <li><b>CBC:</b> flipping bits in the $IV$ flips the same bits in $m_1$. Changing $c_i$ garbles $m_i$ but flips chosen bits of $m_{i+1}$. Blocks can also be cut off at the end, which leaves a valid shorter plaintext.</li>
-      <li><b>ECB:</b> blocks can be swapped, repeated or removed without being detected.</li>
-    </ul>
-    <p>Integrity needs a separate mechanism: a <b>MAC</b>, ideally as encrypt-then-MAC, or an authenticated mode such as GCM. The CCA attacks above are exactly integrity attacks: the decryption oracle accepts modified ciphertexts.</p>
+    <p><b>No.</b> Every string decrypts to something, so the receiver cannot detect modifications. In OFB and CTR, flipping bit $j$ of $c_i$ flips bit $j$ of $m_i$; in CBC, flipping IV bits flips the same bits of $m_1$; in ECB, blocks can be reordered or removed. Integrity needs a MAC (e.g. encrypt-then-MAC) or an authenticated mode.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

@@ -19,34 +19,26 @@
   </div>
 
   <div class="solution">
-    <h2>The encoding as a number</h2>
-    $$\hat m = r \cdot 2^{\ell + 8} + m, \qquad \hat m \lt 2^{\ell + 88} \ll N \approx 2^{2\ell}.$$
-    <p>Decryption computes $\hat m = c^d \bmod N$, checks the format (leading zeros, then 80 arbitrary bits, a zero byte), and outputs the low $\ell$ bits; otherwise it outputs $\bot$.</p>
-
-    <h2>Tool: RSA is multiplicatively malleable</h2>
-    $$c \cdot s^e \equiv (\hat m \cdot s)^e \pmod N,$$
-    <p>so from $c$ anyone can compute the RSA image of $s\hat m\bmod N$ without knowing $\hat m$. For the doubling attack below, assume $\ell>89$. Then $2\hat m_b<2^{\ell+89}\le2^{2\ell-1}\le N$, so there is <b>no reduction modulo $N$</b>. The chosen messages are nonzero, hence $2\hat m_b\ne\hat m_b$ as residues modulo $N$. RSA’s injectivity therefore guarantees $c'\ne c^*$, making the decryption query allowed.</p>
+    <p>RSA is multiplicatively malleable: $c \cdot 2^e \equiv (2 \hat m)^e \pmod N$. Multiplying by $2$ shifts $\hat m$ left by one bit, and because $\hat m$ has many leading zeros, there is no reduction modulo $N$.</p>
 
     <h2>Attack in $\mathsf{PubK}^{\mathsf{cca}}$</h2>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Output $m_0 = 0^{\ell-1}1$ and $m_1 = 0^{\ell-2}10$ (integers $1$ and $2$). Receive $c^* = \hat m_b^e \bmod N$.</td></tr>
-      <tr><td>2.</td><td>Ask for the decryption of $c' := c^* \cdot 2^e \bmod N \ne c^*$. It is the encryption of $2\hat m_b = r \cdot 2^{\ell+9} + 2m_b$.</td></tr>
-      <tr><td>3.</td><td>If the answer is $0^{\ell-2}10$ (integer $2$), output $0$; if it is $0^{\ell-3}100$ (integer $4$), output $1$; if it is $\bot$, guess.</td></tr>
+      <tr><td>1.</td><td>Output $m_0 = 00\cdots0$ and $m_1 = 01\cdots1$. Receive $c$.</td></tr>
+      <tr><td>2.</td><td>Ask for the decryption of $c' := [2^e \cdot c \bmod N]$ (a different ciphertext).</td></tr>
+      <tr><td>3.</td><td>If the answer is an error, output a random bit. Otherwise output the most significant bit of the returned message.</td></tr>
     </table></div>
-    <p><b>Why it works.</b> $2\hat m_b$ is $\hat m_b$ shifted left by one bit:</p>
+
+    <h2>Why it works</h2>
+    <p>$c'$ encrypts $2\hat m$, i.e. $0^k \,\|\, r \,\|\, 0^8 \,\|\, m_b$ shifted left by one bit, read with the same field boundaries:</p>
     <ul>
-      <li>low $\ell$ bits: $2m_b \bmod 2^\ell$, which is $0^{\ell-2}10$ or $0^{\ell-3}100$ (the top bit of $m_b$ is $0$, so nothing is lost);</li>
-      <li>the zero byte receives the top bit of $m_b$, which is $0$, so it stays zero;</li>
-      <li>the top bit of $r$ moves into the leading-zero area. The format check fails only if that bit is $1$, which happens with probability $\frac12$.</li>
+      <li>The top bit of $m_b$ is $0$, so the zero byte stays zero, and the new message part is $m_b$ shifted left. Its most significant bit is the second bit of $m_b$, which is exactly $b$.</li>
+      <li>The top bit of $r$ moves into the leading zeros. Decryption reports an error only if that bit is $1$, which happens with probability $\frac12$.</li>
     </ul>
-    $$\Pr[\text{win}] \ge \tfrac12 \cdot 1 + \tfrac12 \cdot \tfrac12 = \tfrac34.$$
-    <p>The advantage $1/4$ proves that the scheme is not CCA-secure. If only the leading-zero check is omitted, these two chosen messages are distinguished with probability $1$. This is a distinguishing attack, not a proof of full recovery for every message: doubling can move a message bit into the checked zero byte and cause rejection. <span class="qed">$\blacksquare$</span></p>
+    $$\Pr[\text{win}] = \tfrac12 \cdot 1 + \tfrac12 \cdot \tfrac12 = \tfrac34,$$
+    <p>so the scheme is not CCA-secure. <span class="qed">$\blacksquare$</span></p>
 
-    <h2>Why this is easier than PKCS #1 v1.5</h2>
-    <p>PKCS #1 v1.5 encodes $\hat m=\texttt{00}\,\texttt{02}\|\text{nonzero random bytes}\|\texttt{00}\|m$. Its fixed header is near the high end of the number. Multiplication can destroy that header even <i>without</i> modular wraparound; it is false that every multiplier $s&gt;1$ causes wraparound. Bleichenbacher’s attack exploits validity responses adaptively to narrow the plaintext interval, rather than preserving the format in one simple doubling step.</p>
-    <p>Here the long zero prefix leaves room to double the encoded integer without wraparound. For the two chosen messages, the format is preserved whenever the top bit of $r$ is zero, which occurs with probability $1/2$. One allowed decryption query therefore already gives a constant distinguishing advantage.</p>
-
-    <div class="box result"><span class="label">Result.</span> Multiply the challenge by $2^e$: the ciphertext of $2\hat m$ still decodes (with probability at least $\frac12$) and its message part is $2m$. One decryption query distinguishes the two chosen messages with success probability $3/4$. The large zero prefix leaves room for such manipulations, while PKCS #1 v1.5 puts its fixed bytes at the very top, so the attack is much harder there. <span class="qed">$\blacksquare$</span></div>
+    <h2>Why PKCS #1 v1.5 resists this attack</h2>
+    <p>There $\hat m = \texttt{0x00} \,\|\, \texttt{0x02} \,\|\, r \,\|\, \texttt{0x00} \,\|\, m$. Doubling turns the second byte $\texttt{0x02}$ into $\texttt{0x04}$ (or $\texttt{0x05}$), so $2\hat m$ is <b>never</b> correctly formatted and the decryption query always returns an error. (Bleichenbacher's attack on PKCS #1 v1.5 needs many adaptive queries instead.)</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

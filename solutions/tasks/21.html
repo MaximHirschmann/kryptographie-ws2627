@@ -18,27 +18,16 @@
   </div>
 
   <div class="solution">
-    <h2>Recall CBC</h2>
-    <p>$c_0 := IV$ and $c_i := F_k(c_{i-1} \oplus m_i)$. The ciphertext is $\langle IV, c_1, \dots, c_\ell \rangle$, so the IV is public. In this variant, the next IV is always the previous IV plus 1, so the attacker can <b>predict</b> it.</p>
+    <p>In CBC, $c_0 := IV$ and $c_i := F_k(c_{i-1} \oplus m_i)$; the IV is sent in the clear. In this variant the next IV is the previous one plus 1, so the attacker can <b>predict</b> it and cancel it with its challenge message.</p>
 
     <h2>Attack</h2>
-    <p>Single-block messages are enough.</p>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Query the encryption oracle on $m = 0^n$. The answer is $\langle IV, c \rangle$ with $c = F_k(IV \oplus 0^n) = F_k(IV)$.</td></tr>
-      <tr><td>2.</td><td>The challenge will use $IV' = IV + 1$. Choose
-        $$m_0 := IV \oplus (IV + 1), \qquad m_1 := m_0 \oplus 0^{n-1}1 \ (\text{any other message}).$$</td></tr>
-      <tr><td>3.</td><td>Receive $\langle IV', c^* \rangle$ with $c^* = F_k(IV' \oplus m_b)$.</td></tr>
-      <tr><td>4.</td><td>Output $b' = 0$ if $c^* = c$, otherwise $b' = 1$.</td></tr>
+      <tr><td>1.</td><td>Query the oracle on $0^n$ and receive $\langle IV, c \rangle$ with $c = F_k(IV)$.</td></tr>
+      <tr><td>2.</td><td>The challenge will use $IV + 1$. Output $m_0 := IV \oplus (IV + 1)$ and any $m_1 \ne m_0$.</td></tr>
+      <tr><td>3.</td><td>Receive $\langle IV + 1, c^* \rangle$ and output $0$ iff $c^* = c$.</td></tr>
     </table></div>
-
-    <h2>Analysis</h2>
-    <ul>
-      <li><b>$b = 0$:</b> $IV' \oplus m_0 = (IV + 1) \oplus IV \oplus (IV + 1) = IV$, so $c^* = F_k(IV) = c$. The attacker answers $0$ and is right.</li>
-      <li><b>$b = 1$:</b> $IV' \oplus m_1 = IV \oplus 0^{n-1}1 \ne IV$. $F_k$ is a permutation, so $c^* \ne c$. The attacker answers $1$ and is right.</li>
-    </ul>
-    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] = 1.$$
-    <p>So the scheme is not CPA-secure. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The attacker chooses its challenge message so that it cancels the predictable IV. That way the block-cipher input is one it has already seen. CBC needs an <b>unpredictable</b> IV. A counter is enough for CTR mode, but not for CBC. (TLS 1.0 had this weakness, which led to the BEAST attack.)</p>
+    <p>If $b = 0$, the block-cipher input is $(IV + 1) \oplus m_0 = IV$, so $c^* = F_k(IV) = c$. If $b = 1$, the input differs from $IV$, and since $F_k$ is a permutation, $c^* \ne c$. The attacker always wins, so the scheme is not CPA-secure. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The book's solution uses $m_0 = 0^n$ and only works when $IV$ is even (success probability $\frac34$). Choosing $m_0 = IV \oplus (IV + 1)$ works for every IV.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

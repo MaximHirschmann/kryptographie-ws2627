@@ -47,17 +47,7 @@
     $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] = \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A}',\Pi'}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
     <p>$\mathcal{A}'$ is PPT, so $\Pi$ is CPA-secure. <span class="qed">$\blacksquare$</span></p>
     <p class="note">The other half is symmetric. If $\Pi''$ is CPA-secure, $\mathcal{A}''$ generates $k'$ itself, puts the fresh uniform share $s$ under $\Pi'$, and sends the challenge pair $(s \oplus m_0, s \oplus m_1)$ to its $\Pi''$ challenger. The construction works without knowing which scheme is secure, because one uniformly random share reveals nothing about $m$.</p>
-
-    <h2>The lecture's version (00_header.pdf, Theorem 1)</h2>
-    <p>The lecture uses the same construction ($\mathsf{Enc}_{k'}(r)$, $\mathsf{Enc}_{k''}(m \oplus r)$ with $r \leftarrow \{0,1\}^n$) and proves the contrapositive with advantage $\epsilon(n) := \big|\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] - \frac12\big|$. For Case 1 ($\Pi'$ secure) it argues differently: instead of re-randomising the challenge, $\mathcal{A}'$ asks its challenger to encrypt <b>either the real share or $0^n$</b>.</p>
-    <div class="algo"><table>
-      <tr><td>Ask</td><td>$k'' \leftarrow \mathsf{Gen}''(1^n)$; $r \leftarrow \{0,1\}^n$; output the pair $(r,\ 0^n)$.</td></tr>
-      <tr><td>Guess</td><td>On $c_1$: $m_0, m_1 \leftarrow \mathcal{A}$; $b \leftarrow \{0,1\}$; $c_2 \leftarrow \mathsf{Enc}''_{k''}(m_b \oplus r)$; $b' \leftarrow \mathcal{A}(c_1, c_2)$; output $0$ iff $b = b'$.</td></tr>
-      <tr><td>Oracle</td><td>On $m^i$: $r^i \leftarrow \{0,1\}^n$; $c^i_1 \leftarrow \mathsf{Enc}'(r^i)$ via the own oracle; $c^i_2 \leftarrow \mathsf{Enc}''_{k''}(m^i \oplus r^i)$.</td></tr>
-    </table></div>
-    <p>If the challenger encrypted $r$ ($\hat b = 0$), $\mathcal{A}$ sees a real $\Pi$-encryption and wins with probability $\frac12 + \epsilon(n)$. If it encrypted $0^n$ ($\hat b = 1$), $c_1$ says nothing about $r$, so $c_2$ is a one-time pad encryption of $m_b$ and $\mathcal{A}$ wins with probability exactly $\frac12$. Hence</p>
-    $$\tfrac12 + \mathsf{negl}(n) \ \ge\ \tfrac12\Big(\tfrac12 + \epsilon(n)\Big) + \tfrac12 \cdot \tfrac12 = \tfrac12 + \tfrac12\epsilon(n) \quad\Longrightarrow\quad \epsilon(n) \le 2\,\mathsf{negl}(n).$$
-    <p>Case 2 ($\Pi''$ secure) in the lecture is the direct re-randomisation: $\mathcal{A}''$ outputs $(m_0 \oplus r, m_1 \oplus r)$ and adds $c_1 \leftarrow \mathsf{Enc}_{k'}(r)$ itself. That is exactly the argument used above, applied to the other scheme. Both styles are valid; the version above simulates perfectly, the lecture's Case 1 uses a hybrid with $0^n$.</p>
+    <p class="note">The lecture (00_header.pdf, Theorem 1) proves Case 1 differently: $\mathcal{A}'$ submits the pair $(r, 0^n)$ to its own challenger. If $0^n$ was encrypted, the second share is a one-time pad and $\mathcal{A}$ wins with probability exactly $\frac12$. Both proofs are valid.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

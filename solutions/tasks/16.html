@@ -21,36 +21,20 @@
   </div>
 
   <div class="solution">
-    <p class="note">This follows the script's proof of <a href="../script.html#thm-ps-4-3">Theorem 4</a> (case Def. 6 $\Rightarrow$ Def. 5), but starts from the negation of Definition 2.1 instead of the script's <a href="../script.html#def-ps-3">Definition 5</a>. Notation: $p_m(c) := \Pr[\mathsf{Enc}_K(m) = c] = \Pr[C = c \mid M = m]$. This value does not depend on the distribution of $M$ (see <a href="14.html">Question 14</a>).</p>
-
     <h2>Proof (contrapositive)</h2>
-    <p>Assume that Definition 2.1 does <b>not</b> hold. We construct an adversary $\mathcal{A}$ with $\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] \gt \frac12$.</p>
+    <p>Assume Definition 2.1 fails. Definition 2.1 is equivalent to $\Pr[\mathsf{Enc}_K(m_0) = c] = \Pr[\mathsf{Enc}_K(m_1) = c]$ for all $m_0, m_1, c$ (script <a href="../script.html#thm-ps-1-2">Theorems 2</a> and <a href="../script.html#thm-ps-3-2">3</a>). So there are messages $m_0, m_1$ and a ciphertext $\tilde c$ with, after renaming if necessary,</p>
+    $$p_0 := \Pr[\mathsf{Enc}_K(m_0) = \tilde c] \ \gt\ p_1 := \Pr[\mathsf{Enc}_K(m_1) = \tilde c]. \tag{1}$$
 
-    <h3>Step 1: Negation of Definition 2.1</h3>
-    <p>There are a distribution over $\mathcal{M}$, a message $m$ and a ciphertext $\tilde c$ with $\Pr[C = \tilde c] \gt 0$ and</p>
-    $$\Pr[M = m \mid C = \tilde c] \ne \Pr[M = m].$$
-    <p>This forces $\Pr[M = m] \gt 0$, because otherwise both sides would be $0$. Using $\Pr[M = m \wedge C = \tilde c] = \Pr[M = m] \cdot p_m(\tilde c)$ and dividing by $\Pr[M = m]$:</p>
-    $$p_m(\tilde c) \ne \Pr[C = \tilde c] = \sum_{m' \in \mathcal{M}} \Pr[M = m'] \cdot p_{m'}(\tilde c).$$
-    <p>The right-hand side is a weighted average of the values $p_{m'}(\tilde c)$. If all $p_{m'}(\tilde c)$ were equal to $p_m(\tilde c)$, the average would be $p_m(\tilde c)$ as well. So there are two messages whose values differ. Name them $m_0, m_1$ so that</p>
-    $$p_0 := \Pr[C = \tilde c \mid M = m_0] \ \gt\ p_1 := \Pr[C = \tilde c \mid M = m_1]. \tag{1}$$
+    <h2>The adversary</h2>
+    <p>$\mathcal{A}$ outputs $m_0, m_1$. On the challenge $c$ it outputs $b' = 0$ if $c = \tilde c$, and a uniform random bit otherwise.</p>
 
-    <h3>Step 2: The adversary</h3>
-    <div class="algo"><table>
-      <tr><td>ask</td><td>output $m_0, m_1$</td></tr>
-      <tr><td>guess</td><td>on ciphertext $c$: if $c = \tilde c$ output $b' = 0$; otherwise output a uniformly random bit $b'$</td></tr>
-    </table></div>
-
-    <h3>Step 3: Success probability</h3>
-    <p>In the game $b$ is uniform, so $M = m_b$ is uniform over $\{m_0, m_1\}$, and</p>
-    $$\Pr[\mathsf{win}] = \tfrac12 \Pr[\mathsf{win} \mid M = m_0] + \tfrac12 \Pr[\mathsf{win} \mid M = m_1].$$
-    <p><b>Case $M = m_0$.</b> If $C = \tilde c$, $\mathcal{A}$ answers $0$ and is right. Otherwise it guesses and is right with probability $\frac12$:</p>
-    $$\Pr[\mathsf{win} \mid M = m_0] = p_0 \cdot 1 + (1 - p_0) \cdot \tfrac12 = \tfrac12 + \tfrac12 p_0.$$
-    <p><b>Case $M = m_1$.</b> If $C = \tilde c$, $\mathcal{A}$ answers $0$ and is wrong. Otherwise it guesses:</p>
-    $$\Pr[\mathsf{win} \mid M = m_1] = p_1 \cdot 0 + (1 - p_1) \cdot \tfrac12 = \tfrac12 - \tfrac12 p_1.$$
-    <p>Together:</p>
-    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] = \tfrac12\Big(\tfrac12 + \tfrac12 p_0\Big) + \tfrac12\Big(\tfrac12 - \tfrac12 p_1\Big) = \tfrac12 + \tfrac14\,(p_0 - p_1) \overset{(1)}{\gt} \tfrac12.$$
-    <p>So Definition 2.4 does not hold. By contraposition, Definition 2.4 implies Definition 2.1. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">Choosing the order in (1) makes the advantage positive. With the opposite order, the same adversary would win with probability below $\frac12$, which also violates Definition 2.4, as in the script.</p>
+    <h2>Success probability</h2>
+    <ul>
+      <li>If $m_0$ was encrypted: $\mathcal{A}$ is right when $c = \tilde c$, and with probability $\frac12$ otherwise, so it wins with probability $p_0 + \frac12(1 - p_0) = \frac12 + \frac12 p_0$.</li>
+      <li>If $m_1$ was encrypted: $\mathcal{A}$ is wrong when $c = \tilde c$, and right with probability $\frac12$ otherwise, so it wins with probability $\frac12(1 - p_1) = \frac12 - \frac12 p_1$.</li>
+    </ul>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi} = 1] = \tfrac12\big(\tfrac12 + \tfrac12 p_0\big) + \tfrac12\big(\tfrac12 - \tfrac12 p_1\big) = \tfrac12 + \tfrac14 (p_0 - p_1) \overset{(1)}{\gt} \tfrac12.$$
+    <p>So Definition 2.4 fails too. By contraposition, Definition 2.4 implies Definition 2.1. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

@@ -42,8 +42,6 @@
     </ul>
     $$\Pr[\mathsf{PubK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] \ \ge\ \tfrac12 \cdot \frac1N + \tfrac12 \cdot 1 = \tfrac12 + \frac{1}{4n^c}.$$
     <p>This advantage occurs for infinitely many $n$, so it is non-negligible. The same attack works if only encryptions of $0$ have the short-length bound; if only encryptions of $1$ are short, swap the bit labels. Thus a secure scheme’s fixed single-bit ciphertext length must be $\omega(\log n)$. <span class="qed">$\blacksquare$</span></p>
-<p><b>Variable-length qualification.</b> Security does not forbid a very short ciphertext on a negligible fraction of random tapes. If $\delta$ of the probability mass of $\mathsf{Enc}_{pk}(0)$ lies on at most $N$ short strings, then $\sum_{c\text{ short}}p_c^2\ge\delta^2/N$. The attack’s advantage is at least $\delta^2/(2N)$. Therefore the probability of a logarithmic-length ciphertext must be negligible, rather than such ciphertexts being literally impossible.</p>
-    <p class="note">The attack needs no oracle at all; $pk$ is enough. This is the public-key analogue of <a href="30.html">Question 30</a>: with only polynomially many possible values, the attacker can "hit" the right one with noticeable probability. If decryption errors are allowed, the case $b = 1$ loses only a negligible amount.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

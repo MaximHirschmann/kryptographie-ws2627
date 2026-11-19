@@ -23,29 +23,15 @@
   </div>
 
   <div class="solution">
-    <h2>(a) XOR mangler: the whole cipher is affine</h2>
-    <p>One round is $L_i = R_{i-1}$, $R_i = L_{i-1} \oplus R_{i-1} \oplus k_i$. In matrix form over $\mathrm{GF}(2)$, with $I$ the $32 \times 32$ identity:</p>
-    $$\begin{pmatrix} L_i \\ R_i \end{pmatrix} = \underbrace{\begin{pmatrix} 0 & I \\ I & I \end{pmatrix}}_{A} \begin{pmatrix} L_{i-1} \\ R_{i-1} \end{pmatrix} \oplus \begin{pmatrix} 0 \\ k_i \end{pmatrix}.$$
-    <p>Composing 16 affine maps (and the fixed bit permutations $IP$, $IP^{-1}$ and the swap, which are linear) gives an affine map</p>
-    $$E_k(x) = M x \oplus K,$$
-    <p>where $M$ is a <b>public</b> invertible $64 \times 64$ matrix (it does not depend on the key) and $K \in \{0,1\}^{64}$ depends only on the sub-keys.</p>
-    <p><b>Attack with one known plaintext.</b></p>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>Given one pair $(x, y = E_k(x))$, compute $K = y \oplus Mx$.</td></tr>
-      <tr><td>2.</td><td>Decrypt any ciphertext $y'$ as $x' = M^{-1}(y' \oplus K)$, and encrypt anything as $Mx \oplus K$.</td></tr>
-    </table></div>
-    <p>We never learn the individual $k_i$ (many sub-key sequences give the same $K$), but we do not need them: $K$ is an equivalent key. Total cost: a few matrix–vector products. Without any known plaintext, $E_k(x) \oplus E_k(x') = M(x \oplus x')$ distinguishes the cipher from a random permutation with two queries.</p>
+    <h2>(a) XOR mangler: the cipher is affine</h2>
+    <p>Follow the rounds: $L_1 = R_0$, $R_1 = L_0 \oplus R_0 \oplus k_1$; $L_2 = L_0 \oplus R_0 \oplus k_1$, $R_2 = L_0 \oplus k_1 \oplus k_2$; and so on. Every round is XOR-linear in its input plus a key term, and $IP$, $IP^{-1}$ and the swap are bit permutations. So the whole cipher is</p>
+    $$E_k(x) = M x \oplus K$$
+    <p>for a <b>public</b> matrix $M$ (independent of the key) and a 64-bit value $K$ that depends only on the sub-keys.</p>
+    <p><b>Attack.</b> From one known pair $(x, y)$ compute $K = y \oplus Mx$. Now encrypt or decrypt anything: $x' = M^{-1}(y' \oplus K)$. (Even without a known pair, $E_k(x) \oplus E_k(x') = M(x \oplus x')$ distinguishes it from a random permutation.)</p>
 
-    <h2>(b) Same sub-key in every round: an involution</h2>
-    <p>By <a href="70.html">Question 70</a>, decryption is the same procedure with the sub-keys in reverse order. If all 16 sub-keys are the same $\hat k$, the reversed order is identical, so for <b>every</b> key</p>
-    $$E_{\hat k}^{-1} = E_{\hat k}, \qquad \text{i.e. } E_{\hat k}(E_{\hat k}(x)) = x.$$
-    <p>This is the weak-key property of <a href="71.html">Question 71</a>, now for all keys.</p>
-    <div class="algo"><table>
-      <tr><td>$D^{O}$:</td><td>pick any $x$, query $y = O(x)$, then query $O(y)$; output $1$ iff $O(y) = x$.</td></tr>
-    </table></div>
-    <p>Against the modified DES, $D$ outputs $1$ with probability $1$. Against a random permutation $\pi$ of $\{0,1\}^{64}$: if $y \ne x$, the value $\pi(y)$ is uniform over the $2^{64} - 1$ values other than $\pi(x) = y$, so it equals $x$ with probability $\frac{1}{2^{64}-1}$; and $y = x$ happens with probability $2^{-64}$. The advantage is $\approx 1$ with two queries and constant time.</p>
-
-    <div class="box result"><span class="label">Result.</span> (a) With a linear mangler the cipher is affine, $E(x) = Mx \oplus K$: one known pair gives an equivalent key. (b) With identical sub-keys every key is a weak key: $E(E(x)) = x$ distinguishes with two queries. The non-linear S-boxes and the changing sub-keys are both essential. <span class="qed">$\blacksquare$</span></div>
+    <h2>(b) Same sub-key in every round: encryption equals decryption</h2>
+    <p>By <a href="70.html">Question 70</a>, decryption is DES with the sub-keys in reverse order. With identical sub-keys the order does not matter, so $E_k(E_k(x)) = x$ for every key.</p>
+    <p><b>Distinguisher:</b> query $y = O(x)$, then $O(y)$, and output $1$ iff $O(y) = x$. For the modified DES this always holds; for a random permutation only with probability about $2^{-64}$. Two queries suffice. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

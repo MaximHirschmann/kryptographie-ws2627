@@ -30,15 +30,9 @@
     <p>So Bob outputs $k$, the same key as Alice.</p>
 
     <h2>Security: completely insecure</h2>
-    <p>An eavesdropper sees the whole transcript $(s, u, w)$. XORing the three messages gives</p>
+    <p>An eavesdropper sees the transcript $(s, u, w)$ and computes</p>
     $$s \oplus u \oplus w = (k \oplus r) \oplus (k \oplus r \oplus t) \oplus (k \oplus t) = k.$$
-    <p>Every mask $r$ and $t$ appears exactly twice and cancels, and $k$ appears three times, so it remains.</p>
-
-    <h3>Attack in $\mathsf{KE}^{\mathsf{eav}}$</h3>
-    <p>As in the lecture's experiment (<a href="46.html">Question 46</a>), $\mathcal{A}$ gets the transcript $(s, u, w)$ and $k_b$, where $k_1 = k$ is the real key and $k_0$ is uniform. $\mathcal{A}$ outputs $b' = 1$ iff $k_b = s \oplus u \oplus w$.</p>
-    $$\Pr[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] = \tfrac12 \cdot 1 + \tfrac12 \cdot (1 - 2^{-n}) = 1 - 2^{-(n+1)}.$$
-    <p>This is far from $\frac12$, so the protocol is not secure. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The idea is the "double lock" (Shamir's three-pass protocol): Alice locks the box, Bob adds his lock, Alice removes hers, Bob removes his. This needs locks that commute but <i>cannot be removed by combining the transcripts</i>, such as exponentiation $k^{a}$, $k^{ab}$, $k^{b}$ modulo $p$. XOR is commutative too, but it is linear, so the transcripts can simply be XORed together.</p>
+    <p>So it learns the key itself. In $\mathsf{KE}^{\mathsf{eav}}$ it outputs $1$ iff the given key equals $s \oplus u \oplus w$, and wins with probability $1 - 2^{-(n+1)}$. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

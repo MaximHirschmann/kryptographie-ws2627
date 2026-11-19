@@ -19,37 +19,17 @@
   </div>
 
   <div class="solution">
-    <h2>Diffie–Hellman</h2>
-    <p>Public parameters $(\mathbb{G}, q, g)$. Alice sends $h_A = g^{a}$, Bob sends $h_B = g^{b}$, and both compute $k = g^{ab}$. The messages are <b>not authenticated</b>: nobody checks who sent $h_A$ or $h_B$.</p>
-
     <h2>The attack</h2>
-    <p>Eve sits on the channel and can intercept, drop and inject messages.</p>
+    <p>Eve runs two independent, honest Diffie–Hellman executions: one with Alice, playing Bob, and one with Bob, playing Alice.</p>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Alice sends $h_A = g^a$. Eve intercepts it, chooses $e_1 \leftarrow \mathbb{Z}_q$ and sends $g^{e_1}$ to Bob as if it came from Alice.</td></tr>
-      <tr><td>2.</td><td>Bob sends $h_B = g^b$. Eve intercepts it, chooses $e_2 \leftarrow \mathbb{Z}_q$ and sends $g^{e_2}$ to Alice as if it came from Bob.</td></tr>
-      <tr><td>3.</td><td>Alice computes $k_A = (g^{e_2})^a = g^{ae_2}$. Bob computes $k_B = (g^{e_1})^b = g^{be_1}$.</td></tr>
-      <tr><td>4.</td><td>Eve computes both: $k_A = h_A^{e_2}$ and $k_B = h_B^{e_1}$.</td></tr>
+      <tr><td>1.</td><td>Alice sends $g^a$. Eve keeps it and sends $g^{e_1}$ to Bob instead.</td></tr>
+      <tr><td>2.</td><td>Bob sends $g^b$. Eve keeps it and sends $g^{e_2}$ to Alice instead.</td></tr>
+      <tr><td>3.</td><td>Alice outputs $k_A = g^{a e_2}$ and Bob outputs $k_B = g^{b e_1}$. Eve computes both: $k_A = (g^a)^{e_2}$, $k_B = (g^b)^{e_1}$.</td></tr>
     </table></div>
-    <p><b>Relaying.</b> When Alice sends $\mathsf{Enc}_{k_A}(m)$, Eve decrypts it with $k_A$, reads or modifies $m$, re-encrypts it with $k_B$ and forwards it to Bob, and the same in the other direction.</p>
-    <p><b>Why nobody notices.</b> Each side sees a correct protocol run: it receives a valid group element and derives a key that works for all later messages. Alice and Bob have no way to compare their keys, and the group elements they receive look just like honest ones.</p>
+    <p>Eve then decrypts every message with one key and re-encrypts it with the other. Each party ran a correct protocol execution with someone, so neither can detect anything: the DH messages are not authenticated.</p>
 
-    <h2>Detection with secret questions</h2>
-    <p><b>It does not help.</b> Eve does not need to know the answers. She acts as a transparent relay:</p>
-    <ul>
-      <li>Alice sends $\mathsf{Enc}_{k_A}(\text{"What's our dog's name?"})$. Eve decrypts with $k_A$, re-encrypts with $k_B$ and forwards to Bob.</li>
-      <li>Bob answers $\mathsf{Enc}_{k_B}(\text{"Rex"})$. Eve decrypts, re-encrypts with $k_A$ and forwards to Alice.</li>
-    </ul>
-    <p>Alice gets the correct answer, because the <i>real</i> Bob answered it. The check confirms that Bob is at the other end of the conversation, but not that the <b>key</b> is shared with Bob, and the key is what the attack is about. Worse, Eve now knows the secret answer too.</p>
-
-    <h2>What does help</h2>
-    <p>The check must be bound to the key exchange itself:</p>
-    <ul>
-      <li>Authenticate the exchanged values, e.g. sign $g^a$ and $g^b$ (with certified public keys), or MAC them with a pre-shared key. This is what TLS does.</li>
-      <li>Compare a fingerprint of the key or transcript, e.g. $H(g^a, g^b, k)$, over an independent authenticated channel (reading out short codes, as in Signal's "safety numbers").</li>
-    </ul>
-
-    <div class="box result"><span class="label">Result.</span> Unauthenticated DH is completely broken by a man in the middle, who runs two separate DH exchanges and relays all traffic. Secret questions don't detect this, because Eve simply forwards them. Only authentication that is bound to the exchanged values or the key prevents the attack. <span class="qed">$\blacksquare$</span></div>
-    <p class="note">This does not contradict the security proof of DH. The definition $\mathsf{KE}^{\mathsf{eav}}$ (<a href="46.html">Question 46</a>) only considers a passive eavesdropper.</p>
+    <h2>Secret questions do not help</h2>
+    <p>Eve simply relays them: she decrypts Alice's question with $k_A$, re-encrypts it with $k_B$, and does the same with Bob's answer. The real Bob answers, so Alice gets the right answer, and Eve learns it too. Only authentication bound to the exchanged values (e.g. signatures on $g^a, g^b$ under certified keys) prevents the attack. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

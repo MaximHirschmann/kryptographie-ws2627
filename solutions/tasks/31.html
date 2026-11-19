@@ -20,26 +20,13 @@
   <div class="solution">
     <div class="box result"><span class="label">Answer.</span> <b>Yes.</b> Any collision for $\bar H$ contains a collision for $H$.</div>
 
-    <h2>Key observation</h2>
-    <p>Let $x \ne x'$ with $\bar H^s(x) = \bar H^s(x')$, i.e. $H^s(H^s(x)) = H^s(H^s(x'))$. There are two cases:</p>
+    <h2>Proof</h2>
+    <p>Let $x \ne x'$ with $H^s(H^s(x)) = H^s(H^s(x'))$. Two cases:</p>
     <ol>
-      <li><b>$H^s(x) \ne H^s(x')$.</b> Then $y := H^s(x)$ and $y' := H^s(x')$ are different inputs with $H^s(y) = H^s(y')$, a collision for $H$.</li>
-      <li><b>$H^s(x) = H^s(x')$.</b> Then $(x, x')$ itself is a collision for $H$, because $x \ne x'$.</li>
+      <li>$H^s(x) = H^s(x')$: then $(x, x')$ is a collision for $H$.</li>
+      <li>$H^s(x) \ne H^s(x')$: then $y := H^s(x)$ and $y' := H^s(x')$ are different inputs with $H^s(y) = H^s(y')$, a collision for $H$.</li>
     </ol>
-
-    <h2>Reduction</h2>
-    <p>Let $\bar{\mathcal{A}}$ be a PPT adversary in $\mathsf{Hash\text{-}coll}_{\bar{\mathcal{A}},\bar H}(n)$. Build $\mathcal{A}$ against $H$:</p>
-    <div class="algo"><table>
-      <tr><td>$\mathcal{A}(s)$</td><td>
-        <span class="line">run $\bar{\mathcal{A}}(s)$ and receive $x, x'$</span>
-        <span class="line">if $H^s(x) \ne H^s(x')$: output $(H^s(x), H^s(x'))$</span>
-        <span class="line">else: output $(x, x')$</span>
-      </td></tr>
-    </table></div>
-    <p>$\mathcal{A}$ is PPT, gets the same key $s \leftarrow \mathsf{Gen}(1^n)$, and by the case distinction it outputs a collision whenever $\bar{\mathcal{A}}$ does:</p>
-    $$\Pr[\mathsf{Hash\text{-}coll}_{\mathcal{A},H}(n) = 1] \ \ge\ \Pr[\mathsf{Hash\text{-}coll}_{\bar{\mathcal{A}},\bar H}(n) = 1].$$
-    <p>The left side is negligible, so the right side is too. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">For the composition to be defined, the output of $H^s$ must be a valid input for $H^s$. This holds for $H^s : \{0,1\}^* \to \{0,1\}^{\ell(n)}$.</p>
+    <p>So an adversary $\mathcal{A}$ against $H$ runs a collision finder $\bar{\mathcal{A}}$ for $\bar H$ on the same key $s$, and outputs $(x, x')$ or $(H^s(x), H^s(x'))$ according to the case. It succeeds whenever $\bar{\mathcal{A}}$ does, so $\bar{\mathcal{A}}$'s success probability is negligible. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

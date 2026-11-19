@@ -20,31 +20,20 @@
   </div>
 
   <div class="solution">
-    <h2>Difference between the two definitions</h2>
-    <p>In the <b>multiple-message eavesdropper</b> game, the adversary fixes two message vectors <i>before</i> seeing any ciphertext. In the <b>CPA</b> game, it can choose messages <i>adaptively</i>, after it has seen ciphertexts. So we build in a trapdoor that can only be triggered by a message that depends on a previous ciphertext.</p>
+    <p><b>Idea.</b> In the multiple-message eavesdropper game, the adversary fixes all messages <i>before</i> seeing any ciphertext; in the CPA game it can choose them adaptively. So build in a trapdoor that only a message derived from an earlier ciphertext can trigger.</p>
 
     <h2>Construction</h2>
-    <p>Let $F$ be a PRF with $F_k : \{0,1\}^n \to \{0,1\}^n$. Messages are $m = m_1 \| m_2 \in \{0,1\}^{2n}$.</p>
+    <p>Let $F$ be a PRF. The key is a pair $(k, s)$ of uniform $n$-bit strings; messages are in $\{0,1\}^n$.</p>
     <div class="algo"><table>
-      <tr><td>Gen</td><td>$k \leftarrow \{0,1\}^n$</td></tr>
-      <tr><td>Enc</td><td>
-        <span class="line">if $F_k(m_1) = m_2$: output $\langle 1, k, m \rangle$ &nbsp;<span style="color:var(--muted)">(trapdoor: leak the key)</span></span>
-        <span class="line">else: $r \leftarrow \{0,1\}^n$; output $\langle 0, r, m_1 \oplus F_k(r), m_2 \oplus F_k(r+1) \rangle$</span>
-      </td></tr>
-      <tr><td>Dec</td><td>for $\langle 0,r,s_1,s_2\rangle$, output $(s_1\oplus F_k(r))\|(s_2\oplus F_k(r+1))$; for $\langle 1,\hat k,m\rangle$, output $m$; reject malformed ciphertexts</td></tr>
+      <tr><td>Enc</td><td>if $m = s$: output $\langle 0, k \rangle$ (trapdoor: leak the key); otherwise choose $r \leftarrow \{0,1\}^n$ and output $\langle 1, s, r, F_k(r) \oplus m \rangle$</td></tr>
+      <tr><td>Dec</td><td>for $\langle 0, \cdot \rangle$ output $s$; for $\langle 1, s, r, c \rangle$ output $F_k(r) \oplus c$</td></tr>
     </table></div>
-    <p class="note">Normally this is randomised counter mode, which is CPA-secure (<a href="20.html">Question 20</a>, scheme 4). The trapdoor fires only on a message of the form $x \,\|\, F_k(x)$.</p>
 
     <h2>Secure for multiple eavesdropped messages</h2>
-    <p>The adversary chooses all messages $m^{(1)}, m^{(2)}, \dots$ without any information about $k$. A message triggers the trapdoor only if $m_2 = F_k(m_1)$, which means correctly guessing a PRF value. For each message this happens with probability $2^{-n} + \mathsf{negl}(n)$. Over polynomially many messages the probability is still negligible (union bound). Without the trapdoor, the ciphertexts are counter-mode encryptions, which are secure for multiple messages. So the scheme has indistinguishable multiple encryptions.</p>
+    <p>The adversary fixes its messages without any information about $s$, so one of them equals $s$ only with negligible probability. Otherwise every ciphertext is $\langle 1, s, r, F_k(r) \oplus m \rangle$, where $s$ is independent of the messages, and the rest is the CPA-secure scheme $\langle r, F_k(r) \oplus m \rangle$. So the multiple-message advantage is negligible.</p>
 
     <h2>Not CPA-secure</h2>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>Query the oracle on $0^{2n}$ and receive $\langle 0, r, F_k(r), F_k(r+1) \rangle$. This reveals the pair $(r, F_k(r))$. If the answer already has header $1$, it reveals $k$ directly and the next query is unnecessary.</td></tr>
-      <tr><td>2.</td><td>Query the oracle on $m = r \,\|\, F_k(r)$. The trapdoor fires, and the answer is $\langle 1, k, m \rangle$.</td></tr>
-      <tr><td>3.</td><td>Choose any $m_0 \ne m_1$, decrypt the challenge with $k$, and output the correct $b$.</td></tr>
-    </table></div>
-    <p>Both encryption branches decrypt to their input message. The CPA attack wins with probability $1$, including when the first query already reveals the key. In the usual case it chooses the second query from the first ciphertext, which is exactly what the eavesdropper game does not allow. <span class="qed">$\blacksquare$</span></p>
+    <p>Query the oracle on $0^n$: the answer contains $s$ (unless $0^n = s$, which directly leaks $k$). Query the oracle on $s$: the answer contains $k$. Now decrypt the challenge and output the correct $b$. This wins with probability $1$, because the second query depends on the first answer. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

@@ -18,19 +18,15 @@
   </div>
 
   <div class="solution">
-    <div class="box result"><span class="label">Answer.</span> <b>No.</b> The two halves are authenticated <i>independently</i>, so halves from different messages can be combined ("mix and match").</div>
+    <div class="box result"><span class="label">Answer.</span> <b>No.</b> The two halves are authenticated independently, so halves of different tags can be combined.</div>
 
     <h2>Attack</h2>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Query $m_0 \| m_1$ and receive $t = F_k(0 \| m_0) \,\|\, F_k(1 \| m_1) =: t_0 \| t_1$.</td></tr>
+      <tr><td>1.</td><td>Query $m_0 \| m_1$ and receive $t_0 \| t_1 = F_k(0 \| m_0) \,\|\, F_k(1 \| m_1)$.</td></tr>
       <tr><td>2.</td><td>Query $m'_0 \| m'_1$ with $m'_0 \ne m_0$ and $m'_1 \ne m_1$, and receive $t'_0 \| t'_1$.</td></tr>
-      <tr><td>3.</td><td>Output the forgery $(m_0 \| m'_1,\ t_0 \| t'_1)$.</td></tr>
+      <tr><td>3.</td><td>Output the message $m_0 \| m'_1$ with tag $t_0 \| t'_1$.</td></tr>
     </table></div>
-
-    <h2>Why it works</h2>
-    <p>$\mathsf{Mac}_k(m_0 \| m'_1) = F_k(0 \| m_0) \,\|\, F_k(1 \| m'_1) = t_0 \| t'_1$, so the tag is valid. The message $m_0 \| m'_1$ differs from both queried messages: from the first in the second half, and from the second in the first half. So it is a new message, and the forgery succeeds with probability $1$:</p>
-    $$\Pr[\mathsf{Mac\text{-}forge}_{\mathcal{A},\Pi}(n) = 1] = 1. \qquad \blacksquare$$
-    <p class="note">The prefixes $0$/$1$ only prevent swapping the two halves of one message. They do not bind the halves together. A secure fix is a PRF whose domain actually contains the entire $2n-2$-bit message, or fixed-length CBC-MAC with an unambiguous fixed-length block encoding. The given $F_k$ accepts only $n$ bits, so $F_k(m_0\|m_1)$ is not a valid call to that primitive in general.</p>
+    <p>$\mathsf{Mac}_k(m_0 \| m'_1) = F_k(0 \| m_0) \,\|\, F_k(1 \| m'_1) = t_0 \| t'_1$, so the tag is valid, and $m_0 \| m'_1$ differs from both queried messages. The forgery succeeds with probability $1$. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

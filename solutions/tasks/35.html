@@ -18,24 +18,14 @@
   </div>
 
   <div class="solution">
-    <h2>Attack 1: mix and match</h2>
+    <h2>Attack: mix and match</h2>
     <p>As in <a href="34.html">Question 34</a>, each half of the tag depends on only one half of the message.</p>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Query $x \| y$ and receive $\langle F_k(x), F_k(F_k(y)) \rangle$.</td></tr>
-      <tr><td>2.</td><td>Query $x' \| y'$ with $x' \ne x$, $y' \ne y$, and receive $\langle F_k(x'), F_k(F_k(y')) \rangle$.</td></tr>
-      <tr><td>3.</td><td>Output $\big(x \| y',\ \langle F_k(x), F_k(F_k(y')) \rangle\big)$.</td></tr>
+      <tr><td>1.</td><td>Query $x \| y$ and receive $t = \langle F_k(x), F_k(F_k(y)) \rangle$.</td></tr>
+      <tr><td>2.</td><td>Query $x' \| y'$ with $x' \ne x$, $y' \ne y$, and receive $t' = \langle F_k(x'), F_k(F_k(y')) \rangle$.</td></tr>
+      <tr><td>3.</td><td>Output the message $x \| y'$ with the tag $\langle F_k(x), F_k(F_k(y')) \rangle$: the first half of $t$ and the second half of $t'$.</td></tr>
     </table></div>
-    <p>The tag is valid and $x \| y'$ was never queried, so the forgery succeeds with probability $1$.</p>
-
-    <h2>Attack 2: using the inner value</h2>
-    <p>The first half of a tag gives PRF values that can be reused inside the nested second half:</p>
-    <div class="algo"><table>
-      <tr><td>1.</td><td>Query $x \| y$ and receive $a := F_k(x)$ as the first tag half.</td></tr>
-      <tr><td>2.</td><td>Query $a \| y$ and receive $F_k(a) = F_k(F_k(x))$ as the first tag half.</td></tr>
-      <tr><td>3.</td><td>Output $\big(x \| x,\ \langle a, F_k(a) \rangle\big)$, with $y \ne x$ so that $x \| x$ is new.</td></tr>
-    </table></div>
-    <p>Indeed $\mathsf{Mac}_k(x \| x) = \langle F_k(x), F_k(F_k(x)) \rangle = \langle a, F_k(a) \rangle$. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">Both attacks work with probability $1$ for <i>every</i> $F$, so the PRF assumption does not help. The construction does not bind the two halves of the message together.</p>
+    <p>This is exactly $\mathsf{Mac}_k(x \| y')$, and $x \| y'$ was never queried. So the forgery succeeds with probability $1$, and the MAC is insecure. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

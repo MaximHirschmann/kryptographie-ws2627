@@ -18,33 +18,19 @@
   </div>
 
   <div class="solution">
-    <h2>Attack model</h2>
-    <p>In a <b>chosen-plaintext attack</b>, the attacker chooses messages $m$ and receives $c = \mathsf{Enc}_k(m)$. This is at least as strong as a known-plaintext attack (<a href="03.html">Question 3</a>), because the attacker can pick a plaintext that reveals the key as fast as possible. Letters are numbers, $\texttt{a} = 0, \texttt{b} = 1, \dots, \texttt{z} = 25$.</p>
+    <p>In a chosen-plaintext attack the attacker chooses $m$ and receives $c = \mathsf{Enc}_k(m)$. Letters are numbers, $\texttt{a} = 0, \dots, \texttt{z} = 25$; for any known pair, $k = c - m$.</p>
 
     <h2>Shift cipher</h2>
-    <p>Ask for the encryption of $m = \texttt{a}$. Then $c = 0 + k$, so the ciphertext <i>is</i> the key:</p>
-    $$k = c_0.$$
-    <div class="box result"><span class="label">Needed:</span> 1 letter.</div>
+    <p>Ask for the encryption of one letter, e.g. $\texttt{a}$: the ciphertext is the key. <b>Needed: 1 letter.</b></p>
 
     <h2>Mono-alphabetic substitution cipher</h2>
-    <p>Ask for the encryption of the alphabet $m = \texttt{abc}\cdots\texttt{y}$. Then $c_x = \pi_k(x)$, so the ciphertext is the permutation written out:</p>
-    $$\pi_k = (c_0, c_1, \dots, c_{24}, \text{the one letter still missing}).$$
-    <div class="box result"><span class="label">Needed:</span> 25 letters (or all 26, to read the last value directly).</div>
+    <p>Ask for the encryption of $\texttt{abc}\cdots\texttt{y}$: the ciphertext lists $\pi(\texttt{a}), \dots, \pi(\texttt{y})$, and $\pi(\texttt{z})$ is the one letter still missing. <b>Needed: 25 letters.</b></p>
 
     <h2>Vigenère cipher</h2>
-    <p>Ask for the encryption of $m = \texttt{aa}\cdots\texttt{a}$. Then $c_x = 0 + k_{x \bmod t}$, so the ciphertext is the key repeated:</p>
-    $$c = k_0 k_1 \cdots k_{t-1} k_0 k_1 \cdots$$
-    <div class="box result"><span class="label">Needed:</span> $t$ letters if the key length $t$ is known. If $t$ is unknown, ask for a longer string of $\texttt{a}$s. The observed repetitions suggest the effective period, which may be a proper divisor of the declared key length $t$. About $2t$ letters can reveal a candidate, but no fixed finite sample certifies an unbounded unknown period.</div>
+    <p>Ask for the encryption of $\texttt{aa}\cdots\texttt{a}$: the ciphertext is the key repeated, $k_0 \cdots k_{t-1} k_0 \cdots$. <b>Needed: $t$ letters</b> if the period $t$ is known; if only an upper bound $t_{\max}$ is known, a plaintext of length $O(t_{\max})$ reveals the period as well.</p>
 
     <h2>Comparison with the known-plaintext attack</h2>
-    <div class="table-scroll"><table class="data">
-      <tr><th>Cipher</th><th>Chosen plaintext</th><th>Known plaintext (Q3)</th></tr>
-      <tr><td>Shift</td><td>1 letter: $\texttt{a}$</td><td>1 letter</td></tr>
-      <tr><td>Substitution</td><td>25 letters: $\texttt{abc}\cdots\texttt{y}$</td><td>any text containing 25 different letters; can be <b>much</b> longer</td></tr>
-      <tr><td>Vigenère</td><td>$t$ letters: $\texttt{a}^t$ if $t$ is known</td><td>$t$ letters if $t$ is known</td></tr>
-    </table></div>
-    <p>For the shift and Vigenère ciphers, any letter reveals one key letter, so choosing the plaintext saves nothing: both attacks need the same amount of text. The difference shows up for the <b>substitution cipher</b>. With a known plaintext the attacker has to wait until rare letters such as <i>q</i>, <i>x</i> or <i>z</i> appear. With a chosen plaintext they ask for each letter exactly once, so 25 letters always suffice.</p>
-    <p class="note">Choosing $\texttt{a} = 0$ just makes the ciphertext equal to the key. Any other known plaintext would also work, because $k = c - m$.</p>
+    <p>For the shift and Vigenère ciphers every known letter reveals one key letter, so both attacks need the same amount of text. For the <b>substitution cipher</b>, a known plaintext reveals the key only once it contains 25 different letters, which may take a long text (rare letters such as <i>q</i>, <i>x</i>, <i>z</i>). A chosen plaintext needs exactly 25 letters.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

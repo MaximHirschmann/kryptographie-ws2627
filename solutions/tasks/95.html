@@ -20,28 +20,21 @@
 
   <div class="solution">
     <h2>Part 1: secure in the random oracle model</h2>
-    <p>Let $\mathcal{A}$ make $q_H$ queries to $H$ and $q_M$ queries to $\mathsf{Mac}_k$, and output $(m^*, t^*)$ with $m^*$ never MAC-queried. Since $|k| = n$ is fixed, the string $k \| m$ determines $k$ and $m$ uniquely.</p>
-    <p>Let $\mathsf{KeyQuery}$ be the event that $\mathcal{A}$ queries $H$ on some string whose first $n$ bits are $k$.</p>
-    <p><b>$\Pr[\mathsf{KeyQuery}]$ is small.</b> Couple the real game to a simulation with independent lazy-sampled hash answers and independent uniform MAC tags (cached for repeated messages). Before the first query with prefix $k$, this simulation and the real game agree. The simulated transcript is independent of $k$, so each of its at most $q_H$ candidate prefixes hits the uniform key with probability $2^{-n}$. The union bound gives</p>
-    $$\Pr[\mathsf{KeyQuery}] \le q_H \cdot 2^{-n}.$$
-    <p><b>Without $\mathsf{KeyQuery}$, forging means guessing.</b> The tag $t^*$ is valid iff $t^* = H(k \| m^*)$. This point was never queried: not as a MAC query ($m^*$ is new), and not as an $H$-query (that would be $\mathsf{KeyQuery}$). So $H(k \| m^*)$ is uniform and independent of $t^*$:</p>
-    $$\Pr[\mathsf{Mac\text{-}forge} = 1] \le \Pr[\mathsf{KeyQuery}] + 2^{-n} \le \frac{q_H + 1}{2^n},$$
-    <p>which is negligible. <span class="qed">$\blacksquare$</span></p>
+    <p>Let $\mathcal{A}$ make $q$ queries to $H$ and output $(m^*, t^*)$ with $m^*$ never MAC-queried. Let $\mathsf{KeyQuery}$ be the event that $\mathcal{A}$ queries $H$ on a string starting with $k$.</p>
+    <ul>
+      <li>Until $\mathsf{KeyQuery}$ happens, $\mathcal{A}$'s view (random oracle answers and MAC tags, which are fresh random values for new messages) is independent of $k$. So each of its $q$ queries starts with $k$ with probability $2^{-n}$, and $\Pr[\mathsf{KeyQuery}] \le q \cdot 2^{-n}$.</li>
+      <li>Without $\mathsf{KeyQuery}$, the point $k \| m^*$ was never queried, so $H(k \| m^*)$ is uniform and $t^*$ is correct with probability $2^{-n}$.</li>
+    </ul>
+    $$\Pr[\mathsf{Mac\text{-}forge} = 1] \le \frac{q + 1}{2^n}, \quad\text{which is negligible.} \qquad \blacksquare$$
 
-    <h2>Part 2: insecure with Merkle–Damgård (length extension)</h2>
-    <p>Merkle–Damgård (as in <a href="69.html">Question 69</a>): pad $x$ with zeros to blocks $x_1, \dots, x_B$, append $x_{B+1} = |x|$, chain $z_i = h^s(z_{i-1} \| x_i)$ from $z_0 = 0^n$, and output $z_{B+1}$. The output <b>is</b> the internal chain value, so anyone holding $H(x)$ can continue the chain without knowing $x$.</p>
+    <h2>Part 2: insecure with Merkle–Damgård</h2>
+    <p>Merkle–Damgård outputs its internal chain value, so anyone holding $H(x)$ can keep hashing (length extension). Write $\langle i \rangle$ for the $n$-bit encoding of $i$ and $z_0 = IV$.</p>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Ask for the tag of some $m$: $t = H(k \| m) = z_{B+1}$. The length $L = n + |m|$ is known.</td></tr>
-      <tr><td>2.</td><td>Let $\mathit{pad}$ be the zero-padding of $k \| m$. Choose any block $w$ and set
-        $$m^* := m \,\|\, \mathit{pad} \,\|\, \langle L \rangle \,\|\, w.$$
-        Then $k \| m^*$ consists of the blocks $x_1, \dots, x_B, \langle L \rangle, w$, followed by its own length $L^* = L + |\mathit{pad}| + 2n$.</td></tr>
-      <tr><td>3.</td><td>The chain of $k \| m^*$ passes through $z_{B+1} = t$ after the first $B+1$ blocks, so its output is
-        $$t^* = h^s\big(h^s(t \| w) \,\|\, \langle L^* \rangle\big),$$
-        which the adversary can compute. Output $(m^*, t^*)$.</td></tr>
+      <tr><td>1.</td><td>Ask for the tag of a one-block message $m \in \{0,1\}^n$. Since $k \| m$ has two blocks and length $2n$: $t = h^s\big(h^s(h^s(IV \| k) \| m) \,\|\, \langle 2n \rangle\big)$.</td></tr>
+      <tr><td>2.</td><td>Output the message $m^* := m \| \langle 2n \rangle$ with the tag $t^* := h^s(t \| \langle 3n \rangle)$.</td></tr>
     </table></div>
-    <p>$m^* \ne m$ (it is longer), and the tag is valid with probability $1$. <span class="qed">$\blacksquare$</span></p>
-
-    <div class="box result"><span class="label">Result.</span> With a random oracle, $H(k \| m)$ is a fresh random value for each $m$ unless the adversary guesses $k$, so the MAC is secure. A Merkle–Damgård hash outputs its internal state, so $H(k \| m)$ can be extended to $H(k \| m \| \mathit{pad} \| L \| w)$ without the key. Here the random oracle model gives a wrong security verdict, which is why HMAC uses two nested hash calls. <span class="qed">$\blacksquare$</span></div>
+    <p>$k \| m^*$ has the three blocks $k, m, \langle 2n \rangle$ and length $3n$, so its hash is $h^s\big(h^s(h^s(h^s(IV \| k) \| m) \| \langle 2n \rangle) \,\|\, \langle 3n \rangle\big) = h^s(t \| \langle 3n \rangle) = t^*$. The forgery is valid with probability $1$, and $m^* \ne m$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">Here the random oracle model gives the wrong verdict for concrete hash functions, which is why HMAC uses two nested hash calls.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

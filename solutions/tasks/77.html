@@ -19,17 +19,8 @@
   </div>
 
   <div class="solution">
-    <p>The last two digits are $[3^{1000} \bmod 100]$.</p>
-
-    <h2>Method 1: Euler's theorem</h2>
-    <p>$100 = 2^2 \cdot 5^2$, so by <a href="76.html">Question 76</a></p>
-    $$\phi(100) = 2 \cdot 1 \cdot 5 \cdot 4 = 40.$$
-    <p>$\gcd(3, 100) = 1$, so $3^{40} \equiv 1 \pmod{100}$. Since $1000 = 25 \cdot 40$:</p>
-    $$3^{1000} = \left(3^{40}\right)^{25} \equiv 1^{25} = 1 \pmod{100}.$$
-
-    <h2>Method 2: check by repeated squaring</h2>
-    $$3^5 = 243 \equiv 43, \qquad 3^{10} \equiv 43^2 = 1849 \equiv 49, \qquad 3^{20} \equiv 49^2 = 2401 \equiv 1 \pmod{100}.$$
-    <p>So already $3^{20} \equiv 1$ (the order of $3$ modulo $100$ is $20$, a divisor of $40$), and $3^{1000} = (3^{20})^{50} \equiv 1$.</p>
+    <p>The last two digits are $[3^{1000} \bmod 100]$. Since $\gcd(3, 100) = 1$ and $\phi(100) = \phi(4)\phi(25) = 2 \cdot 20 = 40$ (<a href="76.html">Question 76</a>), Euler's theorem lets us reduce the exponent modulo $40$:</p>
+    $$3^{1000} \equiv 3^{[1000 \bmod 40]} = 3^0 = 1 \pmod{100}.$$
 
     <div class="box result"><span class="label">Result.</span> $3^{1000} \equiv 1 \pmod{100}$: the last two digits are <b>01</b>. <span class="qed">$\blacksquare$</span></div>
   </div>

@@ -18,23 +18,16 @@
   </div>
 
   <div class="solution">
-    <div class="box result"><span class="label">Answer.</span> The construction is <b>completely insecure</b>. It collapses to a single key-mixing step followed by a public, invertible function, so one known plaintext/ciphertext pair reveals the key.</div>
+    <div class="box result"><span class="label">Answer.</span> The construction is equivalent to a <b>single round</b> of an SPN, so it is completely insecure.</div>
 
-    <h2>Collapsing the three phases</h2>
     <ul>
-      <li><b>$r$ key-mixing rounds:</b> $x \mapsto x \oplus k_1 \oplus k_2 \oplus \cdots \oplus k_r$. This is the same as <b>one</b> XOR with $K := k_1 \oplus \cdots \oplus k_r$.</li>
-      <li><b>$r$ substitution rounds:</b> the S-boxes are fixed and public, and they do not use the key. Their composition $S := S^{(r)} \circ \cdots \circ S^{(1)}$ is one fixed, public, invertible function.</li>
-      <li><b>$r$ permutation rounds:</b> likewise one fixed public bit permutation $P := P^{(r)} \circ \cdots \circ P^{(1)}$.</li>
+      <li>$r$ rounds of key mixing are one XOR with $K := k_1 \oplus \cdots \oplus k_r$.</li>
+      <li>$r$ rounds of substitution are one fixed, public, invertible function $S$ (the S-boxes do not use the key).</li>
+      <li>$r$ permutations are one fixed public permutation $P$.</li>
     </ul>
     $$y = P\big(S(x \oplus K)\big).$$
-
-    <h2>Attack</h2>
-    <p>From one known pair $(x, y)$:</p>
-    $$K = x \oplus S^{-1}\big(P^{-1}(y)\big).$$
-    <p>$S^{-1}$ and $P^{-1}$ are public and efficient. Once $K$ is known, every ciphertext can be decrypted, because $K$ is the only key material that matters. The original round keys $k_i$ do not even have to be found. Without a known pair, the attacker can still compute $S^{-1}(P^{-1}(y)) = x \oplus K$ for each ciphertext. That makes the cipher a one-time pad <b>with a reused pad</b>, which is broken by any known structure of the plaintexts.</p>
-
-    <h2>Why ordinary SPNs are secure</h2>
-    <p>The security of an SPN comes from <b>alternating</b> key mixing, substitution (confusion, non-linear) and permutation (diffusion) in every round. A key added after a non-linear S-box cannot be moved back to the beginning. Grouping the steps by type removes exactly this interplay: all the key mixing happens before any non-linearity, so all non-linear parts become public and can be undone.</p>
+    <p><b>Attack.</b> From one known pair $(x, y)$, compute $K = x \oplus S^{-1}(P^{-1}(y))$. $K$ is all the key material that matters, so the attacker can now decrypt everything. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">An SPN is secure only because key mixing, substitution and permutation <b>alternate</b>: a key added after a non-linear S-box cannot be moved back to the start.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

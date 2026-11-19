@@ -29,27 +29,19 @@
     $$\mathsf{Vrfy}_{(N,e)}(m, \sigma) = 1 \iff \sigma^e \equiv \mathsf{enc}(m) \pmod N.$$
 
     <h2>(b) No-message attack</h2>
-    <p>Against textbook RSA, the forger picks any $\sigma$ and outputs the message $m := \sigma^e \bmod N$. With an encoding, the forger needs $\sigma^e \bmod N$ to be a valid encoding $\mathsf{enc}(m)$ of some message. If the image of $\mathsf{enc}$ is a <b>sparse</b> set (e.g. it has a fixed structure such as many zero bits or redundancy), a random $\sigma^e$ lands in it with small probability, negligible only if the redundancy grows sufficiently with the security parameter. For example, if $\mathsf{enc}$ forces 100 fixed bits, the chance is about $2^{-100}$.</p>
+    <p>The attack picks $\sigma$ first and needs $[\sigma^e \bmod N]$ to be a valid encoding $\mathsf{enc}(m)$. If a uniform element of $\mathbb{Z}_N^*$ lies in the range of $\mathsf{enc}$ only with negligible probability (e.g. because $\mathsf{enc}$ forces many fixed bits), this fails. Both encodings in (c) and (d) have this property.</p>
 
-    <h2>Key observation for (c) and (d)</h2>
-    <p>In both cases $\mathsf{enc}$ is <b>multiplication by a constant</b> (as integers):</p>
+    <h2>(c) and (d): both encodings are multiplication by a constant</h2>
+    <p>Appending zeros multiplies by a power of two, and $m \| 0 \| m = m \cdot 2^{|m|+1} + m$. So, as integers,</p>
     $$\text{(c)}\ \ \mathsf{enc}(m) = m \cdot 2^{\ell/10}, \qquad \text{(d)}\ \ \mathsf{enc}(m) = m \cdot (2^{|m|+1} + 1),$$
-    <p>because appending zeros multiplies by a power of two, and $m \| 0 \| m = m \cdot 2^{|m|+1} + m$. Call the constant $C$, so $\mathsf{enc}(m) = C \cdot m$. Then for messages with $m_1 m_2 = m_3 m_4$ (as integers):</p>
-    $$\mathsf{enc}(m_1)\,\mathsf{enc}(m_2) = C^2 m_1 m_2 = C^2 m_3 m_4 = \mathsf{enc}(m_3)\,\mathsf{enc}(m_4),$$
-    <p>and since $x \mapsto x^d$ is multiplicative, the same relation holds for the signatures.</p>
-
-    <h2>(c) and (d): the forgery</h2>
-    <p>Use $2 \cdot 2 = 1 \cdot 4$:</p>
+    <p>i.e. $\mathsf{enc}(m) = C \cdot m$ for a constant $C$. RSA signatures are multiplicative, so this structure carries over. Use $2 \cdot 2 = 1 \cdot 4$:</p>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Ask for the signatures on $m = 1$ and $m = 2$ (written with the required number of bits; both are non-zero): $\sigma_1 = (C)^d$, $\sigma_2 = (2C)^d$.</td></tr>
-      <tr><td>2.</td><td>Output the message $4$ with $\sigma^* := \sigma_2^2 \cdot \sigma_1^{-1} \bmod N$.</td></tr>
+      <tr><td>1.</td><td>Ask for the signatures $\sigma_1 = C^d$ on the message $1$ and $\sigma_2 = (2C)^d$ on the message $2$.</td></tr>
+      <tr><td>2.</td><td>Output the message $4$ with $\sigma^* := \sigma_2^2 / \sigma_1 \bmod N$.</td></tr>
     </table></div>
-    <p>Check:</p>
-    $$(\sigma^*)^e = \frac{\left((2C)^d\right)^{2e}}{(C^d)^e} = \frac{(2C)^2}{C} = 4C = \mathsf{enc}(4) \pmod N.$$
-    <p>The message $4$ was never queried and $\mathsf{enc}(4)$ is a legal encoding (the integer $4$ easily fits into $|m|$ bits), so this is a valid forgery after two queries. ($\sigma_1$ is invertible modulo $N$ except with negligible probability; otherwise it reveals a factor of $N$.) <span class="qed">$\blacksquare$</span></p>
-    <p class="note">More generally, any messages with $m_1 m_2 = m_3 m_4$ work: three signatures give the fourth. Since the forger chooses the messages, it can always arrange this.</p>
-
-    <div class="box result"><span class="label">Result.</span> (a) Check $\sigma^e = \mathsf{enc}(m)$. (b) A sparse image of $\mathsf{enc}$ defeats "pick $\sigma$ first". (c, d) Both encodings are linear ($\mathsf{enc}(m) = Cm$), so RSA's multiplicativity carries over: $\sigma(4) = \sigma(2)^2/\sigma(1)$. Redundancy alone is not enough. The encoding must also destroy the algebraic structure, which a cryptographic hash in hashed RSA (heuristically) does. <span class="qed">$\blacksquare$</span></div>
+    $$(\sigma^*)^e = \frac{(2C)^2}{C} = 4C = \mathsf{enc}(4) \pmod N.$$
+    <p>The message $4$ was never queried, so this is a valid forgery. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">For a small exponent $e$ (so that $2^e$ fits into a message), one query suffices: ask for the signature $\sigma$ on $2^e$; then $\sigma / 2 = C^d$ is the signature on $1$.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

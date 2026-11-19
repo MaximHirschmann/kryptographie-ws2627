@@ -20,21 +20,17 @@
   <div class="solution">
     <div class="box result"><span class="label">Answer.</span> $[171^{4{,}800{,}000{,}047} \bmod 35] = 26$.</div>
 
-    <h2>Step 1: Reduce the base</h2>
-    $$171 = 4 \cdot 35 + 31 \quad\Longrightarrow\quad 171 \equiv 31 \equiv -4 \pmod{35}.$$
-    <p>$\gcd(31, 35) = 1$, so $31 \in \mathbb{Z}_{35}^*$ and Euler's theorem applies (07_number_theory, Theorem 1.26). Its Corollary 1.27 says exactly what we need: $a^x \bmod n = a^{x \bmod \varphi(n)} \bmod n$ for $(a, n) = 1$.</p>
+    <p>Use the Chinese remainder theorem: compute modulo $5$ and modulo $7$ separately, reducing each exponent with Fermat's little theorem.</p>
 
-    <h2>Step 2: Reduce the exponent</h2>
-    <p>$\varphi(35) = \varphi(5)\varphi(7) = 4 \cdot 6 = 24$, so $a^{24} \equiv 1 \pmod{35}$ for $a \in \mathbb{Z}_{35}^*$, and the exponent can be reduced modulo $24$:</p>
-    $$4{,}800{,}000{,}047 = 4{,}800{,}000{,}000 + 47, \qquad 4{,}800{,}000{,}000 = 48 \cdot 10^8 = 24 \cdot 2 \cdot 10^8 \equiv 0, \qquad 47 \equiv 23 \pmod{24}.$$
-    $$\Longrightarrow\quad 171^{4{,}800{,}000{,}047} \equiv 31^{23} \pmod{35}.$$
+    <h2>Modulo 5</h2>
+    $$171 \equiv 1 \pmod 5 \quad\Longrightarrow\quad 171^{4{,}800{,}000{,}047} \equiv 1 \pmod 5.$$
 
-    <h2>Step 3: $31^{23} = 31^{-1}$</h2>
-    <p>$31^{23} \cdot 31 = 31^{24} \equiv 1$, so $31^{23} \equiv 31^{-1} \pmod{35}$. We need $x$ with $-4x \equiv 1 \pmod{35}$:</p>
-    $$4 \cdot 26 = 104 = 3 \cdot 35 - 1 \equiv -1 \quad\Longrightarrow\quad (-4) \cdot 26 \equiv 1 \pmod{35}.$$
-    <p><b>Check:</b> $31 \cdot 26 = 806 = 23 \cdot 35 + 1 \equiv 1 \pmod{35}$. ✓</p>
-    $$171^{4{,}800{,}000{,}047} \equiv 26 \pmod{35}.$$
-    <p class="note">Alternative: with the Carmichael function $\lambda(35) = \mathrm{lcm}(4, 6) = 12$, the exponent becomes $4{,}800{,}000{,}047 \equiv 11 \pmod{12}$, so $31^{11} = 31^{-1} = 26$ as well. Or compute modulo 5 and 7 separately and combine with the CRT: $171 \equiv 1 \pmod 5$ gives $1$, and $171 \equiv 3 \pmod 7$ with exponent $\equiv 5 \pmod 6$ gives $3^5 = 243 \equiv 5$. The number that is $\equiv 1 \pmod 5$ and $\equiv 5 \pmod 7$ is $26$.</p>
+    <h2>Modulo 7</h2>
+    <p>$171 = 24 \cdot 7 + 3$, so $171 \equiv 3 \pmod 7$. Exponents can be reduced modulo $6$, and $4{,}800{,}000{,}047 = 6 \cdot 800{,}000{,}007 + 5$:</p>
+    $$171^{4{,}800{,}000{,}047} \equiv 3^5 = 243 = 34 \cdot 7 + 5 \equiv 5 \pmod 7.$$
+
+    <h2>Combine</h2>
+    <p>We need $x \in \{0, \dots, 34\}$ with $x \equiv 1 \pmod 5$ and $x \equiv 5 \pmod 7$. The candidates $\equiv 5 \pmod 7$ are $5, 12, 19, 26, \dots$; the first one $\equiv 1 \pmod 5$ is $26$. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

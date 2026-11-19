@@ -18,25 +18,14 @@
   </div>
 
   <div class="solution">
-    <h2>Idea</h2>
-    <p>If the input has only $\log n$ bits, there are only $2^{\log n} = n$ possible inputs. A <b>truly random function</b> on this domain is just a table of $n$ random values, which has polynomial size. So we can use the whole table as the key.</p>
+    <h2>Construction: the key is a lookup table</h2>
+    <p>Let $F : \{0,1\}^n \times \{0,1\}^{\log n} \to \{0,1\}$ be defined by</p>
+    $$F_k(i) := \text{the } i\text{-th bit of } k,$$
+    <p>where the input $i$ is read as an integer in $\{0, \dots, n-1\}$. It is efficient (one lookup), and the key has length $n$.</p>
 
-    <h2>Construction</h2>
-    <p>Let the input length be $\ell_{in}(n) = \log n$ (for simplicity, $n$ a power of 2) and the output length $\ell_{out}(n) = n$.</p>
-    <div class="algo"><table>
-      <tr><td>Key</td><td>$k = (k_0, k_1, \dots, k_{n-1})$ with each $k_i \in \{0,1\}^n$, chosen uniformly; $|k| = n^2$</td></tr>
-      <tr><td>$F_k(x)$</td><td>read $x \in \{0,1\}^{\log n}$ as an integer $i \in \{0, \dots, n-1\}$ and output $k_i$</td></tr>
-    </table></div>
-    <ul>
-      <li><b>Efficient:</b> computing $F_k(x)$ is one table lookup, polynomial in $n$.</li>
-      <li><b>Polynomial key length:</b> $n \cdot n = n^2$.</li>
-    </ul>
-
-    <h2>Proof of pseudorandomness</h2>
-    <p>A uniformly random function $f : \{0,1\}^{\log n} \to \{0,1\}^n$ is described by its table of values $(f(0), \dots, f(n-1))$, and this table is uniform over $(\{0,1\}^n)^n$. A uniform key $k$ is uniform over exactly the same set. So $F_k$ and $f$ have <b>identical distributions</b>, and for every distinguisher $D$, even one with unlimited running time,</p>
-    $$\big|\Pr[D^{F_k(\cdot)}(1^n) = 1] - \Pr[D^{f(\cdot)}(1^n) = 1]\big| = 0.$$
-    <p>This uses no computational assumption, so the existence is unconditional. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">This also works for input length $c \cdot \log n$ (table size $n^c$), but not for $\omega(\log n)$: then the table would be super-polynomial. Building PRFs with long inputs needs assumptions (e.g. one-way functions, via GGM).</p>
+    <h2>Proof</h2>
+    <p>A function $\{0,1\}^{\log n} \to \{0,1\}$ is a table of $n$ bits, and a uniformly random function is a uniformly random such table. A uniform key $k$ is exactly such a table. So $F_k$ for uniform $k$ <b>is</b> a random function, and every distinguisher, even an unbounded one, has advantage $0$. No assumption is used. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The same works with $n$-bit outputs (key = $n$ blocks of $n$ bits) or input length $c \log n$. It fails for longer inputs, because the table would no longer have polynomial size.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

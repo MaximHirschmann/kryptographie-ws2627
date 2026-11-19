@@ -23,20 +23,14 @@
 
   <div class="solution">
     <h2>1. $G'(s) = G(s\,0^{|s|})$: no, not necessarily</h2>
-    <p>$G'$ feeds $G$ a seed that is <b>not uniform</b>: its second half is always $0^n$. A PRG only guarantees pseudorandom output for uniform seeds, so it may behave badly on this tiny set of seeds.</p>
-    <p><b>Counterexample.</b> Let $\hat G$ be any PRG with $|\hat G(s)| \gt 2|s|$, and define on seeds $x \| y$ with $|x| = |y|$:</p>
-    $$G(x \| y) := \begin{cases} 0^{\ell} & \text{if } y = 0^{|y|}, \\ \hat G(x \| y) & \text{otherwise.} \end{cases}$$
-    <ul>
-      <li><b>$G$ is a PRG:</b> for a uniform seed, $y = 0^{|y|}$ happens only with probability $2^{-|y|}$, which is negligible. Otherwise $G$ behaves like $\hat G$, so any distinguisher's advantage changes by at most a negligible amount.</li>
-      <li><b>$G'$ is not a PRG:</b> $G'(s) = G(s \| 0^{|s|}) = 0^{\ell}$ for every seed. The distinguisher "output $1$ iff the input is all zeros" has advantage $1 - 2^{-\ell}$.</li>
-    </ul>
+    <p>$G'$ runs $G$ on a seed that is not uniform, and a PRG only guarantees anything for uniform seeds.</p>
+    <p><b>Counterexample.</b> Let $H$ be a PRG with $|H(y)| \gt 4|y|$ and define $G(x \| y) := H(y)$ for $|x| = |y|$. $G$ is a PRG: its seed $x \| y$ has length $2n$, the output is longer than $4n$, and for a uniform seed $y$ is uniform. But</p>
+    $$G'(s) = G(s \| 0^{|s|}) = H(0^{|s|})$$
+    <p>is a fixed string, which is trivially distinguishable from random.</p>
 
     <h2>2. $G'(s) = G(s_1 \cdots s_{n/2})$: yes</h2>
-    <p><b>Expansion:</b> $|G'(s)| = |G(s_1 \cdots s_{n/2})| \gt 2 \cdot \frac n2 = n = |s|$.</p>
-    <p><b>Pseudorandomness:</b> if $s$ is uniform in $\{0,1\}^n$, its first half $s' := s_1 \cdots s_{n/2}$ is uniform in $\{0,1\}^{n/2}$. Let $D$ be a PPT distinguisher for $G'$. Then $D$ itself distinguishes $G$ at seed length $n/2$:</p>
-    $$\Big|\Pr[D(G'(s)) = 1] - \Pr[D(r) = 1]\Big| = \Big|\Pr_{s' \leftarrow \{0,1\}^{n/2}}[D(G(s')) = 1] - \Pr[D(r) = 1]\Big| \le \mathsf{negl}(n/2).$$
-    <p>$n \mapsto \mathsf{negl}(n/2)$ is negligible in $n$. For any polynomial $p$, apply the definition with the polynomial $p(2m)$: $\mathsf{negl}(m) \lt \frac{1}{p(2m)}$ for large $m$, i.e. $\mathsf{negl}(n/2) \lt \frac{1}{p(n)}$. So $G'$ is a PRG. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The difference: in part 2 the bits that are thrown away are simply ignored, and the bits that are used are still uniform. In part 1 half of the seed $G$ receives is fixed, so it is no longer uniform.</p>
+    <p><b>Expansion:</b> $|G'(s)| = |G(s_1 \cdots s_{n/2})| \gt 2 \cdot \frac n2 = n$.</p>
+    <p><b>Pseudorandomness:</b> for uniform $s$, the half $s_1 \cdots s_{n/2}$ is uniform in $\{0,1\}^{n/2}$, so $G'(s)$ is distributed exactly like $G$ on a uniform seed of length $n/2$. Any distinguisher for $G'$ therefore distinguishes $G$ with the same advantage $\varepsilon(n) = \varepsilon'(n/2)$, which is negligible because $\varepsilon'$ is. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

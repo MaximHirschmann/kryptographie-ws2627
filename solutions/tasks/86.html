@@ -19,36 +19,21 @@
   </div>
 
   <div class="solution">
-    <h2>Setting</h2>
-    <p>$\Pi'$ encrypts $m = m_1 \cdots m_t$ as $\langle c_1, \dots, c_t \rangle$ with $c_i \leftarrow \mathsf{Enc}_{pk}(m_i)$, and decrypts component-wise. In $\mathsf{PubK}^{\mathsf{cca}}$ the adversary may ask for decryptions of anything except the challenge ciphertext itself.</p>
+    <p>$\Pi'$ encrypts $m = m_1 \cdots m_t$ bit by bit as $\langle \mathsf{Enc}_{pk}(m_1), \dots, \mathsf{Enc}_{pk}(m_t) \rangle$.</p>
 
     <h2>Part 1: $\Pi'$ is not CCA-secure, even if $\Pi$ is</h2>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Output $m_0 = 0^t$ and $m_1 = 1^t$ (with $t \ge 2$); receive $c^* = \langle c_1, \dots, c_t \rangle$.</td></tr>
-      <tr><td>2.</td><td>Compute a fresh $e \leftarrow \mathsf{Enc}_{pk}(0)$ and form $c' = \langle c_1, \dots, c_{t-1}, e \rangle$.</td></tr>
-      <tr><td>3.</td><td>If $c' \ne c^*$, ask the decryption oracle for $\mathsf{Dec}(c')$; its first bit is $b$. Output it.</td></tr>
+      <tr><td>1.</td><td>Output $m_0 = 00$ and $m_1 = 11$; receive $c = \langle c_1, c_2 \rangle$.</td></tr>
+      <tr><td>2.</td><td>Compute $c_2' \leftarrow \mathsf{Enc}_{pk}(0)$ and ask the decryption oracle for $\langle c_1, c_2' \rangle$.</td></tr>
+      <tr><td>3.</td><td>The answer is $b\,0$. Output its first bit $b$.</td></tr>
     </table></div>
-    <p><b>The query is allowed:</b> $c' = c^*$ only if $e = c_t$. A CPA-secure $\Pi$ cannot produce the same ciphertext twice except with negligible probability: otherwise "compare the challenge with a fresh encryption of 0" would distinguish encryptions of 0 and 1. So $c' \ne c^*$ with overwhelming probability.</p>
-    <p><b>The answer reveals $b$:</b> $\mathsf{Dec}(c') = (b, \dots, b, 0)$. The adversary wins with probability $1 - \mathsf{negl}(n)$. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The problem is <i>malleability</i>: components of the challenge can be cut out, reordered or recombined into a new, legal ciphertext. Each component is protected individually, but the vector is not protected as a whole.</p>
+    <p>The query is legal, since $\langle c_1, c_2' \rangle \ne c$ (a CPA-secure $\Pi$ repeats a ciphertext only with negligible probability). So the attacker wins with probability $1 - \mathsf{negl}(n)$. <span class="qed">$\blacksquare$</span></p>
 
     <h2>Part 2: Theorem 10.10 holds for CCA</h2>
-    <p>In the <b>multiple-message</b> CCA experiment the adversary outputs vectors $(m^1_0, \dots, m^t_0)$ and $(m^1_1, \dots, m^t_1)$, receives $\langle C^1, \dots, C^t \rangle$ with $C^i \leftarrow \mathsf{Enc}_{pk}(m^i_b)$, and may ask for the decryption of any ciphertext <b>other than each $C^i$</b>.</p>
-    <p>The usual hybrid argument works. Hybrid $H_j$ encrypts the first $j$ messages from vector $1$ and the rest from vector $0$. A reduction $\mathcal{A}'$ for neighbouring hybrids $H_{j-1}, H_j$:</p>
-    <ul>
-      <li>it gets $pk$ and a decryption oracle for $\Pi$, and forwards the adversary's decryption queries to it;</li>
-      <li>it encrypts all positions $i \ne j$ itself (the public key suffices), and takes its own challenge for position $j$ with messages $(m^j_0, m^j_1)$;</li>
-      <li>the adversary may not ask for $C^j$, which is the only ciphertext $\mathcal{A}'$ itself may not ask for. So every query can be forwarded.</li>
-    </ul>
-    <p>A distinguishing advantage $\varepsilon$ between $H_0$ and $H_t$ gives advantage $\varepsilon/t$ against $\Pi$. So single-message CCA security implies multiple-message CCA security. <span class="qed">$\blacksquare$</span></p>
+    <p>In the multiple-message CCA experiment, every challenge ciphertext $C^i$ is forbidden as a decryption query. The usual hybrid argument then goes through: to distinguish neighbouring hybrids, the reduction embeds its own challenge at position $j$, encrypts all other positions itself with $pk$, and forwards every decryption query to its own oracle. The only query it may not forward is its challenge $C^j$, which the adversary may not ask either. An advantage $\varepsilon$ over $t$ hybrids gives advantage $\varepsilon/t$ against $\Pi$. <span class="qed">$\blacksquare$</span></p>
 
-    <h2>Part 3: why the two notions differ only for CCA</h2>
-    <ul>
-      <li><b>CPA:</b> the adversary sees exactly the same thing whether we call $\langle c_1, \dots, c_t \rangle$ "$t$ ciphertexts" or "one ciphertext of a long message", and has no oracle whose rules depend on that choice. The notions coincide.</li>
-      <li><b>CCA:</b> the rule "you may not query the challenge" depends on what the challenge is. For $t$ separate ciphertexts, every $C^i$ is forbidden. For one long ciphertext, only the exact vector $c^*$ is forbidden, and vectors that reuse some of its components are allowed. This is exactly what Part 1 uses.</li>
-    </ul>
-
-    <div class="box result"><span class="label">Result.</span> Bit-by-bit encryption with a CCA-secure scheme is not CCA-secure: mix one challenge component with a fresh one and ask for decryption. Multiple-message security still follows from single-message security for CCA, because each individual challenge ciphertext stays forbidden. The difference comes from what counts as "the challenge" in the decryption-oracle restriction. <span class="qed">$\blacksquare$</span></div>
+    <h2>Part 3: why only CCA distinguishes the two</h2>
+    <p>Under CPA the adversary sees the same vector of ciphertexts either way and has no oracle whose rules depend on the view. Under CCA the rule "do not query the challenge" does: for $t$ separate messages each component is forbidden, but for one long message only the exact vector is forbidden, so vectors that reuse some components, as in Part 1, are allowed.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

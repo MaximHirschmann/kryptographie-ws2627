@@ -18,34 +18,16 @@
   </div>
 
   <div class="solution">
-    <div class="box result"><span class="label">Answer.</span> <b>No.</b> The modified scheme is <b>not</b> perfectly secret. Removing the zero key makes the scheme worse: the attacker learns that $m \ne c$.</div>
+    <div class="box result"><span class="label">Answer.</span> <b>No.</b> The modified scheme is <b>not</b> perfectly secret.</div>
 
     <h2>Proof</h2>
-    <p>Now $\mathcal{K} = \{0,1\}^\ell \setminus \{0^\ell\}$ and $\mathcal{M} = \mathcal{C} = \{0,1\}^\ell$.</p>
-
-    <h3>Short proof</h3>
-    <p>$|\mathcal{K}| = 2^\ell - 1 \lt 2^\ell = |\mathcal{M}|$. By the script's <a href="../script.html#thm-key-length">Theorem 6</a>, a perfectly secret scheme needs $|\mathcal{K}| \ge |\mathcal{M}|$. So the scheme cannot be perfectly secret.</p>
-
-    <h3>Direct proof (script <a href="../script.html#def-ps-3">Definition 5</a>)</h3>
-    <p>Fix a ciphertext $c$ and look at two messages: $m_0 := c$ and some $m_1 \ne c$.</p>
-    $$\Pr[C = c \mid M = m_0] = \Pr[K = m_0 \oplus c] = \Pr[K = 0^\ell] = 0,$$
-    $$\Pr[C = c \mid M = m_1] = \Pr[K = m_1 \oplus c] = \frac{1}{2^\ell - 1} \gt 0 \qquad (\text{since } m_1 \oplus c \ne 0^\ell).$$
-    <p>The two values differ, so <a href="../script.html#def-ps-3">Definition 5</a> is violated and the scheme is not perfectly secret. <span class="qed">$\blacksquare$</span></p>
-
-    <p>In terms of Definition 2.1: with the uniform distribution over $\mathcal{M}$,</p>
-    $$\Pr[M = c \mid C = c] = 0 \ne \frac{1}{2^\ell} = \Pr[M = c].$$
-    <p>Seeing $c$ rules out the message $m = c$.</p>
-
-    <h3>Extreme case $\ell = 1$</h3>
-    <p>The only key left is $k = 1$, so $\mathsf{Enc}(m) = m \oplus 1$. The attacker simply flips the bit and reads the message.</p>
+    <p>Take the uniform distribution over $\mathcal{M} = \{0,1\}^\ell$ and any $\alpha \in \{0,1\}^\ell$. The ciphertext $\alpha$ can only come from $\alpha$ via the key $0^\ell$, which is excluded, so</p>
+    $$\Pr[M = \alpha \mid C = \alpha] = 0 \ne 2^{-\ell} = \Pr[M = \alpha].$$
+    <p>This contradicts perfect secrecy: seeing $c$ tells the attacker that $m \ne c$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">Shorter still: $|\mathcal{K}| = 2^\ell - 1 \lt |\mathcal{M}|$, and perfect secrecy needs $|\mathcal{K}| \ge |\mathcal{M}|$ (script <a href="../script.html#thm-key-length">Theorem 6</a>).</p>
 
     <h2>Reconciling with "the key $0^\ell$ sends the message in the clear"</h2>
-    <ul>
-      <li>Perfect secrecy is a property of the <b>distribution</b> of ciphertexts, not of a single key. The attacker sees $c$ but does not know which key was used. With the original one-time pad, the ciphertext $c = m$ is exactly as likely as any other ciphertext, and every message is still possible. Nothing tells the attacker that this $c$ "is" the plaintext.</li>
-      <li>Every key is "bad" for some message: any key $k$ maps the message $m = k \oplus c$ to $c$. Key $0^\ell$ is no worse than any other key.</li>
-      <li>Removing $0^\ell$ creates a real leak: the attacker learns with certainty that $m \ne c$. For example, if the message is one of two values $m_0, m_1$ and $c = m_0$, the attacker knows that $m = m_1$.</li>
-    </ul>
-    <p class="note">The worry about sending "in the clear" is about how the ciphertext looks, not about what the attacker can deduce. If the zero key is a concern in practice (for example, if keys are not sampled properly), the fix is to generate keys correctly, not to change the key space.</p>
+    <p>The eavesdropper never knows which key was used. With the original one-time pad, the ciphertext $c = m$ is exactly as likely as any other ciphertext, so the fact that $\mathsf{Enc}_{0^\ell}(m) = m$ is of no help to it. To obtain perfect secrecy, encrypting with $0^\ell$ must be possible.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>
