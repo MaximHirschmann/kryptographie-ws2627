@@ -75,6 +75,41 @@ table.plain td, table.plain th { border: 1px solid #bbb; padding: 4px 10px; text
 /* Preserve accessible MathML without letting it widen the visible page. */
 .katex .katex-mathml { left: 0; top: 0; }
 
+/* Material that is not in the lecture notes (.beyond, .beyond-i) or only in the WS 2020/21 notes (.ws20only). */
+:root {
+  --beyond-c: #a34a08;
+  --beyond-bg: #fdf1e1;
+  --ws20-c: #2a5d8f;
+  --ws20-bg: #edf3fa;
+}
+.beyond, .ws20only { border-left: 4px solid var(--beyond-c); background: var(--beyond-bg); padding: 4px 12px 6px; margin-left: -16px; border-radius: 0 3px 3px 0; }
+.ws20only { border-left-color: var(--ws20-c); background: var(--ws20-bg); }
+.beyond .beyond { border-left: 0; background: none; padding: 0; margin-left: 0; }
+.ws20only .beyond { margin-left: 0; }
+li.beyond { margin-left: 0; padding-left: 8px; }
+.beyond::before, .ws20only > h2::after, .ws20only > h3::after, section.beyond > h2::after, section.beyond > h3::after,
+.beyond-i::before, .mark-key, .toc-mark {
+  font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .02em; color: #fff;
+  background: var(--beyond-c); border-radius: 3px; padding: 2px 6px;
+}
+.beyond::before { content: "Not in lecture"; display: table; margin: 2px 0 6px; font-style: normal; }
+.beyond[data-src]::before { content: "Not in lecture \00b7  " attr(data-src); }
+section.beyond::before, .beyond .beyond::before { content: none; display: none; }
+section.beyond > h2::after, section.beyond > h3::after { content: "Not in lecture"; display: table; margin-top: 6px; font-weight: 600; }
+section.beyond > h3[data-src]::after { content: "Not in lecture \00b7  " attr(data-src); }
+.ws20only > h2::after, .ws20only > h3::after { content: "Only in WS 2020/21 notes (no 2025/26 Mitschrift)"; display: table; margin-top: 6px; background: var(--ws20-c); }
+.beyond-i { background: var(--beyond-bg); border-bottom: 1.5px dashed var(--beyond-c); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.beyond-i::before { content: "not in lecture"; margin-right: 5px; padding: 1px 4px; font-size: 10px; vertical-align: 2px; font-style: normal; }
+.beyond .beyond-i, .beyond .beyond-i::before { background: none; }
+.beyond .beyond-i::before { content: none; }
+.mark-legend { max-width: 640px; margin: 18px auto 0; padding: 10px 14px; border: 1px solid #ddd; border-radius: 3px; text-align: left; font: 14px/1.5 system-ui, sans-serif; color: #333; }
+.mark-legend p { margin: 4px 0; text-align: left; }
+.mark-key { display: inline-block; margin-right: 6px; }
+.mark-key--ws20, .toc-mark--ws20 { background: var(--ws20-c); }
+.toc-mark { margin-left: 8px; padding: 1px 5px; font-size: 10px; font-weight: 600; vertical-align: 2px; }
+.toc-mark--partial { background: none; color: var(--beyond-c); border: 1px solid var(--beyond-c); }
+.toc .l2 .toc-mark { font-weight: 600; }
+
 /* Compact, static diagrams for the classical ciphers. */
 .cipher-figure {
   --cipher-highlight: #b9dde7;
@@ -108,4 +143,8 @@ table.plain td, table.plain th { border: 1px solid #bbb; padding: 4px 10px; text
   a { color: inherit; }
   .cipher-figure__diagram { overflow: visible; }
   .cipher-figure--vigenere svg { min-width: 0; }
+  .beyond, .ws20only, .beyond-i, .beyond::before, .beyond-i::before, .mark-key, .toc-mark,
+  section.beyond > h2::after, section.beyond > h3::after, .ws20only > h2::after, .ws20only > h3::after {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
 }

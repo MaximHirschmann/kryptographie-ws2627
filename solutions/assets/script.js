@@ -10,6 +10,15 @@
   };
   const labels = {};
 
+  // TOC badge for sections marked as beyond the lecture (see .beyond / .ws20only in script.css).
+  const tocMark = (sec) => {
+    if (sec.classList.contains("beyond")) return ' <span class="toc-mark">not in lecture</span>';
+    if (sec.classList.contains("ws20only")) return ' <span class="toc-mark toc-mark--ws20">WS 20/21 only</span>';
+    const own = [...sec.querySelectorAll(".beyond, .beyond-i")].some((el) => el.closest("section") === sec);
+    if (own) return ' <span class="toc-mark toc-mark--partial">partly</span>';
+    return "";
+  };
+
   // Sections: h2 inside section.chapter, h3 inside section.sub
   const toc = document.getElementById("toc-list");
   let c = 0;
@@ -21,7 +30,7 @@
     h2.insertAdjacentHTML("afterbegin", `<span class="secnum">${c}</span>`);
     h2.insertAdjacentHTML("beforeend", `<a class="anchor" href="#${ch.id}">¶</a>`);
     toc.insertAdjacentHTML("beforeend",
-      `<li class="l2"><a href="#${ch.id}"><span class="n">${c}</span><span class="t">${chTitle}</span><span class="dots"></span></a></li>`);
+      `<li class="l2"><a href="#${ch.id}"><span class="n">${c}</span><span class="t">${chTitle}${tocMark(ch)}</span><span class="dots"></span></a></li>`);
     let s = 0;
     ch.querySelectorAll(":scope > section.sub").forEach((sub) => {
       s += 1;
@@ -32,7 +41,7 @@
       h3.insertAdjacentHTML("afterbegin", `<span class="secnum">${num}</span>`);
       h3.insertAdjacentHTML("beforeend", `<a class="anchor" href="#${sub.id}">¶</a>`);
       toc.insertAdjacentHTML("beforeend",
-        `<li class="l3"><a href="#${sub.id}"><span class="n">${num}</span><span class="t">${title}</span><span class="dots"></span></a></li>`);
+        `<li class="l3"><a href="#${sub.id}"><span class="n">${num}</span><span class="t">${title}${tocMark(sub)}</span><span class="dots"></span></a></li>`);
     });
   });
 
