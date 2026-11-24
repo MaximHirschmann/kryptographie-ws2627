@@ -23,43 +23,19 @@
   </div>
 
   <div class="solution">
-    <h2>Setup</h2>
-    <p>As in Question 1, we count from $0$: the key is $k_0, \dots, k_{t-1}$, and the letter at position $x$ lies in block $j = \lfloor x / t \rfloor$ at place $i = x \bmod t$, so $x = jt + i$. The modified encryption is</p>
+    <p>Count from $0$: position $x$ lies in block $\lfloor x/t \rfloor$ at place $x \bmod t$, and</p>
     $$c_x = m_x + k_{x \bmod t} + \lfloor x / t \rfloor \bmod 26.$$
 
-    <h2>1. Decryption is possible</h2>
-    <p>The receiver knows the key $k_0, \dots, k_{t-1}$ and the period $t$. For every position $x$ they also know $x$, so they can compute the block number $\lfloor x/t \rfloor$ and the place $x \bmod t$. Therefore:</p>
-    <div class="algo"><table>
-      <tr><td>Dec</td><td>
-        <span class="line">input $k_0, \dots, k_{t-1}$, $c \in \Sigma^*$</span>
-        <span class="line">for $x = 0$ to $|c| - 1$ do</span>
-        <span class="line ind">$m_x := c_x - k_{x \bmod t} - \lfloor x/t \rfloor \bmod 26$</span>
-        <span class="line">output $m = m_0 \cdots m_{|c|-1}$</span>
-      </td></tr>
-    </table></div>
-    <p><b>Correctness:</b> $\big(m_x + k_{x \bmod t} + \lfloor x/t \rfloor\big) - k_{x \bmod t} - \lfloor x/t \rfloor = m_x \bmod 26$.</p>
+    <h2>1. Decryption</h2>
+    <p>The receiver knows $k$, $t$ and each position $x$, so it computes $m_x := c_x - k_{x \bmod t} - \lfloor x/t \rfloor \bmod 26$.</p>
 
     <h2>2. Effect on Kasiski's attack</h2>
-    <p>Kasiski relies on this: the same plaintext word at the same place in two different blocks gives the same ciphertext. With the modification, the shift used at position $x$ is</p>
-    $$k'_x := k_{x \bmod t} + \lfloor x/t \rfloor \bmod 26.$$
-    <p>Take the same word at positions $x$ and $x + d$ with $d = s \cdot t$. Then the two shifts differ by exactly $s$:</p>
-    $$k'_{x+st} - k'_x = s \bmod 26.$$
-    <p>So the two copies are encrypted the same way only if $s \equiv 0 \pmod{26}$, that is, only if $d$ is a multiple of $26t$.</p>
-
-    <div class="box result"><span class="label">Effect.</span> The scheme is really an ordinary Vigenère cipher with the longer key $k'_0, \dots, k'_{26t-1}$ with $26t$ as a period (not necessarily the fundamental period), because $\lfloor (x + 26t)/t \rfloor = \lfloor x/t \rfloor + 26$. Kasiski's attack is not prevented, but:
-      <ul>
-        <li>for equal fragments whose starting positions agree modulo $t$, matching ciphertext now requires a distance divisible by $26t$. Accidental repetitions and special keys can produce other distances;</li>
-        <li>Kasiski can suggest $26t$ or a divisor/multiple rather than revealing $t$ directly. Splitting into $26t$ columns leaves fewer samples per column; there is no universal factor-26 bound on the ciphertext required.</li>
-      </ul>
-    </div>
+    <p>The same word at positions $x$ and $x + st$ is now shifted by amounts that differ by $s$. So it gives the same ciphertext only if $s \equiv 0 \pmod{26}$, i.e. at distances that are multiples of $26t$. The scheme is just a Vigenère cipher with the key $k'_x = k_{x \bmod t} + \lfloor x/t \rfloor$ of period $26t$: Kasiski still works, but finds $26t$ (or a divisor or multiple) and needs much more ciphertext, because repetitions must now be $26t$ apart.</p>
 
     <h2>3. Another way to find the period</h2>
-    <p>The modification is public; only the key is secret. So for each guess $\tilde t = 1, 2, 3, \dots$ the attacker can <b>undo the block counter</b> and test whether an ordinary Vigenère cipher with period $\tilde t$ remains:</p>
+    <p>The modification is public, so for each guess $\tilde t$ the attacker undoes the block counter:</p>
     $$c'_x := c_x - \lfloor x / \tilde t \rfloor \bmod 26.$$
-    <p>If $\tilde t = t$, then $c'_x = m_x + k_{x \bmod t}$. This is a normal Vigenère ciphertext with period $t$, and the index-of-coincidence test from the script recognises it. Split $c'$ into the columns $C_i = \{c'_i, c'_{i+t}, c'_{i+2t}, \dots\}$ and compute the letter frequencies $q_0, \dots, q_{25}$ of each column:</p>
-    $$S = \sum_{i=0}^{25} q_i^2 \approx \begin{cases} 0.065 & \text{if } \tilde t = t \text{ (each column is an English text shifted by } k_i) \\ \text{variable} & \text{for a wrong guess; mixtures need not be uniform} \end{cases}$$
-    <p>Use peaks near $0.065$ as candidate periods, then check all columns and the resulting plaintext. The test is statistical, not a guarantee for every key or finite text. For example, $t=3$ and $k=(0,9,18)$ give $k'_x=9x\bmod26$, whose fundamental period is $26$, although $26t=78$ is also a period.</p>
-    <p class="note">Put another way: inside column $i$, consecutive letters are shifted by $k_i, k_i + 1, k_i + 2, \dots$. Subtracting $0, 1, 2, \dots$ from the column's letters makes the shift constant again. That is exactly what $c'_x$ does.</p>
+    <p>For $\tilde t = t$ this is an ordinary Vigenère ciphertext with period $t$, and the index of coincidence of its columns is close to the English value $0.065$. So the attacker tries $\tilde t = 1, 2, \dots$ and picks the one with the English-like index of coincidence.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

@@ -18,23 +18,18 @@
   </div>
 
   <div class="solution">
-    <p>Let $\Pi$ be a key-exchange protocol between two parties and $\mathcal{A}$ an adversary. This is the definition from the lecture (handwritten notes, "The Key-Exch. Experiment").</p>
-
     <h2>Experiment $\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n)$</h2>
     <div class="algo"><table>
-      <tr><td>1.</td><td>$(\mathsf{trans}, k) \leftarrow \Pi.\mathsf{run}(1^n)$: the two parties run the protocol on input $1^n$. $\mathsf{trans}$ contains all messages sent; $k \in \{0,1\}^n$ is the key output by both parties.</td></tr>
-      <tr><td>2.</td><td>$b \leftarrow \{0,1\}$</td></tr>
-      <tr><td>3.</td><td>$k_0 \leftarrow \{0,1\}^n$ uniformly at random</td></tr>
-      <tr><td>4.</td><td>$k_1 := k$ &nbsp;<span style="color:var(--muted)">(so $b = 1$ means "real key", $b = 0$ means "random key")</span></td></tr>
-      <tr><td>5.</td><td>$b' \leftarrow \mathcal{A}(\mathsf{trans}, k_b)$</td></tr>
-      <tr><td>6.</td><td>output $1$ iff $b = b'$</td></tr>
+      <tr><td>1.</td><td>The parties run $\Pi(1^n)$; this gives the transcript $\mathsf{trans}$ (all messages sent) and the key $k \in \{0,1\}^n$.</td></tr>
+      <tr><td>2.</td><td>$b \leftarrow \{0,1\}$; $k_0 \leftarrow \{0,1\}^n$ uniformly; $k_1 := k$.</td></tr>
+      <tr><td>3.</td><td>$b' \leftarrow \mathcal{A}(\mathsf{trans}, k_b)$.</td></tr>
+      <tr><td>4.</td><td>Output $1$ iff $b' = b$.</td></tr>
     </table></div>
 
     <h2>Security</h2>
-    <div class="box claim"><span class="label">Definition.</span> A key-exchange protocol $\Pi$ is <b>secure in the presence of an eavesdropper</b> if for all PPT adversaries $\mathcal{A}$ there is a negligible function $\mathsf{negl}$ such that
+    <div class="box claim"><span class="label">Definition.</span> $\Pi$ is <b>secure in the presence of an eavesdropper</b> if for every PPT $\mathcal{A}$ there is a negligible $\mathsf{negl}$ with
     $$\Pr\big[\mathsf{KE}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1\big] \le \tfrac12 + \mathsf{negl}(n).$$</div>
-    <p><b>Correctness</b> (implicit): both parties output the same key $k$, always or except with negligible probability.</p>
-    <p class="note">The adversary does not merely have to <i>compute</i> the key: it must not even be able to <i>distinguish</i> the key from a random string. Only then can the key safely be used in a private-key scheme. Raw Diffie–Hellman satisfies the corresponding experiment with a uniform <i>group element</i> as the random key under DDH. To obtain the bit-string experiment above, specify a key-derivation step and its assumptions; a group-element encoding is not automatically a uniform $n$-bit string. The protocol in <a href="45.html">Question 45</a> does not.</p>
+    <p class="note">The key must be indistinguishable from random, not merely hard to compute; only then can it be used in a private-key scheme.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

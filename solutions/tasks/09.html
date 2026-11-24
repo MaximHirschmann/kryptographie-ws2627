@@ -24,36 +24,15 @@
   </div>
 
   <div class="solution">
-    <div class="box result"><span class="label">Answer.</span> <b>All three</b> properly define perfect secrecy, because they are equivalent. They are <a href="../script.html#def-ps-1">Definitions 3</a>, <a href="../script.html#def-ps-2">4</a> and <a href="../script.html#def-ps-3">5</a> of the script.
-      <ol>
-        <li>The ciphertext gives no information about the message: the posterior equals the prior.</li>
-        <li>The ciphertext distribution does not depend on which message was sent.</li>
-        <li>Any two messages give the same ciphertext distribution.</li>
-      </ol>
-    </div>
-    <p class="note">In 2 and 3 we condition on $M = m$, so we read them for messages with $\Pr[M = m] \gt 0$. In general, $\Pr[C = c \mid M = m]$ means $\Pr[\mathsf{Enc}_K(m) = c]$. That value does not depend on the distribution of $M$, because $K$ is independent of $M$. Question 14 shows that messages with probability $0$ do not matter.</p>
+    <div class="box result"><span class="label">Answer.</span> <b>All three</b>, because they are equivalent: they are <a href="../script.html#def-ps-1">Definitions 3</a>, <a href="../script.html#def-ps-2">4</a> and <a href="../script.html#def-ps-3">5</a> of the script. (In 2 and 3 we read the conditional probabilities for $\Pr[M = m] \gt 0$.)</div>
 
-    <h2>Proof that $1 \Rightarrow 2$</h2>
-    <p>This is the direction “Def. 1 ⇒ Def. 2” proved in the script. Fix a distribution, a message $m$ with $\Pr[M = m] \gt 0$, and a ciphertext $c$.</p>
-    <p><b>Case $\Pr[C = c] \gt 0$.</b> By Bayes' theorem and then 1:</p>
-    $$\Pr[C = c \mid M = m] = \frac{\Pr[M = m \mid C = c] \cdot \Pr[C = c]}{\Pr[M = m]} \overset{(1)}{=} \frac{\Pr[M = m] \cdot \Pr[C = c]}{\Pr[M = m]} = \Pr[C = c].$$
-    <p><b>Case $\Pr[C = c] = 0$.</b> Then</p>
-    $$\Pr[C = c \mid M = m] = \frac{\Pr[C = c \wedge M = m]}{\Pr[M = m]} \le \frac{\Pr[C = c]}{\Pr[M = m]} = 0 = \Pr[C = c].$$
+    <h2>$1 \Leftrightarrow 2$: Bayes</h2>
+    <p>For $\Pr[C = c] \gt 0$ and $\Pr[M = m] \gt 0$,</p>
+    $$\Pr[M = m \mid C = c] = \frac{\Pr[C = c \mid M = m] \cdot \Pr[M = m]}{\Pr[C = c]},$$
+    <p>so $\Pr[M = m \mid C = c] = \Pr[M = m]$ holds iff $\Pr[C = c \mid M = m] = \Pr[C = c]$. If $\Pr[C = c] = 0$, then $\Pr[C = c \mid M = m] = 0 = \Pr[C = c]$ as well, so 2 holds there trivially.</p>
 
-    <h2>Proof that $2 \Rightarrow 1$</h2>
-    <p>Script <a href="../script.html#thm-ps-1-2">Theorem 2</a>. For $\Pr[C = c] \gt 0$, use Bayes' theorem in the other direction:</p>
-    $$\Pr[M = m \mid C = c] = \frac{\Pr[C = c \mid M = m] \cdot \Pr[M = m]}{\Pr[C = c]} \overset{(2)}{=} \frac{\Pr[C = c] \cdot \Pr[M = m]}{\Pr[C = c]} = \Pr[M = m].$$
-    <p>If $\Pr[M = m] = 0$, both sides are $0$.</p>
-
-    <h2>Proof that $2 \Leftrightarrow 3$</h2>
-    <p>Script <a href="../script.html#thm-ps-3-2">Theorem 3</a>.</p>
-    <p><b>$2 \Rightarrow 3$:</b> $\Pr[C = c \mid M = m_0] = \Pr[C = c] = \Pr[C = c \mid M = m_1]$.</p>
-    <p><b>$3 \Rightarrow 2$:</b> By 3, $p := \Pr[C = c \mid M = m]$ is the same for every $m$. By the law of total probability,</p>
-    $$\Pr[C = c] = \sum_{m \in \mathcal{M}} \Pr[C = c \mid M = m] \cdot \Pr[M = m] = p \cdot \sum_{m \in \mathcal{M}} \Pr[M = m] = p = \Pr[C = c \mid M = m].$$
-
-    <h2>Why the condition $\Pr[C = c] \gt 0$ appears only in 1</h2>
-    <p>Definition 1 conditions on $C = c$, which is undefined if $\Pr[C = c] = 0$. Definitions 2 and 3 condition on $M = m$ instead. For them, a ciphertext with $\Pr[C = c] = 0$ is no problem: both sides are simply $0$.</p>
-    <p class="note">In practice, Definition 3 is usually the easiest one to check, because it does not involve the distribution of $M$ at all. The script uses it, for example, to prove that the one-time pad is perfectly secret (<a href="../script.html#thm-otp">Theorem 5</a>).</p>
+    <h2>$2 \Leftrightarrow 3$</h2>
+    <p>$2 \Rightarrow 3$: both sides equal $\Pr[C = c]$. $3 \Rightarrow 2$: if $p := \Pr[C = c \mid M = m]$ is the same for all $m$, then $\Pr[C = c] = \sum_m p \cdot \Pr[M = m] = p$. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

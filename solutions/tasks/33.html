@@ -20,23 +20,16 @@
   </div>
 
   <div class="solution">
-    <h2>Problem</h2>
-    <p>With <b>unique tags</b>, every message has exactly one valid tag, so $\mathsf{Mac}_{k_2}$ is deterministic. The tag is computed on the <i>plaintext</i> and sent in the clear, so equal plaintexts give equal tags. This reveals when the same message is sent twice, regardless of how good $\mathsf{Enc}$ is.</p>
+    <p><b>Idea.</b> With unique tags, $\mathsf{Mac}_{k_2}$ is deterministic. The tag is computed on the plaintext and sent in the clear, so equal plaintexts give equal tags.</p>
 
     <h2>CPA attack</h2>
     <div class="algo"><table>
-      <tr><td>1.</td><td>Choose two different messages $m_0 \ne m_1$ of equal length. Query the encryption oracle on $m_0$ and receive $\langle c, t_0 \rangle$ with $t_0 = \mathsf{Mac}_{k_2}(m_0)$.</td></tr>
-      <tr><td>2.</td><td>Output the challenge pair $m_0, m_1$ and receive $\langle c^*, t^* \rangle$ with $t^* = \mathsf{Mac}_{k_2}(m_b)$.</td></tr>
-      <tr><td>3.</td><td>Output $b' = 0$ if $t^* = t_0$, otherwise $b' = 1$.</td></tr>
+      <tr><td>1.</td><td>Query the encryption oracle on $m_0$ and receive $\langle c, t_0 \rangle$ with $t_0 = \mathsf{Mac}_{k_2}(m_0)$.</td></tr>
+      <tr><td>2.</td><td>Output $m_0, m_1$ ($m_0 \ne m_1$) and receive $\langle c^*, t^* \rangle$.</td></tr>
+      <tr><td>3.</td><td>Output $0$ iff $t^* = t_0$.</td></tr>
     </table></div>
-
-    <h2>Analysis</h2>
-    <ul>
-      <li>$b = 0$: $t^* = \mathsf{Mac}_{k_2}(m_0) = t_0$, since the tag is unique. The attacker is always right.</li>
-      <li>$b = 1$: the attacker is wrong only if $\mathsf{Mac}_{k_2}(m_1) = \mathsf{Mac}_{k_2}(m_0)$. That can only happen with negligible probability. Otherwise, after one query on $m_0$, an adversary could output $(m_1, t_0)$ as a forgery, which contradicts the security of the MAC.</li>
-    </ul>
-    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A}}(n) = 1] \ \ge\ \tfrac12 \cdot 1 + \tfrac12 \big(1 - \mathsf{negl}(n)\big) = 1 - \mathsf{negl}(n). \qquad \blacksquare$$
-    <p class="note">A secure MAC protects integrity, not secrecy. A MAC tag may even reveal parts of the message. The recommended combination is <b>encrypt-then-MAC</b>: $t \leftarrow \mathsf{Mac}_{k_2}(c)$.</p>
+    <p>For $b = 0$, $t^* = t_0$ always. For $b = 1$, $t^* = t_0$ would mean $\mathsf{Mac}_{k_2}(m_1) = \mathsf{Mac}_{k_2}(m_0)$, i.e. $(m_1, t_0)$ would be a forgery; by MAC security this has negligible probability. So the attacker wins with probability $1 - \mathsf{negl}(n)$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">A MAC protects integrity, not secrecy. Use encrypt-then-MAC: $t \leftarrow \mathsf{Mac}_{k_2}(c)$.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

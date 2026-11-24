@@ -20,23 +20,16 @@
   </div>
 
   <div class="solution">
-    <h2>Observation</h2>
-    <p>In ElGamal, $h^r = g^{xr}$ is already a fresh Diffie–Hellman value that only the sender and the receiver can compute. There is no need to choose $k$ separately and transport it with $h^r \cdot k$. We can <b>derive the key from $h^r$</b> directly. This is the key-encapsulation (KEM) approach.</p>
+    <p><b>Idea.</b> $h^r = g^{xr}$ is already a fresh Diffie–Hellman value known only to the sender and the receiver. So there is no need to transport a separate key: <b>derive the key from $h^r$</b>.</p>
 
-    <h2>Improved scheme (DHIES / ECIES)</h2>
-    <p>Let $H : \mathbb{G} \to \{0,1\}^n$ be a key-derivation function, e.g. a hash function modelled as a random oracle, with an explicit extraction argument if a standard-model extractor is used.</p>
+    <h2>Improved scheme</h2>
+    <p>Let $H : \mathbb{G} \to \{0,1\}^n$ be a hash function (key derivation), e.g. modelled as a random oracle.</p>
     <div class="algo"><table>
-      <tr><td>Enc</td><td>$r \leftarrow \mathbb{Z}_q$; &nbsp; $k := H(h^r)$; &nbsp; output $\langle g^r,\ \mathsf{Enc}_k(m) \rangle$</td></tr>
-      <tr><td>Dec</td><td>input $x$ and $\langle c_1, c_2 \rangle$: &nbsp; $k := H(c_1^{\,x})$; &nbsp; output $\mathsf{Dec}_k(c_2)$</td></tr>
+      <tr><td>Enc</td><td>$r \leftarrow \mathbb{Z}_q$; $k := H(h^r)$; output $\langle g^r,\ \mathsf{Enc}_k(m) \rangle$</td></tr>
+      <tr><td>Dec</td><td>$k := H(c_1^{\,x})$; output $\mathsf{Dec}_k(c_2)$</td></tr>
     </table></div>
-    <p><b>Correctness:</b> $c_1^{\,x} = g^{rx} = (g^x)^r = h^r$, so both sides derive the same $k$.</p>
-    <p><b>Shorter:</b> the ciphertext contains <b>one</b> group element $g^r$ instead of two, followed by the private-key encryption.</p>
-
-    <p class="note">The lecture uses the same idea in the random-oracle model ("Public-Key Encryption in the RO Model", Mitschrift 16.2): $c_1 := [r^e \bmod N]$, $c_2 := H(r) \oplus m$. The key is derived from the encapsulated value by $H$, and nothing else is transported.</p>
-
-    <h2>Why it is secure (sketch)</h2>
-    <p>$(g, h = g^x, g^r)$ is a Diffie–Hellman transcript. Under DDH, $h^r$ looks like a uniform group element. $H$ turns it into a (pseudo)random $n$-bit key $k$, in the random-oracle model under CDH. Under DDH, a properly seeded extractor is another option, with its seed and entropy/output-length conditions specified; an arbitrary hash function is not automatically an extractor. Then the hybrid argument goes through as for Construction 10.12 (<a href="49.html">Question 49</a>): $\langle g^r, \mathsf{Enc}_k(m) \rangle$ is indistinguishable from $\langle g^r, \mathsf{Enc}_{k'}(m) \rangle$ for an independent uniform $k'$, and the latter hides $m$ by the security of the private-key scheme.</p>
-    <p class="note">We need $H$: $h^r$ itself is a <i>group element</i>, not a uniform bit string, and its encoding might have structure. The derivation step must make its output indistinguishable from a uniform symmetric key under the stated assumptions.</p>
+    <p>Correctness: $c_1^{\,x} = g^{rx} = h^r$. The ciphertext now has <b>one</b> group element instead of two.</p>
+    <p><b>Why it is secure (sketch).</b> Under DDH, $h^r$ looks like a random group element given $g, h, g^r$; $H$ turns it into a random-looking $n$-bit key. Then the hybrid argument of <a href="49.html">Question 49</a> applies. ($H$ is needed because a group element is not a uniform bit string.) <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

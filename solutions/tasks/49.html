@@ -32,58 +32,44 @@
   </div>
 
   <div class="solution">
-    <p><b>Key-distribution convention.</b> As in the question, assume $\mathsf{Gen}'(1^n)$ samples a uniform $n$-bit key. If it uses a different distribution, the hybrid encryption algorithm must sample $k\leftarrow\mathsf{Gen}'(1^n)$ as well; the reduction must match that distribution.</p>
-<p><b>How to read the schemas.</b> The left column is the reduction’s own challenger: $\mathsf{PubK}^{\mathsf{eav}}$ for $\Pi$ in case 1, $\mathsf{PrivK}^{\mathsf{eav}}$ for $\Pi'$ in case 3. The middle is the reduction; boxes 2 and 7 are its internal computations. The right column is $\mathcal{A}^{hy}$, run as a subroutine. Steps are in the order 1 to 10.</p>
+    <p class="note">Left column: the reduction's own challenger. Middle: the reduction (boxes 2 and 7 are internal steps). Right: $\mathcal{A}^{hy}$, run as a subroutine. Keys $k$ are uniform $n$-bit strings.</p>
 
     <h2>Case 1: $\mathcal{A}_1$ attacks $\Pi$ in $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}_1,\Pi}(n)$</h2>
-    <p>Goal: show $\langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle \approx \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle$. $\mathcal{A}_1$ uses its <b>challenge</b> to encrypt either the real key $k$ or $0^n$.</p>
+    <p>$\mathcal{A}_1$ uses its challenge to encrypt either the real key $k$ or $0^n$.</p>
     <div class="table-scroll"><table class="data">
       <tr><th>#</th><th>Where</th><th>Content</th></tr>
-      <tr><td>1</td><td>Challenger $\to \mathcal{A}_1$</td><td>Challenger runs $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ and gives $pk$ to $\mathcal{A}_1$.</td></tr>
-      <tr><td>2</td><td>$\mathcal{A}_1$ (internal)</td><td>Choose $k \leftarrow \{0,1\}^n$ uniformly.</td></tr>
-      <tr><td>3</td><td>$\mathcal{A}_1 \to$ challenger</td><td>Output the two messages $k_0 := k$ and $k_1 := 0^n$ (same length $n$).</td></tr>
-      <tr><td>4</td><td>Challenger $\to \mathcal{A}_1$</td><td>Challenger picks $b \leftarrow \{0,1\}$ and sends $c_1 \leftarrow \mathsf{Enc}_{pk}(k_b)$, i.e. $\mathsf{Enc}_{pk}(k)$ or $\mathsf{Enc}_{pk}(0^n)$.</td></tr>
+      <tr><td>1</td><td>Challenger $\to \mathcal{A}_1$</td><td>$(pk, sk) \leftarrow \mathsf{Gen}(1^n)$; send $pk$.</td></tr>
+      <tr><td>2</td><td>$\mathcal{A}_1$</td><td>Choose $k \leftarrow \{0,1\}^n$.</td></tr>
+      <tr><td>3</td><td>$\mathcal{A}_1 \to$ challenger</td><td>Output $k_0 := k$ and $k_1 := 0^n$.</td></tr>
+      <tr><td>4</td><td>Challenger $\to \mathcal{A}_1$</td><td>$b \leftarrow \{0,1\}$; send $c_1 \leftarrow \mathsf{Enc}_{pk}(k_b)$.</td></tr>
       <tr><td>5</td><td>$\mathcal{A}_1 \to \mathcal{A}^{hy}$</td><td>Run $\mathcal{A}^{hy}(pk)$.</td></tr>
-      <tr><td>6</td><td>$\mathcal{A}^{hy} \to \mathcal{A}_1$</td><td>$\mathcal{A}^{hy}$ outputs two messages $m_0, m_1$.</td></tr>
-      <tr><td>7</td><td>$\mathcal{A}_1$ (internal)</td><td>Compute $c_2 \leftarrow \mathsf{Enc}'_k(m_0)$, always with $m_0$.</td></tr>
-      <tr><td>8</td><td>$\mathcal{A}_1 \to \mathcal{A}^{hy}$</td><td>Give the challenge ciphertext $\langle c_1, c_2 \rangle$.</td></tr>
-      <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}_1$</td><td>$\mathcal{A}^{hy}$ outputs a bit $b''$.</td></tr>
+      <tr><td>6</td><td>$\mathcal{A}^{hy} \to \mathcal{A}_1$</td><td>Receive $m_0, m_1$.</td></tr>
+      <tr><td>7</td><td>$\mathcal{A}_1$</td><td>$c_2 \leftarrow \mathsf{Enc}'_k(m_0)$ (always $m_0$).</td></tr>
+      <tr><td>8</td><td>$\mathcal{A}_1 \to \mathcal{A}^{hy}$</td><td>Send $\langle c_1, c_2 \rangle$.</td></tr>
+      <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}_1$</td><td>Receive a bit $b''$.</td></tr>
       <tr><td>10</td><td>$\mathcal{A}_1 \to$ challenger</td><td>Output $b' := b''$.</td></tr>
     </table></div>
-    <p><b>Analysis.</b> If $b = 0$, $\mathcal{A}^{hy}$ sees exactly $\langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle$, a real $\Pi^{hy}$-encryption of $m_0$. If $b = 1$, it sees $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle$. Hence</p>
-    $$
-    \begin{aligned}
-    \Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}_1,\Pi}(n) = 1]
-    &= \tfrac12 \Pr\big[\mathcal{A}^{hy}(pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0)) = 0\big] \\
-    &\quad + \tfrac12 \Pr\big[\mathcal{A}^{hy}(pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0)) = 1\big] \\
-    &= \tfrac12 + \tfrac12 \big(p_{\text{top}} - p_{\text{bottom}}\big) \ \le\ \tfrac12 + \mathsf{negl}(n),
-    \end{aligned}
-    $$
-    <p>where $p_{\text{top}}$ and $p_{\text{bottom}}$ are the probabilities that $\mathcal{A}^{hy}$ outputs $0$ on the top-left and bottom-left tuple. So $p_{\text{top}} - p_{\text{bottom}} \le 2\,\mathsf{negl}(n)$. The variant of $\mathcal{A}_1$ that flips $\mathcal{A}^{hy}$'s output gives the same bound for $p_{\text{bottom}} - p_{\text{top}}$. Case 2 is identical, with $m_1$ instead of $m_0$ in step 7.</p>
+    <p>For $b = 0$, $\mathcal{A}^{hy}$ sees the top-left tuple $\langle pk, \mathsf{Enc}_{pk}(k), \mathsf{Enc}'_k(m_0) \rangle$; for $b = 1$, the bottom-left tuple. So any difference in $\mathcal{A}^{hy}$'s behaviour on these tuples is an advantage for $\mathcal{A}_1$ against $\Pi$, hence negligible. Case 2 is the same with $m_1$ in step 7.</p>
 
     <h2>Case 3: $\mathcal{A}'$ attacks $\Pi'$ in $\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n)$</h2>
-    <p>Goal: show $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_0) \rangle \approx \langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_1) \rangle$. Now the private key $k$ is <b>hidden inside the challenger</b>. $\mathcal{A}'$ does not need it, because the public-key part only encrypts $0^n$.</p>
+    <p>Now $k$ stays inside the challenger. $\mathcal{A}'$ does not need it, because the public-key part only encrypts $0^n$.</p>
     <div class="table-scroll"><table class="data">
       <tr><th>#</th><th>Where</th><th>Content</th></tr>
-      <tr><td>1</td><td>Challenger $\to \mathcal{A}'$</td><td>Challenger runs $k \leftarrow \mathsf{Gen}'(1^n)$ (kept secret) and starts $\mathcal{A}'(1^n)$.</td></tr>
-      <tr><td>2</td><td>$\mathcal{A}'$ (internal)</td><td>Run $(pk, sk) \leftarrow \mathsf{Gen}(1^n)$ itself.</td></tr>
+      <tr><td>1</td><td>Challenger $\to \mathcal{A}'$</td><td>$k \leftarrow \mathsf{Gen}'(1^n)$ (secret); start $\mathcal{A}'(1^n)$.</td></tr>
+      <tr><td>2</td><td>$\mathcal{A}'$</td><td>$(pk, sk) \leftarrow \mathsf{Gen}(1^n)$.</td></tr>
       <tr><td>3</td><td>$\mathcal{A}' \to \mathcal{A}^{hy}$</td><td>Run $\mathcal{A}^{hy}(pk)$.</td></tr>
-      <tr><td>4</td><td>$\mathcal{A}^{hy} \to \mathcal{A}'$</td><td>$\mathcal{A}^{hy}$ outputs $m_0, m_1$.</td></tr>
-      <tr><td>5</td><td>$\mathcal{A}' \to$ challenger</td><td>Output the same pair $m_0, m_1$.</td></tr>
-      <tr><td>6</td><td>Challenger $\to \mathcal{A}'$</td><td>Challenger picks $b \leftarrow \{0,1\}$ and sends $c_2 \leftarrow \mathsf{Enc}'_k(m_b)$.</td></tr>
-      <tr><td>7</td><td>$\mathcal{A}'$ (internal)</td><td>Compute $c_1 \leftarrow \mathsf{Enc}_{pk}(0^n)$.</td></tr>
-      <tr><td>8</td><td>$\mathcal{A}' \to \mathcal{A}^{hy}$</td><td>Give the challenge ciphertext $\langle c_1, c_2 \rangle$.</td></tr>
-      <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}'$</td><td>$\mathcal{A}^{hy}$ outputs a bit $b''$.</td></tr>
+      <tr><td>4</td><td>$\mathcal{A}^{hy} \to \mathcal{A}'$</td><td>Receive $m_0, m_1$.</td></tr>
+      <tr><td>5</td><td>$\mathcal{A}' \to$ challenger</td><td>Output $m_0, m_1$.</td></tr>
+      <tr><td>6</td><td>Challenger $\to \mathcal{A}'$</td><td>$b \leftarrow \{0,1\}$; send $c_2 \leftarrow \mathsf{Enc}'_k(m_b)$.</td></tr>
+      <tr><td>7</td><td>$\mathcal{A}'$</td><td>$c_1 \leftarrow \mathsf{Enc}_{pk}(0^n)$.</td></tr>
+      <tr><td>8</td><td>$\mathcal{A}' \to \mathcal{A}^{hy}$</td><td>Send $\langle c_1, c_2 \rangle$.</td></tr>
+      <tr><td>9</td><td>$\mathcal{A}^{hy} \to \mathcal{A}'$</td><td>Receive a bit $b''$.</td></tr>
       <tr><td>10</td><td>$\mathcal{A}' \to$ challenger</td><td>Output $b' := b''$.</td></tr>
     </table></div>
-    <p><b>Analysis.</b> $\mathcal{A}^{hy}$ sees exactly $\langle pk, \mathsf{Enc}_{pk}(0^n), \mathsf{Enc}'_k(m_b) \rangle$ with $\mathcal{A}'$'s challenge bit $b$, so $\mathcal{A}'$ wins exactly when $\mathcal{A}^{hy}$ guesses $b$:</p>
-    $$\Pr\big[\mathcal{A}^{hy} \text{ guesses } b \text{ in the bottom row}\big] = \Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A}',\Pi'}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
+    <p>$\mathcal{A}^{hy}$ sees exactly the bottom-row tuple for $m_b$, so $\mathcal{A}'$ wins exactly when $\mathcal{A}^{hy}$ guesses $b$, which happens with probability at most $\frac12 + \mathsf{negl}(n)$ by EAV security of $\Pi'$.</p>
 
     <h2>Putting it together</h2>
-    <p>In $\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}^{hy},\Pi^{hy}}$, $\mathcal{A}^{hy}$ sees the top-left tuple if $b = 0$ and the top-right tuple if $b = 1$. Going top-left $\to$ bottom-left (case 1) $\to$ bottom-right (case 3) $\to$ top-right (case 2) changes the probability that $\mathcal{A}^{hy}$ outputs $0$ by at most $\mathsf{negl}_1 + \mathsf{negl}_3 + \mathsf{negl}_2$. This is the "transitivity", and gives</p>
-    $$\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}^{hy},\Pi^{hy}}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
-    <p>For public-key schemes, EAV security implies CPA security (<a href="50.html">Question 50</a>), so $\Pi^{hy}$ is CPA-secure. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">Why the detour via $0^n$? The scheme $\Pi'$ only needs EAV security for a key that is uniform and <i>independent</i> of everything the adversary sees. In the top row, $\mathsf{Enc}_{pk}(k)$ depends on $k$. After replacing it by $\mathsf{Enc}_{pk}(0^n)$, the key $k$ is used only once, inside $\mathsf{Enc}'$, exactly as in $\mathsf{PrivK}^{\mathsf{eav}}$.</p>
+    <p>Going top-left $\to$ bottom-left (case 1) $\to$ bottom-right (case 3) $\to$ top-right (case 2) changes $\mathcal{A}^{hy}$'s output distribution by at most three negligible amounts, so $\Pr[\mathsf{PubK}^{\mathsf{eav}}_{\mathcal{A}^{hy},\Pi^{hy}}(n) = 1] \le \frac12 + \mathsf{negl}(n)$. For public-key schemes this is CPA security. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

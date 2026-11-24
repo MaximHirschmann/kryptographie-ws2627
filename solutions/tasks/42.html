@@ -18,32 +18,16 @@
   </div>
 
   <div class="solution">
-    <h2>The experiments</h2>
-    <p>$\mathcal{G}(1^n)$ outputs a cyclic group $\mathbb{G}$ of order $q$ (with $\|q\| = n$) and a generator $g$.</p>
+    <p><b>Contrapositive.</b> Let $\mathcal{A}$ solve the discrete-log problem with probability $\varepsilon(n)$. Build a CDH solver:</p>
     <div class="algo"><table>
-      <tr><td>$\mathsf{DLog}_{\mathcal{A},\mathcal{G}}(n)$</td><td>$(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$; $h \leftarrow \mathbb{G}$ uniformly; $x \leftarrow \mathcal{A}(\mathbb{G}, q, g, h)$; output $1$ iff $g^x = h$.</td></tr>
-      <tr><td>CDH</td><td>$(\mathbb{G}, q, g) \leftarrow \mathcal{G}(1^n)$; $x_1, x_2 \leftarrow \mathbb{Z}_q$; given $(\mathbb{G}, q, g, g^{x_1}, g^{x_2})$, the adversary must output $g^{x_1 x_2}$.</td></tr>
-    </table></div>
-    <p><b>Hardness</b> means: every PPT adversary succeeds with only negligible probability.</p>
-
-    <div class="box claim"><span class="label">Theorem.</span> If CDH is hard relative to $\mathcal{G}$, then DL is hard relative to $\mathcal{G}$.</div>
-
-    <h2>Proof (contrapositive)</h2>
-    <p>Let $\mathcal{A}$ be a PPT adversary that solves DL with probability $\varepsilon(n)$. Build $\mathcal{A}'$ for CDH:</p>
-    <div class="algo"><table>
-      <tr><td>$\mathcal{A}'(\mathbb{G}, q, g, h_1, h_2)$</td><td>
-        <span class="line">$x := \mathcal{A}(\mathbb{G}, q, g, h_1)$ &nbsp;<span style="color:var(--muted)">(try to compute $\log_g h_1$)</span></span>
-        <span class="line">output $h_2^{\,x}$</span>
-      </td></tr>
+      <tr><td>$\mathcal{A}'(\mathbb{G}, q, g, h_1, h_2)$</td><td>$x := \mathcal{A}(\mathbb{G}, q, g, h_1)$; output $h_2^{\,x}$</td></tr>
     </table></div>
     <ul>
-      <li><b>Same input distribution:</b> $h_1 = g^{x_1}$ with $x_1$ uniform in $\mathbb{Z}_q$ is a uniform group element, exactly as $h$ in $\mathsf{DLog}$. So $\mathcal{A}$ outputs $x$ with $g^x = h_1$ with probability exactly $\varepsilon(n)$.</li>
-      <li><b>Correct output:</b> if $g^x = h_1$, then $x \equiv x_1 \pmod q$ and $h_2^{\,x} = (g^{x_2})^{x_1} = g^{x_1 x_2}$.</li>
-      <li><b>Efficient:</b> one call to $\mathcal{A}$ plus one exponentiation, $\mathcal{O}(n)$ group operations.</li>
+      <li>$h_1 = g^{x_1}$ for uniform $x_1$ is a uniform group element, exactly as in the DLog experiment, so $\mathcal{A}$ returns $x = \log_g h_1$ with probability $\varepsilon(n)$.</li>
+      <li>In that case $h_2^{\,x} = (g^{x_2})^{x_1} = g^{x_1 x_2}$, the correct CDH answer.</li>
+      <li>$\mathcal{A}'$ is PPT: one call to $\mathcal{A}$ plus one exponentiation.</li>
     </ul>
-    $$\Pr[\mathcal{A}' \text{ solves CDH}] \ \ge\ \Pr[\mathsf{DLog}_{\mathcal{A},\mathcal{G}}(n) = 1] = \varepsilon(n).$$
-    <p>If CDH is hard, the left side is negligible, so $\varepsilon$ is negligible for every PPT $\mathcal{A}$, i.e. DL is hard. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">In short: CDH is at most as hard as DL. Whoever can compute discrete logarithms can compute Diffie–Hellman keys.</p>
+    <p>So $\Pr[\mathcal{A}' \text{ solves CDH}] \ge \varepsilon(n)$. If CDH is hard, $\varepsilon$ is negligible for every PPT $\mathcal{A}$, i.e. DL is hard. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

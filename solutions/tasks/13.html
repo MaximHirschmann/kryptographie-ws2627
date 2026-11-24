@@ -18,27 +18,12 @@
   </div>
 
   <div class="solution">
-    <div class="box result"><span class="label">Answer.</span> <b>False.</b> $|\mathcal{K}| = |\mathcal{M}|$ and a uniform key are necessary for this kind of scheme, but not enough. Shannon's theorem (script <a href="../script.html#thm-shannon">Theorem 7</a>) also requires that, for every pair $(m, c)$, <b>exactly one</b> key maps $m$ to $c$. The encryption has to actually use the key.</div>
+    <div class="box result"><span class="label">Answer.</span> <b>False.</b> Shannon's theorem (script <a href="../script.html#thm-shannon">Theorem 7</a>) also requires that <b>exactly one</b> key maps each $m$ to each $c$; the encryption has to actually use the key.</div>
 
-    <h2>Counterexample 1: a scheme that ignores the key</h2>
-    <p>Let $\mathcal{M} = \mathcal{K} = \mathcal{C} = \{0,1\}^\ell$ and define</p>
-    <div class="algo"><table>
-      <tr><td>Gen</td><td>$k \leftarrow \{0,1\}^\ell$ uniformly; output $k$</td></tr>
-      <tr><td>Enc</td><td>input $k$, $m$; output $c := m$</td></tr>
-      <tr><td>Dec</td><td>input $k$, $c$; output $m := c$</td></tr>
-    </table></div>
-    <p>The scheme is correct, $|\mathcal{K}| = |\mathcal{M}| = 2^\ell$, and the key is uniform. But for any $m_0 \ne m_1$ and $c = m_0$:</p>
-    $$\Pr[C = c \mid M = m_0] = 1 \ne 0 = \Pr[C = c \mid M = m_1].$$
-    <p>This violates the script's <a href="../script.html#def-ps-3">Definition 5</a>, so the scheme is not perfectly secret. <span class="qed">$\blacksquare$</span></p>
-
-    <h2>Counterexample 2: a scheme that uses the key, but not fully</h2>
-    <p>The first example might look like cheating, so here is one where the key is used. Let $\mathcal{M} = \mathcal{K} = \mathcal{C} = \{0,1\}^2$, with $\mathsf{Gen}$ uniform, and</p>
-    $$\mathsf{Enc}_{k_1 k_2}(m_1 m_2) := (m_1 \oplus k_1) \, (m_2 \oplus k_1).$$
-    <p>The second key bit is never used. Decryption works: $\mathsf{Dec}_{k}(c_1 c_2) = (c_1 \oplus k_1)(c_2 \oplus k_1)$. However, $c_1 \oplus c_2 = m_1 \oplus m_2$ is always visible. For example, the ciphertext $00$ can only come from $00$ or $11$:</p>
-    $$\Pr[C = 00 \mid M = 01] = 0 \ne \tfrac12 = \Pr[C = 00 \mid M = 00].$$
-    <p>Here, two keys ($k_2 = 0$ and $k_2 = 1$) map $m$ to the same $c$, so the uniqueness condition of Shannon's theorem fails.</p>
-
-    <p class="note">By Shannon's theorem, for $|\mathcal{M}| = |\mathcal{K}| = |\mathcal{C}|$: perfect secrecy $\iff$ uniform key <b>and</b> a unique key for every $(m, c)$. The question only gives the first condition.</p>
+    <h2>Counterexample: a scheme that ignores the key</h2>
+    <p>Let $\mathcal{M} = \mathcal{K} = \mathcal{C} = \{0,1\}^\ell$, $\mathsf{Gen}$ uniform, $\mathsf{Enc}_k(m) := m$ and $\mathsf{Dec}_k(c) := c$. The scheme is correct, $|\mathcal{K}| = |\mathcal{M}|$ and the key is uniform. But for $m_0 \ne m_1$ and $c = m_0$,</p>
+    $$\Pr[C = c \mid M = m_0] = 1 \ne 0 = \Pr[C = c \mid M = m_1],$$
+    <p>so it is not perfectly secret (script <a href="../script.html#def-ps-3">Definition 5</a>). <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

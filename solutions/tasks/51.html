@@ -20,28 +20,14 @@
 
   <div class="solution">
     <h2>Proof (contrapositive)</h2>
-    <p>Suppose ciphertexts of single bits have length at most $c \log n$ for some constant $c$ (for infinitely many $n$). Then there are at most</p>
-    $$N := 2^{c \log n + 1} = 2n^c$$
-    <p>possible ciphertexts, which is <b>polynomially many</b>. Since $pk$ is public, the attacker can produce encryptions of $0$ itself and check whether the challenge "looks like" one of them.</p>
-
-    <h3>Adversary</h3>
-    <div class="algo"><table>
-      <tr><td>$\mathcal{A}(pk)$</td><td>
-        <span class="line">output $m_0 = 0$, $m_1 = 1$; receive the challenge $c^*$</span>
-        <span class="line">compute one fresh encryption $c_0 \leftarrow \mathsf{Enc}_{pk}(0)$</span>
-        <span class="line">if $c^* = c_0$ output $0$, else output $1$</span>
-      </td></tr>
-    </table></div>
-
-    <h3>Analysis</h3>
-    <p>Let $p_c := \Pr[\mathsf{Enc}_{pk}(0) = c]$ for each of the at most $N$ possible ciphertexts $c$.</p>
+    <p>Suppose single-bit ciphertexts have length at most $c \log n$. Then there are at most $N := 2n^c$ possible ciphertexts, polynomially many.</p>
+    <p><b>Adversary:</b> output $m_0 = 0$, $m_1 = 1$, receive $c^*$, compute a fresh $c_0 \leftarrow \mathsf{Enc}_{pk}(0)$ with the public key, and output $0$ iff $c^* = c_0$.</p>
     <ul>
-      <li><b>$b = 0$:</b> $c^*$ and $c_0$ are independent samples from the same distribution. By the Cauchy–Schwarz inequality,
-      $$\Pr[c^* = c_0] = \sum_c p_c^2 \ \ge\ \frac{\big(\sum_c p_c\big)^2}{N} = \frac{1}{N}.$$</li>
-      <li><b>$b = 1$:</b> by correctness, an encryption of $1$ is never equal to an encryption of $0$, because it would decrypt to two different bits. So $c^* \ne c_0$ and $\mathcal{A}$ outputs $1$, which is correct.</li>
+      <li>$b = 0$: two independent encryptions of $0$ coincide with probability $\sum_c p_c^2 \ge \frac1N$ (Cauchy–Schwarz, with $p_c := \Pr[\mathsf{Enc}_{pk}(0) = c]$).</li>
+      <li>$b = 1$: by correctness an encryption of $1$ never equals one of $0$, so the adversary is always right.</li>
     </ul>
-    $$\Pr[\mathsf{PubK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] \ \ge\ \tfrac12 \cdot \frac1N + \tfrac12 \cdot 1 = \tfrac12 + \frac{1}{4n^c}.$$
-    <p>This advantage occurs for infinitely many $n$, so it is non-negligible. The same attack works if only encryptions of $0$ have the short-length bound; if only encryptions of $1$ are short, swap the bit labels. Thus a secure scheme’s fixed single-bit ciphertext length must be $\omega(\log n)$. <span class="qed">$\blacksquare$</span></p>
+    $$\Pr[\mathsf{PubK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] \ge \tfrac12 \cdot \tfrac1N + \tfrac12 = \tfrac12 + \tfrac{1}{4n^c},$$
+    <p>which is a non-negligible advantage. So ciphertexts must have length $\omega(\log n)$. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

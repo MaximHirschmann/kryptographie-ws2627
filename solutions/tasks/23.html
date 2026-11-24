@@ -21,33 +21,22 @@
 
   <div class="solution">
     <h2>Construction: secret-share the message</h2>
-    <p>Split $m$ into two XOR shares $r$ and $r \oplus m$. Each share on its own is uniformly random, but together they give $m$. Encrypt one share with each scheme.</p>
+    <p>Split $m$ into the XOR shares $r$ and $r \oplus m$; each share alone is uniformly random. Encrypt one share with each scheme.</p>
     <div class="algo"><table>
-      <tr><td>Gen</td><td>$k' \leftarrow \mathsf{Gen}'(1^n)$, $k'' \leftarrow \mathsf{Gen}''(1^n)$; output $k = (k', k'')$</td></tr>
-      <tr><td>Enc</td><td>input $k$, $m$: &nbsp; $r \leftarrow \{0,1\}^{|m|}$; &nbsp; $c' \leftarrow \mathsf{Enc}'_{k'}(r)$; &nbsp; $c'' \leftarrow \mathsf{Enc}''_{k''}(r \oplus m)$; &nbsp; output $\langle c', c'' \rangle$</td></tr>
-      <tr><td>Dec</td><td>input $k$, $\langle c', c'' \rangle$: &nbsp; output $\mathsf{Dec}'_{k'}(c') \oplus \mathsf{Dec}''_{k''}(c'')$</td></tr>
+      <tr><td>Gen</td><td>$k' \leftarrow \mathsf{Gen}'(1^n)$, $k'' \leftarrow \mathsf{Gen}''(1^n)$</td></tr>
+      <tr><td>Enc</td><td>$r \leftarrow \{0,1\}^{|m|}$; output $\langle \mathsf{Enc}'_{k'}(r),\ \mathsf{Enc}''_{k''}(r \oplus m) \rangle$</td></tr>
+      <tr><td>Dec</td><td>output $\mathsf{Dec}'_{k'}(c') \oplus \mathsf{Dec}''_{k''}(c'')$</td></tr>
     </table></div>
-    <p><b>Correctness:</b> $r \oplus (r \oplus m) = m$.</p>
 
     <h2>Proof (assuming $\Pi'$ is CPA-secure)</h2>
-    <p>Let $\mathcal{A}$ be a PPT adversary attacking $\Pi$. We build $\mathcal{A}'$ attacking $\Pi'$. $\mathcal{A}'$ has an encryption oracle for $\mathsf{Enc}'_{k'}$ and generates $k'' \leftarrow \mathsf{Gen}''(1^n)$ <b>itself</b>.</p>
-    <div class="algo"><table>
-      <tr><td>Oracle</td><td>When $\mathcal{A}$ asks for the encryption of $m$: choose $r \leftarrow \{0,1\}^{|m|}$, get $c' \leftarrow \mathsf{Enc}'_{k'}(r)$ from the own oracle, compute $c'' \leftarrow \mathsf{Enc}''_{k''}(r \oplus m)$ with the own key, and return $\langle c', c'' \rangle$.</td></tr>
-      <tr><td>Challenge</td><td>When $\mathcal{A}$ outputs $m_0, m_1$: choose $s \leftarrow \{0,1\}^{|m_0|}$ and output the pair $(s \oplus m_0,\ s \oplus m_1)$ as $\mathcal{A}'$'s own challenge. Receive $c'^* \leftarrow \mathsf{Enc}'_{k'}(s \oplus m_b)$, compute $c''^* \leftarrow \mathsf{Enc}''_{k''}(s)$, and give $\langle c'^*, c''^* \rangle$ to $\mathcal{A}$.</td></tr>
-      <tr><td>Output</td><td>Keep answering queries as above. Output whatever bit $b'$ $\mathcal{A}$ outputs.</td></tr>
-    </table></div>
-
-    <h3>The simulation is perfect</h3>
+    <p>Given an adversary $\mathcal{A}$ against $\Pi$, build $\mathcal{A}'$ against $\Pi'$. It generates $k''$ itself.</p>
     <ul>
-      <li>Oracle answers are real $\Pi$-encryptions.</li>
-      <li>The challenge is a real encryption of $m_b$ with the share $r := s \oplus m_b$. This $r$ is uniform because $s$ is uniform, and $r \oplus m_b = s$, so $c''^*$ encrypts exactly the right second share.</li>
-      <li>$|s \oplus m_0| = |s \oplus m_1|$, so $\mathcal{A}'$'s challenge pair is valid.</li>
+      <li><b>Oracle queries $m$:</b> choose $r$, get $\mathsf{Enc}'_{k'}(r)$ from its own oracle, compute $\mathsf{Enc}''_{k''}(r \oplus m)$, and return both.</li>
+      <li><b>Challenge $m_0, m_1$:</b> choose a uniform $s$ and submit $(s \oplus m_0,\ s \oplus m_1)$ to its own challenger. On receiving $c'^* = \mathsf{Enc}'_{k'}(s \oplus m_b)$, give $\mathcal{A}$ the pair $\langle c'^*, \mathsf{Enc}''_{k''}(s) \rangle$.</li>
+      <li><b>Output</b> $\mathcal{A}$'s guess.</li>
     </ul>
-    <p>Hence $\mathcal{A}$'s view is distributed exactly as in $\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}$ with the same bit $b$, and</p>
-    $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi}(n) = 1] = \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A}',\Pi'}(n) = 1] \le \tfrac12 + \mathsf{negl}(n).$$
-    <p>$\mathcal{A}'$ is PPT, so $\Pi$ is CPA-secure. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The other half is symmetric. If $\Pi''$ is CPA-secure, $\mathcal{A}''$ generates $k'$ itself, puts the fresh uniform share $s$ under $\Pi'$, and sends the challenge pair $(s \oplus m_0, s \oplus m_1)$ to its $\Pi''$ challenger. The construction works without knowing which scheme is secure, because one uniformly random share reveals nothing about $m$.</p>
-    <p class="note">The lecture (00_header.pdf, Theorem 1) proves Case 1 differently: $\mathcal{A}'$ submits the pair $(r, 0^n)$ to its own challenger. If $0^n$ was encrypted, the second share is a one-time pad and $\mathcal{A}$ wins with probability exactly $\frac12$. Both proofs are valid.</p>
+    <p>The challenge is a real encryption of $m_b$ with the uniform share $r := s \oplus m_b$ (then $r \oplus m_b = s$). So $\mathcal{A}$'s view is exactly as in its own game, and $\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A},\Pi} = 1] = \Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\mathcal{A}',\Pi'} = 1] \le \frac12 + \mathsf{negl}(n)$. <span class="qed">$\blacksquare$</span></p>
+    <p class="note">The case "$\Pi''$ is CPA-secure" is symmetric. The lecture (00_header.pdf, Theorem 1) instead submits the pair $(r, 0^n)$ in Case 1; both proofs are valid.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

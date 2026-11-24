@@ -19,28 +19,16 @@
   </div>
 
   <div class="solution">
-    <h2>Idea</h2>
-    <p>$\mathsf{Enc}$ runs in polynomial time, so the encryption of a <b>single bit</b> has length at most $p(n)$ for some polynomial $p$. Long messages cannot all have such short ciphertexts, because there are too few short strings and decryption must be able to tell them apart. So the <b>length</b> of the ciphertext tells "one bit" apart from "a long message".</p>
+    <p><b>Idea.</b> A single bit is encrypted to at most $p(n)$ bits for some polynomial $p$. Long messages cannot all have such short ciphertexts, so the ciphertext <b>length</b> distinguishes one bit from a long message.</p>
 
     <h2>Counting</h2>
-    <p>Let $L := p(n) + 2$. Fix any key $k$. By correctness, two different messages can never produce the same ciphertext under $k$. There are fewer than $2^{p(n)+1}$ strings of length at most $p(n)$. So fewer than $2^{p(n)+1}$ messages $m \in \{0,1\}^L$ can have <i>any</i> short ciphertext, i.e. a ciphertext of length at most $p(n)$, under $k$. That is fewer than half of the $2^L = 2^{p(n)+2}$ messages. Averaged over the key and over a uniformly random message $m_1 \leftarrow \{0,1\}^L$:</p>
-    $$\Pr_{k,\, m_1}\big[\,|\mathsf{Enc}_k(m_1)| \le p(n)\,\big] \lt \frac{2^{p(n)+1}}{2^{p(n)+2}} = \frac12.$$
+    <p>Fix a key. By correctness, different messages have different ciphertexts, and there are fewer than $2^{p(n)+1}$ strings of length at most $p(n)$. So fewer than half of the $2^{p(n)+2}$ messages of length $p(n) + 2$ can get a ciphertext that short. For a uniform $m_1 \in \{0,1\}^{p(n)+2}$:</p>
+    $$\Pr\big[\,|\mathsf{Enc}_k(m_1)| \le p(n)\,\big] \lt \tfrac12.$$
 
     <h2>Adversary</h2>
-    <div class="algo"><table>
-      <tr><td>ask</td><td>$m_0 := 0$ (one bit); &nbsp; $m_1 \leftarrow \{0,1\}^{p(n)+2}$ uniformly</td></tr>
-      <tr><td>guess</td><td>on $c$: output $0$ if $|c| \le p(n)$, otherwise output $1$</td></tr>
-    </table></div>
-    <p>$\mathcal{A}$ is PPT, since $p$ is a fixed polynomial.</p>
-
-    <h2>Analysis</h2>
-    <ul>
-      <li>$b = 0$: $|c| \le p(n)$ always, so $\mathcal{A}$ is right with probability $1$.</li>
-      <li>$b = 1$: $|c| \gt p(n)$ with probability greater than $\frac12$ (counting above), so $\mathcal{A}$ is right with probability greater than $\frac12$.</li>
-    </ul>
-    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \gt \tfrac12 \cdot 1 + \tfrac12 \cdot \tfrac12 = \tfrac34.$$
-    <p>This is not $\le \frac12 + \mathsf{negl}(n)$, so $\Pi$ does not have indistinguishable encryptions. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">Why the hint says "not trivial": one cannot simply assume $|c| = |m|$. A scheme might pad every ciphertext to some length. But it can only pad up to a polynomial length, and the adversary simply picks a message longer than that. This is why the definitions require $|m_0| = |m_1|$: encryption may always reveal the length of the plaintext.</p>
+    <p>Output $m_0 := 0$ (one bit) and a uniform $m_1 \in \{0,1\}^{p(n)+2}$. On the challenge $c$, output $0$ iff $|c| \le p(n)$. It is always right for $b = 0$ and right with probability greater than $\frac12$ for $b = 1$, so</p>
+    $$\Pr[\mathsf{PrivK}^{\mathsf{eav}}_{\mathcal{A},\Pi}(n) = 1] \gt \tfrac12 + \tfrac14 = \tfrac34. \qquad \blacksquare$$
+    <p class="note">This is why the definitions require $|m_0| = |m_1|$: encryption may always reveal the message length.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

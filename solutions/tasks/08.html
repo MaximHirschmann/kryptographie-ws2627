@@ -20,14 +20,13 @@
   </div>
 
   <div class="solution">
-    <div class="box claim"><span class="label">Claim.</span> For every constant $\varepsilon \lt 1$, almost perfect secrecy implies $|\mathcal{K}| \ge |\mathcal{M}|$ (as for perfect secrecy, <a href="../script.html#thm-key-length">key-length theorem in the script</a>).</div>
+    <div class="box claim"><span class="label">Claim.</span> For every constant $\varepsilon \lt 1$, almost perfect secrecy still requires $|\mathcal{K}| \ge |\mathcal{M}|$ (script <a href="../script.html#thm-key-length">Theorem 6</a>).</div>
 
     <h2>Proof (contrapositive)</h2>
-    <p>Assume $|\mathcal{K}| \lt |\mathcal{M}|$. Fix $m_0 \in \mathcal{M}$, $k_0 \in \mathcal{K}$ and a ciphertext $c$ that $\mathsf{Enc}_{k_0}(m_0)$ can output. The set $\mathcal{M}(c) = \{\mathsf{Dec}_k(c) \mid k \in \mathcal{K}\}$ has at most $|\mathcal{K}| \lt |\mathcal{M}|$ elements, so some $\tilde m \notin \mathcal{M}(c)$ exists. By correctness no key encrypts $\tilde m$ to $c$, and $\tilde m \ne m_0$ (since $\mathsf{Dec}_{k_0}(c) = m_0$).</p>
-    <p>Choose the distribution $\Pr[M = m_0] = 1 - \varepsilon$, $\Pr[M = \tilde m] = \varepsilon$. Then $\Pr[C = c] \gt 0$ (via $m_0, k_0$), but $\Pr[M = \tilde m \mid C = c] = 0$, so</p>
-    $$\big|\Pr[M = \tilde m \mid C = c] - \Pr[M = \tilde m]\big| = \varepsilon \not\lt \varepsilon.$$
-    <p>The scheme is not almost perfectly secret. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The uniform distribution (as in the script's proof) only gives a difference of $1/|\mathcal{M}|$, which may be below $\varepsilon$. Putting weight $\varepsilon$ on $\tilde m$ fixes that. For $\varepsilon \gt 1$ the condition would always hold.</p>
+    <p>Assume $|\mathcal{K}| \lt |\mathcal{M}|$. Fix $m_0$, a key $k_0$ and a ciphertext $c$ that $\mathsf{Enc}_{k_0}(m_0)$ can output. Only $|\mathcal{K}| \lt |\mathcal{M}|$ messages $\mathsf{Dec}_k(c)$ are possible decryptions of $c$, so some $\tilde m$ is never encrypted to $c$; clearly $\tilde m \ne m_0$.</p>
+    <p>Take $\Pr[M = m_0] = 1 - \varepsilon$ and $\Pr[M = \tilde m] = \varepsilon$. Then $\Pr[C = c] \gt 0$ but $\Pr[M = \tilde m \mid C = c] = 0$, so</p>
+    $$\big|\Pr[M = \tilde m \mid C = c] - \Pr[M = \tilde m]\big| = \varepsilon \not\lt \varepsilon. \qquad \blacksquare$$
+    <p class="note">Unlike the script's proof, a uniform distribution would not suffice: it only gives a difference of $1/|\mathcal{M}|$, which may be smaller than $\varepsilon$.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

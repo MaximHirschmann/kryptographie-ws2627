@@ -18,25 +18,17 @@
   </div>
 
   <div class="solution">
-    <h2>Idea</h2>
-    <p>$\varphi(N)$ and $N$ give the <b>sum</b> and the <b>product</b> of $p$ and $q$. Two numbers with a known sum and product are the roots of a quadratic equation. By 07_number_theory, Lemma 2.1:</p>
-    $$\varphi(N) = (p-1)(q-1) = pq - p - q + 1 = N - (p + q) + 1 \quad\Longrightarrow\quad S := p + q = N - \varphi(N) + 1.$$
-    <p>With $pq = N$, the numbers $p$ and $q$ are the roots of</p>
-    $$X^2 - S X + N = (X - p)(X - q) = 0.$$
+    <p><b>Idea.</b> $N$ and $\varphi(N)$ give the product and the sum of $p$ and $q$:</p>
+    $$\varphi(N) = (p-1)(q-1) = N - (p + q) + 1 \quad\Longrightarrow\quad S := p + q = N - \varphi(N) + 1.$$
+    <p>So $p, q$ are the roots of $X^2 - SX + N$.</p>
 
     <h2>Algorithm</h2>
     <div class="algo"><table>
       <tr><td>1.</td><td>$S := N - \varphi(N) + 1$</td></tr>
-      <tr><td>2.</td><td>$D := S^2 - 4N$ &nbsp;<span style="color:var(--muted)">($= (p - q)^2$, a perfect square)</span></td></tr>
-      <tr><td>3.</td><td>$d := \sqrt{D}$ (integer square root)</td></tr>
-      <tr><td>4.</td><td>output $p := \frac{S + d}{2}$, $q := \frac{S - d}{2}$</td></tr>
+      <tr><td>2.</td><td>$d := \sqrt{S^2 - 4N}$ (integer square root; $S^2 - 4N = (p - q)^2$)</td></tr>
+      <tr><td>3.</td><td>output $p := \frac{S + d}{2}$, $q := \frac{S - d}{2}$</td></tr>
     </table></div>
-    <p><b>Correctness:</b> $S^2 - 4N = (p + q)^2 - 4pq = (p - q)^2$, so $d = |p - q|$, and $\frac{S \pm d}{2}$ gives $p$ and $q$.</p>
-    <p><b>Running time:</b> with $\|N\| = \log N$ bits, steps 1, 2 and 4 are additions and multiplications of $\mathcal{O}(\log N)$-bit numbers. The integer square root in step 3 can be computed by binary search, or Newton's method, in $\mathcal{O}(\log N)$ iterations, each a multiplication. In total this is polynomial in $\log N$, e.g. $\mathcal{O}(\log^3 N)$ bit operations.</p>
-
-    <h2>Example</h2>
-    <p>$N = 77$, $\varphi(N) = 60$: $S = 77 - 60 + 1 = 18$, $D = 324 - 308 = 16$, $d = 4$, so $p = 11$, $q = 7$.</p>
-    <p class="note">Consequence: for RSA, computing $\varphi(N)$ is exactly as hard as factoring $N$. Knowing $\varphi(N)$ is enough to factor.</p>
+    <p>Only additions, multiplications and an integer square root (binary search) on $\mathcal{O}(\log N)$-bit numbers, so it runs in polynomial time. Example: $N = 77$, $\varphi(N) = 60$ give $S = 18$, $d = 4$, $p = 11$, $q = 7$. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

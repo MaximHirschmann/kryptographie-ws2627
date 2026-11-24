@@ -19,25 +19,12 @@
   </div>
 
   <div class="solution">
-    <div class="box result"><span class="label">Answer.</span> <b>False.</b> Perfect secrecy says that the ciphertext does not change the probability of a message. It does <i>not</i> say that all messages are equally likely.</div>
-
-    <h2>Why it fails</h2>
-    <p>By perfect secrecy (Definition 2.1), for every $c$ with $\Pr[C = c] \gt 0$:</p>
-    $$\Pr[M = m \mid C = c] = \Pr[M = m] \quad \text{and} \quad \Pr[M = m' \mid C = c] = \Pr[M = m'].$$
-    <p>So the claim would require $\Pr[M = m] = \Pr[M = m']$ for every distribution. That holds only for the uniform distribution.</p>
-    <p class="note">The statement mixes this up with the script's <a href="../script.html#def-ps-3">Definition 5</a>, $\Pr[C = c \mid M = m_0] = \Pr[C = c \mid M = m_1]$, which <i>is</i> true. There we condition on the message, not on the ciphertext.</p>
+    <div class="box result"><span class="label">Answer.</span> <b>False.</b> Perfect secrecy says the ciphertext does not change a message's probability, $\Pr[M = m \mid C = c] = \Pr[M = m]$. So the claim would require all messages to be equally likely, which fails for non-uniform distributions.</div>
 
     <h2>Counterexample</h2>
-    <p>Take the one-time pad with $\ell = 1$, so $\mathcal{M} = \mathcal{K} = \mathcal{C} = \{0, 1\}$ and $c = m \oplus k$ with uniform $k$. It is perfectly secret (script <a href="../script.html#thm-otp">Theorem 5</a>). Choose the distribution</p>
-    $$\Pr[M = 0] = \tfrac14, \qquad \Pr[M = 1] = \tfrac34.$$
-    <p>For $c = 0$:</p>
-    $$\Pr[C = 0] = \Pr[M = 0]\Pr[K = 0] + \Pr[M = 1]\Pr[K = 1] = \tfrac14 \cdot \tfrac12 + \tfrac34 \cdot \tfrac12 = \tfrac12 \gt 0,$$
-    $$\Pr[M = 0 \mid C = 0] = \frac{\Pr[M = 0 \wedge K = 0]}{\Pr[C = 0]} = \frac{\frac14 \cdot \frac12}{\frac12} = \tfrac14,
-    \qquad
-    \Pr[M = 1 \mid C = 0] = \frac{\frac34 \cdot \frac12}{\frac12} = \tfrac34.$$
-    <p>So $\Pr[M = 0 \mid C = 0] = \frac14 \ne \frac34 = \Pr[M = 1 \mid C = 0]$, although the scheme is perfectly secret. <span class="qed">$\blacksquare$</span></p>
-
-    <p class="note">The statement is true only for the uniform distribution over $\mathcal{M}$: then both sides equal $\frac{1}{|\mathcal{M}|}$.</p>
+    <p>Take the one-bit one-time pad (perfectly secret) with $\Pr[M = 0] = \frac14$, $\Pr[M = 1] = \frac34$. For any $c$, perfect secrecy gives</p>
+    $$\Pr[M = 0 \mid C = c] = \tfrac14 \ne \tfrac34 = \Pr[M = 1 \mid C = c]. \qquad \blacksquare$$
+    <p class="note">The true statement conditions on the message instead: $\Pr[C = c \mid M = m] = \Pr[C = c \mid M = m']$ (script <a href="../script.html#def-ps-3">Definition 5</a>).</p>
   </div>
 
   <nav class="pager" id="pager"></nav>

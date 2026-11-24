@@ -22,31 +22,20 @@
 
   <div class="solution">
     <h2>1. Definition</h2>
-    <div class="box claim">
-    <p><span class="label">Definition.</span> Let $\ell$ be a polynomial and $G$ a deterministic polynomial-time algorithm with $|G(s)| = \ell(n)$ for all $s \in \{0,1\}^n$. $G$ is a <b>pseudorandom generator</b> if:</p>
+    <p>$G$ is a <b>pseudorandom generator</b> if</p>
     <ol>
-      <li><b>Expansion:</b> $\ell(n) \gt n$ for every $n$.</li>
-      <li><b>Pseudorandomness:</b> for every PPT distinguisher $D$ there is a negligible function $\mathsf{negl}$ such that
-      $$\Big|\Pr_{r \leftarrow \{0,1\}^{\ell(n)}}[D(r) = 1] - \Pr_{s \leftarrow \{0,1\}^n}[D(G(s)) = 1]\Big| \le \mathsf{negl}(n),$$
-      where $r$ is uniform over $\{0,1\}^{\ell(n)}$ and the seed $s$ is uniform over $\{0,1\}^n$.</li>
+      <li><b>Expansion:</b> $\ell(n) \gt n$ for every $n$, and</li>
+      <li><b>Pseudorandomness:</b> for every PPT distinguisher $D$ there is a negligible $\mathsf{negl}$ with
+      $$\Big|\Pr_{r \leftarrow \{0,1\}^{\ell(n)}}[D(r) = 1] - \Pr_{s \leftarrow \{0,1\}^n}[D(G(s)) = 1]\Big| \le \mathsf{negl}(n).$$</li>
     </ol>
-    </div>
 
     <h2>2. An unbounded distinguisher</h2>
-    <div class="algo"><table>
-      <tr><td>$D(y)$</td><td>
-        <span class="line">for every $s \in \{0,1\}^n$:</span>
-        <span class="line ind">if $G(s) = y$: output $1$</span>
-        <span class="line">output $0$</span>
-      </td></tr>
-    </table></div>
+    <p>$D(y)$: try every seed $s \in \{0,1\}^n$ and output $1$ iff some $G(s) = y$.</p>
     <ul>
-      <li><b>Pseudorandom input</b> $y = G(s)$: $D$ finds the seed, so $\Pr[D(G(s)) = 1] = 1$.</li>
-      <li><b>Random input</b> $y \leftarrow \{0,1\}^{2n}$: $G$ has at most $2^n$ different outputs (one per seed), out of $2^{2n}$ strings. So
-      $$\Pr[D(y) = 1] \le \frac{2^n}{2^{2n}} = 2^{-n}.$$</li>
+      <li>For $y = G(s)$, $D$ always outputs $1$.</li>
+      <li>For uniform $y \in \{0,1\}^{2n}$: $G$ has at most $2^n$ outputs, so $\Pr[D(y) = 1] \le 2^n / 2^{2n} = 2^{-n}$.</li>
     </ul>
-    <p>The difference is at least $1 - 2^{-n}$, which is almost $1$. The distinguisher takes about $2^n$ evaluations of $G$, which is exponential, so this does not contradict pseudorandomness: the definition only covers PPT distinguishers. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The outputs of a PRG are a tiny subset of all strings (here a $2^{-n}$ fraction). It is only <i>computationally</i> hard to tell that a given string belongs to this subset.</p>
+    <p>The advantage is at least $1 - 2^{-n}$. $D$ needs $2^n$ evaluations of $G$, so this does not contradict the definition, which only covers PPT distinguishers. <span class="qed">$\blacksquare$</span></p>
   </div>
 
   <nav class="pager" id="pager"></nav>

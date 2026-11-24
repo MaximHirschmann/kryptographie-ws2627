@@ -24,47 +24,24 @@
   </div>
 
   <div class="solution">
-    <div class="box claim"><span class="label">Definition (script <a href="../script.html#def-negligible">Def. 9</a>).</span> $f$ is negligible if for every polynomial $p$ there is an $N$ such that $f(n) \lt \frac{1}{p(n)}$ for all $n \gt N$. Below, all polynomials are positive for large $n$, and for functions that can be negative we use $|f(n)|$.</div>
+    <p class="note">Definition (script <a href="../script.html#def-negligible">Def. 9</a>): $f$ is negligible if for every polynomial $p$ there is an $N$ with $|f(n)| \lt \frac{1}{p(n)}$ for all $n \gt N$.</p>
 
     <h2>1. Sum</h2>
-    <p>Let $p$ be a polynomial. Apply the definition to the polynomial $2p$:</p>
-    $$\exists N_1\ \forall n \gt N_1: \mathsf{negl}_1(n) \lt \tfrac{1}{2p(n)}, \qquad \exists N_2\ \forall n \gt N_2: \mathsf{negl}_2(n) \lt \tfrac{1}{2p(n)}.$$
-    <p>For $n \gt N := \max(N_1, N_2)$: $\mathsf{negl}_3(n) \lt \frac{1}{2p(n)} + \frac{1}{2p(n)} = \frac{1}{p(n)}$. <span class="qed">$\blacksquare$</span></p>
+    <p>Given $p$, apply the definition to $2p$: for large $n$, $\mathsf{negl}_1(n), \mathsf{negl}_2(n) \lt \frac{1}{2p(n)}$, so $\mathsf{negl}_3(n) \lt \frac{1}{p(n)}$. <span class="qed">$\blacksquare$</span></p>
 
     <h2>2. Polynomial times negligible</h2>
-    <p>Let $q$ be any polynomial. $p \cdot q$ is again a polynomial, so there is an $N$ with $\mathsf{negl}_1(n) \lt \frac{1}{p(n) q(n)}$ for $n \gt N$. Multiplying by $p(n) \gt 0$:</p>
-    $$\mathsf{negl}_4(n) = p(n) \cdot \mathsf{negl}_1(n) \lt \frac{1}{q(n)} \quad \text{for all } n \gt N. \qquad \blacksquare$$
-    <p class="note">Meaning: if an event has negligible probability in one experiment, it still has negligible probability when the experiment is repeated polynomially many times (union bound).</p>
+    <p>Given $q$, apply the definition to the polynomial $p \cdot q$: for large $n$, $\mathsf{negl}_1(n) \lt \frac{1}{p(n)q(n)}$, so $p(n)\,\mathsf{negl}_1(n) \lt \frac{1}{q(n)}$. <span class="qed">$\blacksquare$</span></p>
 
     <h2>3. Negligible functions tend to 0</h2>
-    <p>Let $\varepsilon \gt 0$. Take the constant polynomial $p(n) := \lceil 1/\varepsilon \rceil$. There is an $N$ such that for all $n \gt N$:</p>
-    $$0 \le \mathsf{negl}(n) \lt \frac{1}{\lceil 1/\varepsilon \rceil} \le \varepsilon.$$
-    <p>This is exactly the definition of $\lim_{n \to \infty} \mathsf{negl}(n) = 0$. <span class="qed">$\blacksquare$</span></p>
-    <p class="note">The converse is false: $\frac1n \to 0$, but $\frac1n$ is not negligible (see 4b).</p>
+    <p>Given $\varepsilon \gt 0$, use the constant polynomial $p := \lceil 1/\varepsilon \rceil$: for large $n$, $0 \le \mathsf{negl}(n) \lt \frac1p \le \varepsilon$. That is $\lim_{n\to\infty} \mathsf{negl}(n) = 0$. (The converse fails: $\frac1n \to 0$ is not negligible.) <span class="qed">$\blacksquare$</span></p>
 
     <h2>4. Examples</h2>
-    <h3>(a) $n^{-\log n}$: negligible</h3>
-    <p>Let $p$ be a polynomial of degree $d$. Then $p(n) \le n^{d+1}$ for all large $n$. For $n \gt 2^{d+1}$ we have $\log n \gt d + 1$, hence</p>
-    $$n^{-\log n} \lt n^{-(d+1)} \le \frac{1}{p(n)}.$$
-    <p>So $n^{-\log n}$ is negligible: it decreases faster than any inverse polynomial.</p>
-
-    <h3>(b) $n^{-c}$ for fixed $c \in \mathbb{N}$: not negligible</h3>
-    <p>Take the polynomial $p(n) = n^c$. Then $n^{-c} = \frac{1}{p(n)}$ for <i>every</i> $n$, so $n^{-c} \lt \frac{1}{p(n)}$ never holds. (For $c = 0$, $f \equiv 1$, which is not negligible either.)</p>
-
-    <h3>(c) $c^{-n}$: depends on $c$</h3>
     <ul>
-      <li><b>$|c| \gt 1$: negligible.</b> Write $|c| = e^{a}$ with $a = \ln|c| \gt 0$. For a polynomial $p$ of degree $d$, the series $e^{an} = \sum_j \frac{(an)^j}{j!}$ gives $e^{an} \ge \frac{(an)^{d+1}}{(d+1)!}$, which is greater than $p(n)$ for all large $n$. Hence $|c^{-n}| = e^{-an} \lt \frac{1}{p(n)}$.</li>
-      <li><b>$|c| = 1$: not negligible</b>, because $|c^{-n}| = 1$.</li>
-      <li><b>$0 \lt |c| \lt 1$: not negligible</b>, because $|c^{-n}| = |c|^{-n} \to \infty$.</li>
-      <li>$c = 0$: $c^{-n}$ is undefined.</li>
+      <li><b>(a) $n^{-\log n}$: negligible.</b> If $\deg p = d$, then $p(n) \le n^{d+1}$ for large $n$, and for $n \gt 2^{d+1}$ we have $\log n \gt d+1$, so $n^{-\log n} \lt n^{-(d+1)} \le \frac{1}{p(n)}$.</li>
+      <li><b>(b) $n^{-c}$: not negligible.</b> For $p(n) = n^c$, $n^{-c} \lt \frac{1}{p(n)}$ never holds.</li>
+      <li><b>(c) $c^{-n}$: negligible iff $|c| \gt 1$.</b> Then $|c|^n$ grows faster than every polynomial, so $|c|^{-n} \lt \frac{1}{p(n)}$ eventually. For $|c| = 1$ the value is $1$, for $0 \lt |c| \lt 1$ it grows to $\infty$ ($c = 0$ is undefined).</li>
+      <li><b>(d) $f(n) = c$: negligible iff $c = 0$.</b> For $c \ne 0$, the constant polynomial $p = \lceil 1/|c| \rceil$ gives $|c| \ge \frac1p$ for all $n$.</li>
     </ul>
-
-    <h3>(d) Constant $f(n) = c$</h3>
-    <ul>
-      <li><b>$c = 0$: negligible</b>, because $0 \lt \frac{1}{p(n)}$ always.</li>
-      <li><b>$c \ne 0$: not negligible.</b> Take the constant polynomial $p(n) = \lceil 1/|c| \rceil$. Then $|c| \ge \frac{1}{p(n)}$ for all $n$.</li>
-    </ul>
-    <p class="note">If the definition is applied literally without absolute values ($f(n) \lt \frac{1}{p(n)}$), every $c \le 0$ would count as "negligible". This is why one usually requires $|f(n)| \lt \frac{1}{p(n)}$.</p>
   </div>
 
   <nav class="pager" id="pager"></nav>
